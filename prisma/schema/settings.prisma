@@ -1,5 +1,7 @@
 model WebSettings {
-    id        Int      @id @default(1)
-    config    Json
-    updatedAt DateTime @updatedAt
+    id         Int      @id @default(1)
+    config     Json
+    updated_at DateTime @updatedAt
+
+    @@map("web_settings")
 }
