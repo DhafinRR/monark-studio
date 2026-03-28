@@ -1,0 +1,15 @@
+enum ProjectType {
+    WEB
+    MOBILE
+}
+
+model PortfolioProject {
+    id          String      @id @default(uuid())
+    title       String
+    description String
+    type        ProjectType @default(WEB)
+    imageUrl    String
+    projectUrl  String
+    stack       String[]
+    createdAt   DateTime    @default(now())
+}

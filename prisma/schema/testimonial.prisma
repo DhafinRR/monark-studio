@@ -1,0 +1,9 @@
+model Testimonial {
+    id        String   @id @default(uuid())
+    name      String
+    role      String
+    content   String
+    rating    Int      @default(5)
+    avatarUrl String?
+    createdAt DateTime @default(now())
+}
