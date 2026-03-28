@@ -32,6 +32,8 @@ export default function AdminLayout({
     { href: '/admin/users', label: 'Users', icon: Users },
     { href: '/admin/posts', label: 'Posts', icon: FileText },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+    { href: '/admin/price-catalog/features', label: 'Feature Catalog', icon: FileText },
+    { href: '/admin/price-catalog/difficulties', label: 'Difficulty Levels', icon: BarChart3 },
     { href: '/admin/settings', label: 'Settings', icon: Settings },
   ]
 

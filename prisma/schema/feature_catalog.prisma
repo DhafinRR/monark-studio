@@ -1,0 +1,11 @@
+model FeatureCatalog {
+  id          String   @id @default(uuid())
+  name        String   
+  category    String   
+  price       Decimal  @db.Decimal(12, 2)
+  description String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+
+  @@map("feature_catalog")
+}
