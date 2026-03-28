@@ -8,7 +8,7 @@ export default function PricingSection() {
     <section id="pricing" className="relative py-28 overflow-hidden">
       {/* Background image with heavy overlay */}
       <div className="absolute inset-0">
-        <img src={patternBg} alt="" className="w-full h-full object-cover opacity-[0.06]" loading="lazy" width={1920} height={800} />
+        <img src={patternBg.src} alt="" className="w-full h-full object-cover opacity-[0.06]" loading="lazy" width={1920} height={800} />
         <div className="absolute inset-0 bg-background/95" />
       </div>
 

@@ -20,7 +20,7 @@ export default function Footer() {
         <div className="grid md:grid-cols-3 gap-12 mb-12">
           <div>
             <Link href="/" className="flex items-center gap-3 mb-4">
-              <img src={logoImg} alt="Monark Studio" className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20" />
+              <img src={logoImg.src} alt="Monark Studio" className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20" />
               <span className="text-lg font-display font-bold text-foreground">
                 Monark<span className="text-accent">.</span>
               </span>

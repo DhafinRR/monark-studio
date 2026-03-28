@@ -27,18 +27,17 @@ export default function Navbar() {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
           ? "bg-card/80 backdrop-blur-2xl border-b border-border/30 shadow-lg shadow-background/30"
           : "bg-transparent"
-      }`}
+        }`}
     >
       <div className="container mx-auto flex items-center justify-between py-3 px-4">
         <Link href="/" className="flex items-center gap-3 group">
           <motion.img
             whileHover={{ rotate: [0, -5, 5, 0] }}
             transition={{ duration: 0.5 }}
-            src={logoImg}
+            src={logoImg.src}
             alt="Monark Studio"
             className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20 group-hover:ring-accent/40 transition-all"
           />

@@ -36,7 +36,7 @@ export default function OrderForm() {
     <section id="order" className="relative py-28 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <img src={heroBg} alt="" className="w-full h-full object-cover opacity-[0.04]" loading="lazy" width={1920} height={1080} />
+        <img src={heroBg.src} alt="" className="w-full h-full object-cover opacity-[0.04]" loading="lazy" width={1920} height={1080} />
         <div className="absolute inset-0 bg-background/98" />
       </div>
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
