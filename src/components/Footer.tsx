@@ -1,7 +1,9 @@
+'use client'
+
 import { Heart, ArrowUpRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from 'next/link';
 import { motion } from "framer-motion";
-import logoImg from "@/assets/logo.jpeg";
+import logoImg from "../../public/assets/logo.jpg";
 
 const footerLinks = [
   { label: "Layanan", href: "#pricing" },
@@ -17,7 +19,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-16">
         <div className="grid md:grid-cols-3 gap-12 mb-12">
           <div>
-            <Link to="/" className="flex items-center gap-3 mb-4">
+            <Link href="/" className="flex items-center gap-3 mb-4">
               <img src={logoImg} alt="Monark Studio" className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20" />
               <span className="text-lg font-display font-bold text-foreground">
                 Monark<span className="text-accent">.</span>

@@ -1,7 +1,7 @@
 import { PRICING_PACKAGES } from "@/config/pricing";
 import { motion } from "framer-motion";
 import PricingCard from "./PricingCard";
-import patternBg from "@/assets/pattern-bg.jpg";
+import patternBg from "../../public/assets/pattern-bg.jpg"
 
 export default function PricingSection() {
   return (

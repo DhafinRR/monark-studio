@@ -1,3 +1,5 @@
+'use client'
+
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowUpRight, Globe, Smartphone, Palette } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
@@ -32,9 +34,9 @@ function useTypingEffect() {
 }
 
 const STATS = [
-  // { val: "50+", label: "Proyek" },
-  // { val: "30+", label: "Klien" },
-  // { val: "99%", label: "Uptime" },
+  { val: "50+", label: "Proyek" },
+  { val: "30+", label: "Klien" },
+  { val: "99%", label: "Uptime" },
 ];
 
 const SERVICES = [

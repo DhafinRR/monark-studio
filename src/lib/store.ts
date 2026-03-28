@@ -35,12 +35,19 @@ const SEED_PORTFOLIO: PortfolioProject[] = [
 ];
 
 function getItems<T>(key: string, seed?: T[]): T[] {
-  const raw = localStorage.getItem(key);
+  // Cek apakah kodingan lagi jalan di browser atau bukan
+  if (typeof window === "undefined") {
+    return seed || []; // Balikin data default kalau lagi di server
+  }
+
+  const raw = window.localStorage.getItem(key);
   if (raw) return JSON.parse(raw);
+  
   if (seed) {
-    localStorage.setItem(key, JSON.stringify(seed));
+    window.localStorage.setItem(key, JSON.stringify(seed));
     return seed;
   }
+  
   return [];
 }
 

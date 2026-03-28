@@ -1,8 +1,10 @@
-import { Link } from "react-router-dom";
+'use client'
+
+import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import logoImg from "@/assets/logo.jpeg";
+import logoImg from "../../public/assets/logo.jpg";
 
 const navLinks = [
   { label: "Layanan", href: "#pricing" },
@@ -32,7 +34,7 @@ export default function Navbar() {
       }`}
     >
       <div className="container mx-auto flex items-center justify-between py-3 px-4">
-        <Link to="/" className="flex items-center gap-3 group">
+        <Link href="/" className="flex items-center gap-3 group">
           <motion.img
             whileHover={{ rotate: [0, -5, 5, 0] }}
             transition={{ duration: 0.5 }}
@@ -58,7 +60,7 @@ export default function Navbar() {
             </a>
           ))}
           <Link
-            to="/admin"
+            href="/admin"
             className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Admin
@@ -103,7 +105,7 @@ export default function Navbar() {
                 </a>
               ))}
               <Link
-                to="/admin"
+                href="/admin"
                 onClick={() => setOpen(false)}
                 className="px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
               >

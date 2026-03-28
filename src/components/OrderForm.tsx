@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -6,7 +8,7 @@ import { orderFormSchema, OrderFormData } from "@/lib/validation";
 import { PRICING_PACKAGES } from "@/config/pricing";
 import { addOrder } from "@/lib/store";
 import { Send, CheckCircle, Sparkles, ArrowRight } from "lucide-react";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "../../public/assets/hero-bg.jpg";
 
 export default function OrderForm() {
   const [submitted, setSubmitted] = useState(false);
