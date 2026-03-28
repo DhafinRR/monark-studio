@@ -4,12 +4,16 @@ enum ProjectType {
 }
 
 model PortfolioProject {
-    id          String      @id @default(uuid())
-    title       String
-    description String
-    type        ProjectType @default(WEB)
-    imageUrl    String
-    projectUrl  String
-    stack       String[]
-    createdAt   DateTime    @default(now())
+    id              String      @id @default(uuid())
+    title           String
+    description     String // Deskripsi singkat untuk kartu
+    fullDescription String?     @db.Text // Deskripsi lengkap untuk halaman detail
+    type            ProjectType @default(WEB)
+    imageUrl        String // Gambar utama
+    gallery         String[] // Screenshot tambahan
+    stack           String[] // Teknologi yang digunakan
+    features        String[] // List fitur utama proyek
+    clientName      String?
+    projectUrl      String?
+    createdAt       DateTime    @default(now())
 }
