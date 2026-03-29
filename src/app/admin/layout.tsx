@@ -16,6 +16,7 @@ import {
   ChevronDown,
   LogOut,
   User,
+  ShoppingBag,
 } from 'lucide-react'
 
 export default function AdminLayout({
@@ -27,29 +28,52 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdown, setProfileDropdown] = useState(false)
 
-  const menuItems = [
-    { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/users', label: 'Users', icon: Users },
-    { href: '/admin/posts', label: 'Posts', icon: FileText },
-    { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/admin/price-catalog/features', label: 'Feature Catalog', icon: FileText },
-    { href: '/admin/price-catalog/difficulties', label: 'Difficulty Levels', icon: BarChart3 },
-    { href: '/admin/settings', label: 'Settings', icon: Settings },
+  const menuSections = [
+    {
+      title: 'Overview',
+      items: [
+        { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+      ]
+    },
+    {
+      title: 'Sales & Projects',
+      items: [
+        { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+        { href: '/admin/invoices', label: 'Invoices', icon: FileText },
+      ]
+    },
+    {
+      title: 'Pricing Engine',
+      items: [
+        { href: '/admin/price-catalog/features', label: 'Feature Catalog', icon: FileText },
+        { href: '/admin/price-catalog/difficulties', label: 'Difficulty Matrix', icon: BarChart3 },
+      ]
+    },
+    {
+      title: 'Content',
+      items: [
+        { href: '/admin/posts', label: 'Posts', icon: FileText },
+      ]
+    },
+    {
+      title: 'System',
+      items: [
+        { href: '/admin/users', label: 'Users', icon: Users },
+        { href: '/admin/settings', label: 'Settings', icon: Settings },
+      ]
+    }
   ]
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar - Desktop */}
-      <aside className="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full lg:translate-x-0 bg-gray-900 border-r border-gray-800">
-        <div className="h-full px-3 py-4 overflow-y-auto">
-          {/* Logo */}
-          <div className="flex items-center justify-between mb-8 px-3">
-            <h2 className="text-2xl font-bold text-white">Admin Panel</h2>
-          </div>
-
-          {/* Navigation */}
-          <nav className="space-y-2">
-            {menuItems.map((item) => {
+  const NavContent = ({ mobile = false }: { mobile?: boolean }) => (
+    <nav className="space-y-6">
+      {menuSections.map((section) => (
+        <div key={section.title} className="space-y-2">
+          <h3 className="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+            {section.title}
+          </h3>
+          <div className="space-y-1">
+            {section.items.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
               
@@ -57,24 +81,45 @@ export default function AdminLayout({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center px-3 py-3 rounded-lg transition-colors ${
+                  onClick={() => mobile && setSidebarOpen(false)}
+                  className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group ${
                     isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                   }`}
                 >
-                  <Icon className="w-5 h-5 mr-3" />
-                  <span className="font-medium">{item.label}</span>
+                  <Icon className={`w-4 h-4 mr-3 transition-colors ${
+                    isActive ? 'text-white' : 'text-gray-500 group-hover:text-white'
+                  }`} />
+                  <span className="font-medium text-sm">{item.label}</span>
                 </Link>
               )
             })}
-          </nav>
+          </div>
+        </div>
+      ))}
+    </nav>
+  )
+
+  return (
+    <div className="min-h-screen bg-gray-50 font-sans">
+      {/* Sidebar - Desktop */}
+      <aside className="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full lg:translate-x-0 bg-gray-900 border-r border-gray-800">
+        <div className="h-full px-4 py-6 flex flex-col justify-between overflow-y-auto custom-scrollbar">
+          <div>
+            {/* Logo */}
+            <div className="flex items-center gap-3 mb-10 px-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white">M</div>
+              <h2 className="text-xl font-bold text-white tracking-tight border-b border-gray-800 pb-1">Monark <span className="text-blue-500">Studio</span></h2>
+            </div>
+            <NavContent />
+          </div>
 
           {/* Logout Button */}
-          <div className="absolute bottom-4 left-0 right-0 px-6">
-            <button className="flex items-center w-full px-3 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition-colors">
-              <LogOut className="w-5 h-5 mr-3" />
-              <span className="font-medium">Logout</span>
+          <div className="pt-6 border-t border-gray-800">
+            <button className="flex items-center w-full px-3 py-3 text-gray-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all duration-200 group">
+              <LogOut className="w-4 h-4 mr-3 text-gray-500 group-hover:text-red-500" />
+              <span className="font-medium text-sm">Logout</span>
             </button>
           </div>
         </div>
@@ -86,47 +131,24 @@ export default function AdminLayout({
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:hidden bg-gray-900 border-r border-gray-800`}
       >
-        <div className="h-full px-3 py-4 overflow-y-auto">
-          {/* Mobile Header */}
-          <div className="flex items-center justify-between mb-8 px-3">
-            <h2 className="text-2xl font-bold text-white">Admin Panel</h2>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <X className="w-6 h-6" />
-            </button>
+        <div className="h-full px-4 py-6 flex flex-col justify-between overflow-y-auto">
+          <div>
+            <div className="flex items-center justify-between mb-10 px-2">
+              <h2 className="text-xl font-bold text-white uppercase tracking-tight">Monark <span className="text-blue-500">Admin</span></h2>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-1 hover:bg-gray-800 rounded-lg transition-colors text-gray-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <NavContent mobile />
           </div>
 
-          {/* Navigation */}
-          <nav className="space-y-2">
-            {menuItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
-              
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center px-3 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
-              )
-            })}
-          </nav>
-
-          {/* Logout Button */}
-          <div className="absolute bottom-4 left-0 right-0 px-6">
-            <button className="flex items-center w-full px-3 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition-colors">
-              <LogOut className="w-5 h-5 mr-3" />
-              <span className="font-medium">Logout</span>
+          <div className="pt-6 border-t border-gray-800">
+            <button className="flex items-center w-full px-3 py-3 text-gray-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all duration-200 group">
+              <LogOut className="w-4 h-4 mr-3 text-gray-500 group-hover:text-red-500" />
+              <span className="font-medium text-sm">Logout</span>
             </button>
           </div>
         </div>

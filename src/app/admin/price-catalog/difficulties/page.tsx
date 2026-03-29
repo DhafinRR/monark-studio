@@ -40,6 +40,7 @@ export default function DifficultiesPage() {
     const key = `${level}-${sub_level}`
     setSaving(key)
     try {
+      console.log("Update price", value)
       await fetch('/api/admin/complexity-price', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

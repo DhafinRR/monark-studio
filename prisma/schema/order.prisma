@@ -2,7 +2,7 @@ model Order {
     id           String      @id @default(uuid())
     queue_number Int?        
     name         String
-    email        String
+    email        String?
     whatsapp     String
     story        String?     @db.Text
     package_type String

@@ -13,6 +13,7 @@ model OrderItem {
   // Metadata untuk CUSTOM
   level        ComplexityLevel?
   sub_level    ComplexitySubLevel?
+  reason       String?             @db.Text
   
   // Metadata untuk CATALOG (Opsional)
   feature_id   String?             
