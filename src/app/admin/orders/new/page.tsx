@@ -14,9 +14,12 @@ import {
   CheckCircle2,
   MessageCircle,
   User,
-  ChevronDown
+  ChevronDown,
+  Eye,
+  X
 } from 'lucide-react'
 import Link from 'next/link'
+import InvoicePreview from '@/components/admin/InvoicePreview'
 
 interface Feature {
   id: string
@@ -50,6 +53,7 @@ export default function NewOrderPage() {
     { id: crypto.randomUUID(), type: 'CATALOG', description: '', price: 0 }
   ])
   const [loading, setLoading] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
 
   // Fetch References
   useEffect(() => {
@@ -167,6 +171,15 @@ export default function NewOrderPage() {
           <h1 className="text-2xl font-bold text-gray-900">Buat Pesanan Baru</h1>
           <p className="text-gray-500 text-sm">Input data klien dan rincian pekerjaan secara manual</p>
         </div>
+        <div className="flex-1" />
+        <button 
+          type="button"
+          onClick={() => setShowPreview(true)}
+          className="flex items-center px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-all shadow-sm font-bold text-sm"
+        >
+          <Eye className="w-4 h-4 mr-2" />
+          Preview Invoice
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -385,6 +398,31 @@ export default function NewOrderPage() {
           </button>
         </div>
       </form>
+
+      {/* Invoice Preview Modal */}
+      {showPreview && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 lg:p-8">
+          <div 
+            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => setShowPreview(false)}
+          />
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl animate-in zoom-in-95 duration-300 custom-scrollbar">
+            <button 
+              onClick={() => setShowPreview(false)}
+              className="absolute right-4 top-4 z-10 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-all active:scale-95"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="p-4 sm:p-0">
+              <InvoicePreview 
+                client={client}
+                items={items}
+                total={totalPrice}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
