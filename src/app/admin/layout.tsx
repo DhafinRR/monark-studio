@@ -18,6 +18,7 @@ import {
   User,
   ShoppingBag,
 } from 'lucide-react'
+import { Toaster } from 'sonner'
 
 export default function AdminLayout({
   children,
@@ -242,6 +243,7 @@ export default function AdminLayout({
         <main className="p-4 sm:p-6 lg:p-8 print:p-0">
           {children}
         </main>
+        <Toaster position="bottom-right" richColors />
       </div>
     </div>
   )

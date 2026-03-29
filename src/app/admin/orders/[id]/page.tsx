@@ -18,6 +18,8 @@ import {
   ExternalLink as OpenIcon,
   Plus
 } from 'lucide-react'
+import { toast } from 'sonner'
+import ConfirmDialog from '@/components/admin/ConfirmDialog'
 
 interface OrderItem {
   id: string
@@ -67,6 +69,18 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     preview_link: '',
     details: ''
   })
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type?: 'info' | 'warning' | 'danger';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  })
 
   useEffect(() => {
     fetchOrder()
@@ -104,34 +118,56 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   }
 
   const generateInvoice = async () => {
-    if (!confirm('Apakah Anda yakin ingin menerbitkan invoice resmi untuk pesanan ini?')) return
-    setGeneratingInvoice(true)
-    try {
-      const res = await fetch(`/api/admin/orders/${id}/invoice`, { method: 'POST' })
-      if (res.ok) {
-        const data = await res.json()
-        setInvoice(data)
+    setConfirmModal({
+      isOpen: true,
+      title: 'Terbitkan Invoice?',
+      message: 'Pesanan ini akan dikunci dan nomor invoice resmi akan diterbitkan. Pastikan semua item dan harga sudah benar.',
+      type: 'info',
+      onConfirm: async () => {
+        setGeneratingInvoice(true)
+        try {
+          const res = await fetch(`/api/admin/orders/${id}/invoice`, { method: 'POST' })
+          if (res.ok) {
+            const data = await res.json()
+            setInvoice(data)
+            toast.success('Official Invoice berhasil diterbitkan!')
+          } else {
+            toast.error('Gagal menerbitkan invoice.')
+          }
+        } catch (error) {
+          toast.error('Terjadi kesalahan sistem.')
+        } finally {
+          setGeneratingInvoice(false)
+        }
       }
-    } finally {
-      setGeneratingInvoice(false)
-    }
+    })
   }
 
   const markAsPaid = async () => {
-    if (!confirm('Tandai invoice ini sebagai LUNAS?')) return
-    try {
-      const res = await fetch(`/api/admin/orders/${id}/invoice`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'paid', payment_method: 'MANUAL_TRANSFER' })
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setInvoice(data)
+    setConfirmModal({
+      isOpen: true,
+      title: 'Konfirmasi Pembayaran',
+      message: 'Apakah Anda yakin ingin menandai invoice ini sebagai LUNAS secara manual?',
+      type: 'warning',
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/admin/orders/${id}/invoice`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'paid', payment_method: 'MANUAL_TRANSFER' })
+          })
+          if (res.ok) {
+            const data = await res.json()
+            setInvoice(data)
+            toast.success('Invoice telah ditandai sebagai LUNAS!')
+          } else {
+            toast.error('Gagal memperbarui status pembayaran.')
+          }
+        } catch (error) {
+          toast.error('Terjadi kesalahan sistem.')
+        }
       }
-    } catch (error) {
-      console.error(error)
-    }
+    })
   }
 
   const handleUpdate = async () => {
@@ -145,7 +181,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       if (res.ok) {
         const updated = await res.json()
         setOrder(updated)
-        alert('Data berhasil diperbarui!')
+        toast.success('Data order berhasil diperbarui!')
+      } else {
+        toast.error('Gagal menyimpan perubahan.')
       }
     } finally {
       setUpdating(false)
@@ -436,6 +474,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
            </section>
         </div>
       </div>
+
+      <ConfirmDialog 
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+      />
     </div>
   )
 }
