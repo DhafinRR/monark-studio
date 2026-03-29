@@ -104,7 +104,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       {/* Sidebar - Desktop */}
-      <aside className="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full lg:translate-x-0 bg-gray-900 border-r border-gray-800">
+      <aside className="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full lg:translate-x-0 bg-gray-900 border-r border-gray-800 print:hidden">
         <div className="h-full px-4 py-6 flex flex-col justify-between overflow-y-auto custom-scrollbar">
           <div>
             {/* Logo */}
@@ -129,7 +129,7 @@ export default function AdminLayout({
       <aside
         className={`fixed top-0 left-0 z-50 w-64 h-screen transition-transform ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:hidden bg-gray-900 border-r border-gray-800`}
+        } lg:hidden bg-gray-900 border-r border-gray-800 print:hidden`}
       >
         <div className="h-full px-4 py-6 flex flex-col justify-between overflow-y-auto">
           <div>
@@ -163,9 +163,9 @@ export default function AdminLayout({
       )}
 
       {/* Main Content */}
-      <div className="lg:ml-64">
+      <div className="lg:ml-64 print:ml-0">
         {/* Top Navigation Bar */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 print:hidden">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               {/* Mobile menu button */}
@@ -239,7 +239,7 @@ export default function AdminLayout({
         </header>
 
         {/* Page Content */}
-        <main className="p-4 sm:p-6 lg:p-8">
+        <main className="p-4 sm:p-6 lg:p-8 print:p-0">
           {children}
         </main>
       </div>

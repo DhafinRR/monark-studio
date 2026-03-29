@@ -15,7 +15,8 @@ import {
   MessageCircle,
   User,
   ShoppingBag,
-  ExternalLink as OpenIcon
+  ExternalLink as OpenIcon,
+  Plus
 } from 'lucide-react'
 
 interface OrderItem {
@@ -42,12 +43,24 @@ interface Order {
   created_at: string
 }
 
+interface Invoice {
+  id: string
+  invoice_number: string
+  amount: number
+  status: 'unpaid' | 'paid' | 'cancelled'
+  issued_at: string
+  paid_at?: string
+  payment_method?: string
+}
+
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const [order, setOrder] = useState<Order | null>(null)
+  const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
+  const [generatingInvoice, setGeneratingInvoice] = useState(false)
   const [formData, setFormData] = useState({
     status: '',
     asset_link: '',
@@ -57,6 +70,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     fetchOrder()
+    fetchInvoice()
   }, [id])
 
   const fetchOrder = async () => {
@@ -74,6 +88,49 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       console.error(error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchInvoice = async () => {
+    try {
+      const res = await fetch(`/api/admin/orders/${id}/invoice`)
+      if (res.ok) {
+        const data = await res.json()
+        setInvoice(data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch invoice", error)
+    }
+  }
+
+  const generateInvoice = async () => {
+    if (!confirm('Apakah Anda yakin ingin menerbitkan invoice resmi untuk pesanan ini?')) return
+    setGeneratingInvoice(true)
+    try {
+      const res = await fetch(`/api/admin/orders/${id}/invoice`, { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json()
+        setInvoice(data)
+      }
+    } finally {
+      setGeneratingInvoice(false)
+    }
+  }
+
+  const markAsPaid = async () => {
+    if (!confirm('Tandai invoice ini sebagai LUNAS?')) return
+    try {
+      const res = await fetch(`/api/admin/orders/${id}/invoice`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'paid', payment_method: 'MANUAL_TRANSFER' })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setInvoice(data)
+      }
+    } catch (error) {
+      console.error(error)
     }
   }
 
@@ -296,16 +353,87 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               />
            </section>
 
-           {/* Invoicing Action (Placeholder) */}
-           <div className="p-6 bg-gray-900 rounded-2xl border border-gray-800 space-y-4">
-              <h3 className="text-xs font-black text-white uppercase tracking-widest">Financial Actions</h3>
-              <p className="text-gray-400 text-xs">Anda dapat membuat tagihan resmi untuk pesanan ini.</p>
-              <button 
-                className="w-full py-3 bg-white text-gray-900 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-blue-500 hover:text-white transition-all transform hover:scale-[1.02] active:scale-95 shadow-xl"
-              >
-                Generate Final Invoice
-              </button>
-           </div>
+           {/* Invoicing Action Card */}
+           <section className="bg-gray-900 rounded-2xl p-6 border border-gray-800 space-y-6 shadow-2xl overflow-hidden relative group">
+              {/* Decor Background */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-blue-600/20 transition-all duration-700" />
+              
+              <div className="relative">
+                <h3 className="text-sm font-black text-white uppercase tracking-[0.3em] flex items-center gap-2 mb-4">
+                   <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" /> Billing & Payment
+                </h3>
+                
+                {!invoice ? (
+                  <div className="space-y-4">
+                    <p className="text-gray-400 text-xs leading-relaxed">
+                      Pesanan ini masih berstatus <strong>Draft</strong>. Klik tombol di bawah untuk menerbitkan Nomor Invoice resmi.
+                    </p>
+                    <button 
+                      onClick={generateInvoice}
+                      disabled={generatingInvoice || order.items.length === 0}
+                      className="w-full py-4 bg-white text-gray-900 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-blue-600 hover:text-white transition-all transform hover:scale-[1.02] active:scale-95 shadow-xl flex items-center justify-center disabled:bg-gray-700 disabled:text-gray-500"
+                    >
+                      {generatingInvoice ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                      Generate Official Invoice
+                    </button>
+                    <p className="text-[9px] text-gray-600 italic text-center">Pastikan item & harga sudah fix sebelum generate.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-5">
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-3">
+                       <div className="flex justify-between items-center text-[10px] uppercase tracking-widest">
+                          <span className="text-gray-500">Invoice No.</span>
+                          <span className="text-blue-400 font-black">{invoice.invoice_number}</span>
+                       </div>
+                       <div className="flex justify-between items-center text-[10px] uppercase tracking-widest">
+                          <span className="text-gray-500">Status</span>
+                          <span className={`font-black ${invoice.status === 'paid' ? 'text-green-400' : 'text-amber-400'}`}>
+                             {invoice.status}
+                          </span>
+                       </div>
+                       <div className="flex justify-between items-center text-[10px] uppercase tracking-widest pt-2 border-t border-white/5">
+                          <span className="text-gray-500">Total Due</span>
+                          <span className="text-white font-black text-sm">Rp {Number(invoice.amount).toLocaleString('id-ID')}</span>
+                       </div>
+                    </div>
+
+                    {invoice.status !== 'paid' ? (
+                      <div className="space-y-3">
+                         <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                            <p className="text-[9px] text-amber-500 font-bold leading-tight">
+                              Menunggu pembayaran. Bagikan link bayar ke klien melalui pratinjau invoice.
+                            </p>
+                         </div>
+                         <button 
+                           onClick={markAsPaid}
+                           className="w-full py-3 bg-green-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-green-700 transition-all shadow-xl flex items-center justify-center gap-2"
+                         >
+                            <CheckCircle2 className="w-4 h-4" /> Mark as Paid (Manual)
+                         </button>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center gap-3">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/20">
+                           <CheckCircle2 className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                           <p className="text-[10px] font-black text-green-500 uppercase tracking-widest">Confirmed Paid</p>
+                           <p className="text-[9px] text-green-700 font-bold opacity-70">Success via {invoice.payment_method || 'System'}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Payment Gateaway Placeholder */}
+                    <div className="pt-4 border-t border-white/10 opacity-30 cursor-not-allowed">
+                       <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-2">Gateaway Payment Link</p>
+                       <div className="w-full py-2 bg-white/5 border border-white/5 rounded-lg text-[9px] text-center italic">
+                          Midtrans Integration Pending...
+                       </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+           </section>
         </div>
       </div>
     </div>
