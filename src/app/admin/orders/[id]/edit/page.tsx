@@ -450,6 +450,7 @@ export default function EditOrderPage({ params }: { params: Promise<{ id: string
                    client={client}
                    items={items}
                    total={totalPrice}
+                   status="DRAFT"
                  />
               </div>
            </div>

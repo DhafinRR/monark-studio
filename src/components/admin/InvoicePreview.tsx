@@ -17,13 +17,14 @@ interface InvoicePreviewProps {
     sub_level?: string
   }>
   total: number
+  status?: string
 }
 
 /**
  * Professional Minimalist Invoice Design for Monark Studio
  * Colors: Deep Navy (#1A2B3C), Warm Gold (#C9A66B), Pure White (#FFFFFF), Light Gray (#F5F5F5)
  */
-export default function InvoicePreview({ client, items, total }: InvoicePreviewProps) {
+export default function InvoicePreview({ client, items, total, status }: InvoicePreviewProps) {
   const today = new Date().toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
@@ -58,7 +59,18 @@ export default function InvoicePreview({ client, items, total }: InvoicePreviewP
           
           {/* Invoice Info */}
           <div className="text-right space-y-6 print:space-y-2">
-            <h1 className="text-5xl font-bold text-gray-900 tracking-tight print:text-3xl">INVOICE</h1>
+            <div className="flex flex-col items-end gap-2">
+              <h1 className="text-5xl font-bold text-gray-900 tracking-tight print:text-3xl">INVOICE</h1>
+              {status && (
+                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-sm border ${
+                  status === 'paid' 
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
+                    : 'bg-amber-50 text-amber-600 border-amber-200'
+                }`}>
+                  {status}
+                </span>
+              )}
+            </div>
             <div className="space-y-2 text-sm print:text-xs">
               <div className="flex justify-end gap-8 print:gap-4">
                 <span className="text-gray-500 font-medium">Invoice No:</span>

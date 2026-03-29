@@ -149,6 +149,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
            }}
            items={invoice.order.items}
            total={Number(invoice.amount)}
+           status={invoice.status}
          />
       </div>
 
