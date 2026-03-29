@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Plus, Search, Calendar, User, MessageCircle, Mail, FileText, ChevronRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface Order {
   id: string
@@ -18,6 +19,7 @@ interface Order {
 }
 
 export default function OrdersPage() {
+  const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -70,7 +72,11 @@ export default function OrdersPage() {
                 </tr>
               ) : (
                 orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                  <tr 
+                    key={order.id} 
+                    className="hover:bg-blue-50/30 transition-colors cursor-pointer group"
+                    onClick={() => router.push(`/admin/orders/${order.id}`)}
+                  >
                     <td className="px-6 py-4">
                       <div className="font-bold text-gray-900">{order.name}</div>
                       <div className="text-xs text-gray-500 flex items-center mt-1">
@@ -108,9 +114,13 @@ export default function OrdersPage() {
                       {new Date(order.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="p-2 text-gray-400 hover:text-blue-600">
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
+                      <Link 
+                        href={`/admin/orders/${order.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-2 text-gray-400 group-hover:text-blue-600 transition-colors"
+                      >
+                        <ChevronRight className="w-5 h-5 flex-shrink-0" />
+                      </Link>
                     </td>
                   </tr>
                 ))

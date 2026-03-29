@@ -32,6 +32,7 @@ export async function POST(req: Request) {
           whatsapp: body.whatsapp,
           email: body.email,
           package_type: body.package_type || 'Custom Services',
+          details: body.details,
           status: 'DRAFT',
           total_price: totalPrice,
           items: {

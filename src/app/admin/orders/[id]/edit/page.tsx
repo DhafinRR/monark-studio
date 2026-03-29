@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   Plus, 
@@ -10,11 +10,7 @@ import {
   Loader2, 
   Save, 
   ShoppingBag,
-  AlertCircle,
-  CheckCircle2,
-  MessageCircle,
   User,
-  ChevronDown,
   Eye,
   X
 } from 'lucide-react'
@@ -39,7 +35,8 @@ interface OrderItem {
   isAnalyzing?: boolean
 }
 
-export default function NewOrderPage() {
+export default function EditOrderPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const [catalog, setCatalog] = useState<Feature[]>([])
   const [complexityPrices, setComplexityPrices] = useState<any[]>([])
@@ -50,17 +47,58 @@ export default function NewOrderPage() {
     package_type: 'Custom Project',
     details: ''
   })
-  const [items, setItems] = useState<OrderItem[]>([
-    { id: crypto.randomUUID(), type: 'CATALOG', description: '', price: 0 }
-  ])
-  const [loading, setLoading] = useState(false)
+  const [items, setItems] = useState<OrderItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
 
-  // Fetch References
   useEffect(() => {
-    fetch('/api/admin/features').then(res => res.json()).then(setCatalog)
-    fetch('/api/admin/complexity-price').then(res => res.json()).then(setComplexityPrices)
-  }, [])
+    const fetchData = async () => {
+      try {
+        const [featuresRes, pricesRes, orderRes] = await Promise.all([
+          fetch('/api/admin/features'),
+          fetch('/api/admin/complexity-price'),
+          fetch(`/api/admin/orders/${id}`)
+        ])
+        
+        const [features, prices, order] = await Promise.all([
+          featuresRes.json(),
+          pricesRes.json(),
+          orderRes.json()
+        ])
+
+        setCatalog(features)
+        setComplexityPrices(prices)
+        
+        // Populate Order Data
+        setClient({
+          name: order.name,
+          whatsapp: order.whatsapp,
+          email: order.email || '',
+          package_type: order.package_type,
+          details: order.details || ''
+        })
+        
+        setItems(order.items.map((item: any) => ({
+          id: item.id,
+          type: item.type,
+          description: item.description,
+          price: Number(item.price),
+          level: item.level,
+          sub_level: item.sub_level,
+          feature_id: item.feature_id,
+          reason: item.reason,
+          isAnalyzing: false
+        })))
+      } catch (error) {
+        console.error("Failed to load data", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [id])
 
   // Debounce for AI Analysis
   useEffect(() => {
@@ -93,7 +131,6 @@ export default function NewOrderPage() {
       const data = await res.json()
       
       if (data.level) {
-        // Find price from our pre-fetched complexityPrices
         const priceObj = complexityPrices.find(p => p.level === data.level && p.sub_level === data.sub_level)
         updateItem(index, {
           level: data.level,
@@ -149,28 +186,34 @@ export default function NewOrderPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setSaving(true)
     try {
-      const res = await fetch('/api/admin/orders', {
-        method: 'POST',
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...client, items })
       })
-      if (res.ok) router.push('/admin/orders')
+      if (res.ok) router.push(`/admin/orders/${id}`)
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }
 
+  if (loading) return (
+    <div className="h-96 flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+    </div>
+  )
+
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20">
+    <div className="max-w-5xl mx-auto space-y-8 pb-20 p-4 sm:p-6 lg:p-8 animate-in fade-in duration-500">
       <div className="flex items-center gap-4">
-        <Link href="/admin/orders" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-          <ArrowLeft className="w-6 h-6 text-gray-600" />
+        <Link href={`/admin/orders/${id}`} className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
+          <ArrowLeft className="w-6 h-6 text-gray-600 group-hover:-translate-x-1 transition-transform" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Buat Pesanan Baru</h1>
-          <p className="text-gray-500 text-sm">Input data klien dan rincian pekerjaan secara manual</p>
+          <h1 className="text-2xl font-bold text-gray-900">Edit Data Pesanan</h1>
+          <p className="text-gray-500 text-sm italic">Memperbarui rincian untuk: {client.package_type}</p>
         </div>
         <div className="flex-1" />
         <button 
@@ -188,44 +231,40 @@ export default function NewOrderPage() {
         <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
           <div className="flex items-center gap-2 border-b border-gray-50 pb-4">
             <User className="w-5 h-5 text-blue-600" />
-            <h2 className="font-bold text-gray-900">Informasi Klien</h2>
+            <h2 className="font-bold text-gray-900 uppercase tracking-widest text-sm">Informasi Klien</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700">Nama Lengkap *</label>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Lengkap *</label>
               <input 
                 required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Contoh: Budi Santoso"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                 value={client.name}
                 onChange={e => setClient({...client, name: e.target.value})}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700">Nomor WhatsApp *</label>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Nomor WhatsApp *</label>
               <input 
                 required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="628123456789"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                 value={client.whatsapp}
                 onChange={e => setClient({...client, whatsapp: e.target.value})}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700">Email (Opsional)</label>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email (Opsional)</label>
               <input 
                 type="email"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="budi@example.com"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                 value={client.email}
                 onChange={e => setClient({...client, email: e.target.value})}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700">Judul Proyek</label>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Judul Proyek</label>
               <input 
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Contoh: Landing Page Startup X"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                 value={client.package_type}
                 onChange={e => setClient({...client, package_type: e.target.value})}
               />
@@ -233,12 +272,11 @@ export default function NewOrderPage() {
           </div>
           
           <div className="space-y-2 pt-2">
-            <label className="text-sm font-semibold text-gray-700">Ringkasan / Catatan Proyek (Opsional)</label>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Deskripsi / Catatan Proyek (Opsional)</label>
             <textarea 
               rows={3}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              placeholder="Contoh: Klien ingin nuansa warna biru monark, deadline akhir bulan..."
-              value={client.details || ''}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm italic"
+              value={client.details}
               onChange={e => setClient({...client, details: e.target.value})}
             />
           </div>
@@ -249,12 +287,12 @@ export default function NewOrderPage() {
           <div className="flex items-center justify-between border-b border-gray-50 pb-4">
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-blue-600" />
-              <h2 className="font-bold text-gray-900">Rincian Pekerjaan</h2>
+              <h2 className="font-bold text-gray-900 uppercase tracking-widest text-sm">Rincian Pekerjaan</h2>
             </div>
             <button 
               type="button"
               onClick={addItem}
-              className="px-4 py-2 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center transition-all"
+              className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center transition-all"
             >
               <Plus className="w-4 h-4 mr-2" /> Tambah Item
             </button>
@@ -264,11 +302,10 @@ export default function NewOrderPage() {
             {items.map((item, index) => (
               <div key={item.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-4">
                 <div className="flex flex-col md:flex-row gap-4">
-                  {/* Item Type */}
                   <div className="w-full md:w-48">
-                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Tipe</label>
+                    <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Tipe</label>
                     <select 
-                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg outline-none text-sm font-medium"
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg outline-none text-sm font-bold"
                       value={item.type}
                       onChange={e => updateItem(index, { type: e.target.value as any, description: '', price: 0, level: undefined })}
                     >
@@ -277,9 +314,8 @@ export default function NewOrderPage() {
                     </select>
                   </div>
 
-                  {/* Description / Selection */}
                   <div className="flex-1">
-                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">
+                    <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">
                       {item.type === 'CATALOG' ? 'Pilih Fitur' : 'Deskripsi Fitur'}
                     </label>
                     {item.type === 'CATALOG' ? (
@@ -297,34 +333,27 @@ export default function NewOrderPage() {
                       <div className="space-y-3">
                         <div className="relative">
                           <input 
-                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg outline-none text-sm placeholder:italic"
-                            placeholder="Jelaskan kebutuhan fitur klien..."
+                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg outline-none text-sm"
                             value={item.description}
                             onChange={e => updateItem(index, { description: e.target.value, level: undefined })}
                           />
                           {item.isAnalyzing && (
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[10px] text-blue-600 font-bold bg-white pl-2">
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[10px] text-blue-600 font-black bg-white pl-2">
                                <Loader2 className="w-3 h-3 animate-spin" />
-                               MENGANALISA...
+                               ANALYZING...
                             </div>
                           )}
                         </div>
-                        
-                        {/* AI Reason Hint */}
                         {item.reason && !item.isAnalyzing && (
-                          <div className="flex items-start gap-2 p-2 bg-blue-50/50 rounded-lg border border-blue-100/50 animate-in fade-in duration-500">
+                          <div className="flex items-start gap-2 p-2 bg-blue-50/50 rounded-lg border border-blue-100/50">
                              <Sparkles className="w-3 h-3 text-blue-500 mt-0.5 shrink-0" />
-                             <p className="text-[10px] text-blue-700 italic leading-relaxed">
-                               AI: {item.reason}
-                             </p>
+                             <p className="text-[10px] text-blue-700 italic">AI: {item.reason}</p>
                           </div>
                         )}
-                        
-                        {/* Level & Sub-Level Selection for Custom */}
-                        <div className="flex gap-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <div className="flex gap-3">
                           <div className="flex-1">
                             <select 
-                              className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg outline-none text-[11px] font-bold text-gray-700"
+                              className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg outline-none text-[10px] font-black text-gray-700"
                               value={item.level || ''}
                               onChange={e => handleComplexityChange(index, 'level', e.target.value)}
                             >
@@ -337,7 +366,7 @@ export default function NewOrderPage() {
                           </div>
                           <div className="flex-1">
                             <select 
-                              className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg outline-none text-[11px] font-bold text-gray-700"
+                              className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg outline-none text-[10px] font-black text-gray-700"
                               value={item.sub_level || ''}
                               onChange={e => handleComplexityChange(index, 'sub_level', e.target.value)}
                             >
@@ -351,21 +380,19 @@ export default function NewOrderPage() {
                     )}
                   </div>
 
-                  {/* Price */}
                   <div className="w-full md:w-48">
-                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Harga (IDR)</label>
+                    <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Harga (IDR)</label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">Rp</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">Rp</span>
                       <input 
                         type="number"
-                        className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg outline-none text-sm font-bold"
+                        className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg outline-none text-sm font-black"
                         value={item.price}
                         onChange={e => updateItem(index, { price: Number(e.target.value) })}
                       />
                     </div>
                   </div>
 
-                  {/* Remove */}
                   <div className="flex items-end pb-1">
                     <button 
                       type="button"
@@ -376,13 +403,6 @@ export default function NewOrderPage() {
                     </button>
                   </div>
                 </div>
-                
-                {item.type === 'CUSTOM' && !item.level && item.description.length > 5 && !item.isAnalyzing && (
-                  <div className="flex items-center gap-2 text-[10px] text-orange-500 font-medium animate-pulse">
-                    <Sparkles className="w-3 h-3" />
-                    Menunggu analisa AI (3 detik)...
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -391,48 +411,48 @@ export default function NewOrderPage() {
         {/* Footer Summary */}
         <div className="bg-gray-900 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between shadow-xl">
           <div className="text-center md:text-left mb-4 md:mb-0">
-            <h3 className="text-gray-400 text-sm font-medium uppercase tracking-widest">Total Estimasi</h3>
-            <p className="text-3xl font-bold text-white mt-1">
+            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">Update Estimasi</h3>
+            <p className="text-3xl font-black text-white mt-1 italic tracking-tighter">
               Rp {totalPrice.toLocaleString('id-ID')}
             </p>
           </div>
           <button 
-            disabled={loading || items.some(i => i.price === 0)}
+            disabled={saving || items.some(i => i.price === 0)}
             type="submit"
-            className="w-full md:w-auto px-10 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center shadow-lg disabled:bg-gray-600 disabled:cursor-not-allowed group"
+            className="w-full md:w-auto px-10 py-4 bg-blue-600 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center shadow-lg disabled:bg-gray-600 disabled:cursor-not-allowed group"
           >
-            {loading ? (
+            {saving ? (
               <Loader2 className="w-5 h-5 animate-spin mr-2" />
             ) : (
-              <Save className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+              <Save className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" />
             )}
-            Simpan Pesanan
+            Simpan Perubahan
           </button>
         </div>
       </form>
 
       {/* Invoice Preview Modal */}
       {showPreview && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 lg:p-8">
-          <div 
-            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300"
-            onClick={() => setShowPreview(false)}
-          />
-          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl animate-in zoom-in-95 duration-300 custom-scrollbar">
-            <button 
-              onClick={() => setShowPreview(false)}
-              className="absolute right-4 top-4 z-10 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-all active:scale-95"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <div className="p-4 sm:p-0">
-              <InvoicePreview 
-                client={client}
-                items={items}
-                total={totalPrice}
-              />
-            </div>
-          </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 lg:p-8 animate-in fade-in duration-300">
+           <div 
+             className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+             onClick={() => setShowPreview(false)}
+           />
+           <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white shadow-2xl rounded-xl custom-scrollbar animate-in zoom-in-95 duration-300">
+              <button 
+                onClick={() => setShowPreview(false)}
+                className="absolute right-4 top-4 z-10 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <div className="p-0">
+                 <InvoicePreview 
+                   client={client}
+                   items={items}
+                   total={totalPrice}
+                 />
+              </div>
+           </div>
         </div>
       )}
     </div>
