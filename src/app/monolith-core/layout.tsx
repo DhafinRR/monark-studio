@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import {
   LayoutDashboard,
@@ -26,42 +26,49 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdown, setProfileDropdown] = useState(false)
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    router.push('/gatekeeper')
+    router.refresh()
+  }
 
   const menuSections = [
     {
       title: 'Overview',
       items: [
-        { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+        { href: '/monolith-core', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/monolith-core/analytics', label: 'Analytics', icon: BarChart3 },
       ]
     },
     {
       title: 'Sales & Projects',
       items: [
-        { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
-        { href: '/admin/invoices', label: 'Invoices', icon: FileText },
+        { href: '/monolith-core/orders', label: 'Orders', icon: ShoppingBag },
+        { href: '/monolith-core/invoices', label: 'Invoices', icon: FileText },
       ]
     },
     {
       title: 'Pricing Engine',
       items: [
-        { href: '/admin/price-catalog/features', label: 'Feature Catalog', icon: FileText },
-        { href: '/admin/price-catalog/difficulties', label: 'Difficulty Matrix', icon: BarChart3 },
+        { href: '/monolith-core/price-catalog/features', label: 'Feature Catalog', icon: FileText },
+        { href: '/monolith-core/price-catalog/difficulties', label: 'Difficulty Matrix', icon: BarChart3 },
       ]
     },
     {
       title: 'Content',
       items: [
-        { href: '/admin/posts', label: 'Posts', icon: FileText },
+        { href: '/monolith-core/posts', label: 'Posts', icon: FileText },
       ]
     },
     {
       title: 'System',
       items: [
-        { href: '/admin/users', label: 'Users', icon: Users },
-        { href: '/admin/settings', label: 'Settings', icon: Settings },
+        { href: '/monolith-core/users', label: 'Users', icon: Users },
+        { href: '/monolith-core/settings', label: 'Settings', icon: Settings },
       ]
     }
   ]
@@ -118,7 +125,10 @@ export default function AdminLayout({
 
           {/* Logout Button */}
           <div className="pt-6 border-t border-gray-800">
-            <button className="flex items-center w-full px-3 py-3 text-gray-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all duration-200 group">
+            <button 
+              onClick={handleLogout}
+              className="flex items-center w-full px-3 py-3 text-gray-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all duration-200 group"
+            >
               <LogOut className="w-4 h-4 mr-3 text-gray-500 group-hover:text-red-500" />
               <span className="font-medium text-sm">Logout</span>
             </button>
@@ -147,7 +157,10 @@ export default function AdminLayout({
           </div>
 
           <div className="pt-6 border-t border-gray-800">
-            <button className="flex items-center w-full px-3 py-3 text-gray-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all duration-200 group">
+            <button 
+              onClick={handleLogout}
+              className="flex items-center w-full px-3 py-3 text-gray-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all duration-200 group"
+            >
               <LogOut className="w-4 h-4 mr-3 text-gray-500 group-hover:text-red-500" />
               <span className="font-medium text-sm">Logout</span>
             </button>
@@ -213,21 +226,24 @@ export default function AdminLayout({
                   {profileDropdown && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
                       <Link
-                        href="/admin/profile"
+                        href="/monolith-core/profile"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         <User className="w-4 h-4 mr-2" />
                         Profile
                       </Link>
                       <Link
-                        href="/admin/settings"
+                        href="/monolith-core/settings"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         <Settings className="w-4 h-4 mr-2" />
                         Settings
                       </Link>
                       <hr className="my-1" />
-                      <button className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                      <button 
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      >
                         <LogOut className="w-4 h-4 mr-2" />
                         Logout
                       </button>

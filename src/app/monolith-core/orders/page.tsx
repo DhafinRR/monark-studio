@@ -24,10 +24,15 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/orders')
+    fetch('/api/monolith-core/orders')
       .then(res => res.json())
       .then(data => {
-        setOrders(data)
+        if (Array.isArray(data)) {
+          setOrders(data)
+        } else {
+          console.error("Failed to load orders:", data)
+          setOrders([])
+        }
         setLoading(false)
       })
   }, [])
@@ -40,7 +45,7 @@ export default function OrdersPage() {
           <p className="text-gray-500 text-sm">Review and manage all project intake</p>
         </div>
         <Link 
-          href="/admin/orders/new"
+          href="/monolith-core/orders/new"
           className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-sm"
         >
           <Plus className="w-5 h-5 mr-2" />
@@ -75,7 +80,7 @@ export default function OrdersPage() {
                   <tr 
                     key={order.id} 
                     className="hover:bg-blue-50/30 transition-colors cursor-pointer group"
-                    onClick={() => router.push(`/admin/orders/${order.id}`)}
+                    onClick={() => router.push(`/monolith-core/orders/${order.id}`)}
                   >
                     <td className="px-6 py-4">
                       <div className="font-bold text-gray-900">{order.name}</div>
@@ -115,7 +120,7 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link 
-                        href={`/admin/orders/${order.id}`}
+                        href={`/monolith-core/orders/${order.id}`}
                         onClick={(e) => e.stopPropagation()}
                         className="p-2 text-gray-400 group-hover:text-blue-600 transition-colors"
                       >

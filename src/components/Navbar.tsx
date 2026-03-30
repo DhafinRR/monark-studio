@@ -58,12 +58,7 @@ export default function Navbar() {
               <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 group-hover:w-4/5 h-[2px] bg-accent rounded-full transition-all duration-300" />
             </a>
           ))}
-          <Link
-            href="/admin"
-            className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Admin
-          </Link>
+
           <motion.a
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -103,13 +98,7 @@ export default function Navbar() {
                   {l.label}
                 </a>
               ))}
-              <Link
-                href="/admin"
-                onClick={() => setOpen(false)}
-                className="px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
-              >
-                Admin
-              </Link>
+
               <a
                 href="#order"
                 onClick={() => setOpen(false)}

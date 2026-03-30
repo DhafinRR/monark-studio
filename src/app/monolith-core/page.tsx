@@ -14,7 +14,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-3">
                     <Link
-                        href="/admin/portfolio/new"
+                        href="/monolith-core/portfolio/new"
                         className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-all shadow-sm hover:shadow-md active:scale-95"
                     >
                         <Plus size={20} />
@@ -39,7 +39,7 @@ export default function AdminDashboard() {
                         <h2 className="text-lg font-bold text-gray-900 mb-4">Akses Cepat</h2>
                         <div className="grid grid-cols-1 gap-3">
                             <Link
-                                href="/admin/portfolio"
+                                href="/monolith-core/portfolio"
                                 className="flex items-center gap-3 p-3 rounded-lg border border-gray-50 hover:border-blue-100 hover:bg-blue-50/50 transition-all group"
                             >
                                 <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-blue-100 text-gray-600 group-hover:text-blue-600 transition-colors">
@@ -49,7 +49,7 @@ export default function AdminDashboard() {
                             </Link>
 
                             <Link
-                                href="/admin/services"
+                                href="/monolith-core/services"
                                 className="flex items-center gap-3 p-3 rounded-lg border border-gray-50 hover:border-blue-100 hover:bg-blue-50/50 transition-all group"
                             >
                                 <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-blue-100 text-gray-600 group-hover:text-blue-600 transition-colors">
@@ -59,7 +59,7 @@ export default function AdminDashboard() {
                             </Link>
 
                             <Link
-                                href="/admin/settings"
+                                href="/monolith-core/settings"
                                 className="flex items-center gap-3 p-3 rounded-lg border border-gray-50 hover:border-blue-100 hover:bg-blue-50/50 transition-all group"
                             >
                                 <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-blue-100 text-gray-600 group-hover:text-blue-600 transition-colors">

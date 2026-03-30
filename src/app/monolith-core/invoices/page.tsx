@@ -37,9 +37,14 @@ export default function InvoicesPage() {
 
   const fetchInvoices = async () => {
     try {
-      const res = await fetch('/api/admin/invoices')
+      const res = await fetch('/api/monolith-core/invoices')
       const data = await res.json()
-      setInvoices(data)
+      if (Array.isArray(data)) {
+        setInvoices(data)
+      } else {
+        console.error("Failed to load invoices:", data)
+        setInvoices([])
+      }
     } finally {
       setLoading(false)
     }
@@ -115,7 +120,7 @@ export default function InvoicesPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                        <Link 
-                         href={`/admin/invoices/${inv.id}`}
+                         href={`/monolith-core/invoices/${inv.id}`}
                          className="inline-flex items-center gap-2 p-2 px-4 bg-white border border-gray-200 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-blue-600 hover:text-blue-600 transition-all shadow-sm"
                        >
                           View <ChevronRight className="w-3.5 h-3.5" />
