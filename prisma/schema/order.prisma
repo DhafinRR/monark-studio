@@ -1,15 +1,23 @@
 model Order {
-    id          String   @id @default(uuid())
-    queueNumber Int?
-    name        String
-    email       String
-    whatsapp    String
-    packageType String
-    details     String
-    status      String   @default("new")
-    price       Decimal? @db.Decimal(12, 2)
-    assetLink   String?
-    previewLink String?
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    id           String      @id @default(uuid())
+    queue_number Int?        
+    name         String
+    email        String?
+    whatsapp     String
+    story        String?     @db.Text
+    package_type String
+    details      String?
+    status       OrderStatus @default(DRAFT)
+    total_price  Decimal?    @db.Decimal(12, 2)
+    asset_link   String?
+    preview_link String?
+    
+    // Relasi
+    items        OrderItem[] 
+    invoice      Invoice?
+    
+    created_at   DateTime    @default(now())
+    updated_at   DateTime    @updatedAt
+
+    @@map("order")
 }
