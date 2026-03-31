@@ -23,16 +23,18 @@ export default function DifficultiesPage() {
 
   const fetchPrices = async () => {
     try {
-      const res = await fetch('/api/admin/complexity-price')
+      const res = await fetch('/api/monolith-core/complexity-price')
       const data = await res.json()
-      setPrices(data)
+      if (res.ok && Array.isArray(data)) setPrices(data)
+      else setPrices([])
     } finally {
       setLoading(false)
     }
   }
 
   const getPriceValue = (level: string, sub_level: string) => {
-    const item = prices.find(p => p.level === level && p.sub_level === sub_level)
+    const arr = Array.isArray(prices) ? prices : []
+    const item = arr.find(p => p.level === level && p.sub_level === sub_level)
     return item ? item.price : ''
   }
 
@@ -41,7 +43,7 @@ export default function DifficultiesPage() {
     setSaving(key)
     try {
       console.log("Update price", value)
-      await fetch('/api/admin/complexity-price', {
+      await fetch('/api/monolith-core/complexity-price', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

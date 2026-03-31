@@ -47,7 +47,7 @@ export default function RecentOrders() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-gray-50 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-900">Pesanan Terbaru</h2>
-                <Link href="/admin/orders" className="text-sm font-medium text-blue-600 hover:text-blue-700">
+                <Link href="/monolith-core/orders" className="text-sm font-medium text-blue-600 hover:text-blue-700">
                     Lihat Semua
                 </Link>
             </div>

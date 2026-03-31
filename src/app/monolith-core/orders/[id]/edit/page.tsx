@@ -15,7 +15,7 @@ import {
   X
 } from 'lucide-react'
 import Link from 'next/link'
-import InvoicePreview from '@/components/admin/InvoicePreview'
+import InvoicePreview from '@/components/monolith-core/InvoicePreview'
 
 interface Feature {
   id: string
@@ -56,9 +56,9 @@ export default function EditOrderPage({ params }: { params: Promise<{ id: string
     const fetchData = async () => {
       try {
         const [featuresRes, pricesRes, orderRes] = await Promise.all([
-          fetch('/api/admin/features'),
-          fetch('/api/admin/complexity-price'),
-          fetch(`/api/admin/orders/${id}`)
+          fetch('/api/monolith-core/features'),
+          fetch('/api/monolith-core/complexity-price'),
+          fetch(`/api/monolith-core/orders/${id}`)
         ])
         
         const [features, prices, order] = await Promise.all([
@@ -67,8 +67,8 @@ export default function EditOrderPage({ params }: { params: Promise<{ id: string
           orderRes.json()
         ])
 
-        setCatalog(features)
-        setComplexityPrices(prices)
+        setCatalog(Array.isArray(features) ? features : [])
+        setComplexityPrices(Array.isArray(prices) ? prices : [])
         
         // Populate Order Data
         setClient({
@@ -79,7 +79,7 @@ export default function EditOrderPage({ params }: { params: Promise<{ id: string
           details: order.details || ''
         })
         
-        setItems(order.items.map((item: any) => ({
+        setItems((order.items || []).map((item: any) => ({
           id: item.id,
           type: item.type,
           description: item.description,
@@ -188,12 +188,12 @@ export default function EditOrderPage({ params }: { params: Promise<{ id: string
     e.preventDefault()
     setSaving(true)
     try {
-      const res = await fetch(`/api/admin/orders/${id}`, {
+      const res = await fetch(`/api/monolith-core/orders/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...client, items })
       })
-      if (res.ok) router.push(`/admin/orders/${id}`)
+      if (res.ok) router.push(`/monolith-core/orders/${id}`)
     } finally {
       setSaving(false)
     }
@@ -208,7 +208,7 @@ export default function EditOrderPage({ params }: { params: Promise<{ id: string
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-20 p-4 sm:p-6 lg:p-8 animate-in fade-in duration-500">
       <div className="flex items-center gap-4">
-        <Link href={`/admin/orders/${id}`} className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
+        <Link href={`/monolith-core/orders/${id}`} className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
           <ArrowLeft className="w-6 h-6 text-gray-600 group-hover:-translate-x-1 transition-transform" />
         </Link>
         <div>

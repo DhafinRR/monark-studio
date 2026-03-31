@@ -13,7 +13,7 @@ import {
   Clock, 
   AlertCircle 
 } from 'lucide-react'
-import InvoicePreview from '@/components/admin/InvoicePreview'
+import InvoicePreview from '@/components/monolith-core/InvoicePreview'
 
 interface OrderItem {
   id: string
@@ -51,7 +51,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
 
   const fetchInvoice = async () => {
     try {
-      const res = await fetch(`/api/admin/invoices/${id}`)
+      const res = await fetch(`/api/monolith-core/invoices/${id}`)
       if (!res.ok) throw new Error()
       const data = await res.json()
       setInvoice(data)
@@ -106,7 +106,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       {/* Header Actions - hidden on print */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between print:hidden">
         <div className="flex items-center gap-4">
-          <Link href="/admin/invoices" className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
+          <Link href="/monolith-core/invoices" className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
             <ArrowLeft className="w-6 h-6 text-gray-600 group-hover:-translate-x-1 transition-transform" />
           </Link>
           <div>

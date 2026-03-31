@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import InvoicePreview from '@/components/admin/InvoicePreview'
+import InvoicePreview from '@/components/monolith-core/InvoicePreview'
 
 interface Feature {
   id: string
@@ -55,8 +55,8 @@ export default function NewOrderPage() {
 
   // Fetch References
   useEffect(() => {
-    fetch('/api/admin/features').then(res => res.json()).then(setCatalog)
-    fetch('/api/admin/complexity-price').then(res => res.json()).then(setComplexityPrices)
+    fetch('/api/monolith-core/features').then(res => res.json()).then(data => setCatalog(Array.isArray(data) ? data : []))
+    fetch('/api/monolith-core/complexity-price').then(res => res.json()).then(data => setComplexityPrices(Array.isArray(data) ? data : []))
   }, [])
 
   // Debounce for AI Analysis
@@ -147,14 +147,14 @@ export default function NewOrderPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/orders', {
+      const res = await fetch('/api/monolith-core/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...client, items })
       })
       if (res.ok) {
         toast.success('Pesanan baru berhasil dibuat!')
-        router.push('/admin/orders')
+        router.push('/monolith-core/orders')
       } else {
         toast.error('Gagal membuat pesanan.')
       }
@@ -166,7 +166,7 @@ export default function NewOrderPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-20 p-4 sm:p-6 lg:p-8 animate-in fade-in duration-500">
       <div className="flex items-center gap-4">
-        <Link href="/admin/orders" className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
+        <Link href="/monolith-core/orders" className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
           <ArrowLeft className="w-6 h-6 text-gray-600 group-hover:-translate-x-1 transition-transform" />
         </Link>
         <div>

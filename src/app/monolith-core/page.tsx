@@ -1,5 +1,5 @@
-import StatsCards from '@/components/admin/StatsCards'
-import RecentOrders from '@/components/admin/RecentOrders'
+import StatsCards from '@/components/monolith-core/StatsCards'
+import RecentOrders from '@/components/monolith-core/RecentOrders'
 import { Plus, Settings, Briefcase, Star } from 'lucide-react'
 import Link from 'next/link'
 

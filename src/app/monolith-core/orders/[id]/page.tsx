@@ -19,7 +19,7 @@ import {
   Plus
 } from 'lucide-react'
 import { toast } from 'sonner'
-import ConfirmDialog from '@/components/admin/ConfirmDialog'
+import ConfirmDialog from '@/components/monolith-core/ConfirmDialog'
 
 interface OrderItem {
   id: string
@@ -89,7 +89,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   const fetchOrder = async () => {
     try {
-      const res = await fetch(`/api/admin/orders/${id}`)
+      const res = await fetch(`/api/monolith-core/orders/${id}`)
       const data = await res.json()
       setOrder(data)
       setFormData({
@@ -107,7 +107,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   const fetchInvoice = async () => {
     try {
-      const res = await fetch(`/api/admin/orders/${id}/invoice`)
+      const res = await fetch(`/api/monolith-core/orders/${id}/invoice`)
       if (res.ok) {
         const data = await res.json()
         setInvoice(data)
@@ -126,7 +126,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       onConfirm: async () => {
         setGeneratingInvoice(true)
         try {
-          const res = await fetch(`/api/admin/orders/${id}/invoice`, { method: 'POST' })
+          const res = await fetch(`/api/monolith-core/orders/${id}/invoice`, { method: 'POST' })
           if (res.ok) {
             const data = await res.json()
             setInvoice(data)
@@ -151,7 +151,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       type: 'warning',
       onConfirm: async () => {
         try {
-          const res = await fetch(`/api/admin/orders/${id}/invoice`, {
+          const res = await fetch(`/api/monolith-core/orders/${id}/invoice`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: 'paid', payment_method: 'MANUAL_TRANSFER' })
@@ -173,7 +173,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const handleUpdate = async () => {
     setUpdating(true)
     try {
-      const res = await fetch(`/api/admin/orders/${id}`, {
+      const res = await fetch(`/api/monolith-core/orders/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -210,7 +210,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       {/* Header Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/admin/orders" className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
+          <Link href="/monolith-core/orders" className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
             <ArrowLeft className="w-6 h-6 text-gray-600 group-hover:-translate-x-1 transition-transform" />
           </Link>
           <div>
@@ -226,7 +226,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         
         <div className="flex items-center gap-3">
            <Link 
-             href={`/admin/orders/${id}/edit`}
+             href={`/monolith-core/orders/${id}/edit`}
              className="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all flex items-center shadow-sm text-sm"
            >
              <ShoppingBag className="w-4 h-4 mr-2 text-blue-600" />

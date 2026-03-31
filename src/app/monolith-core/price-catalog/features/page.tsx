@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, Edit2, Loader2, Search } from 'lucide-react'
 import { toast } from 'sonner'
-import ConfirmDialog from '@/components/admin/ConfirmDialog'
+import ConfirmDialog from '@/components/monolith-core/ConfirmDialog'
 
 interface Feature {
   id: string
@@ -45,9 +45,10 @@ export default function FeaturesPage() {
 
   const fetchFeatures = async () => {
     try {
-      const res = await fetch('/api/admin/features')
+      const res = await fetch('/api/monolith-core/features')
       const data = await res.json()
-      setFeatures(data)
+      if (res.ok && Array.isArray(data)) setFeatures(data)
+      else setFeatures([])
     } finally {
       setLoading(false)
     }
@@ -57,7 +58,7 @@ export default function FeaturesPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/features', {
+      const res = await fetch('/api/monolith-core/features', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -85,7 +86,7 @@ export default function FeaturesPage() {
       type: 'danger',
       onConfirm: async () => {
         try {
-          const res = await fetch(`/api/admin/features/${id}`, { method: 'DELETE' })
+          const res = await fetch(`/api/monolith-core/features/${id}`, { method: 'DELETE' })
           if (res.ok) {
             fetchFeatures()
             toast.success('Fitur berhasil dihapus dari katalog.')
@@ -99,7 +100,7 @@ export default function FeaturesPage() {
     })
   }
 
-  const filteredFeatures = features.filter(f => 
+  const filteredFeatures = (Array.isArray(features) ? features : []).filter(f => 
     f.name.toLowerCase().includes(search.toLowerCase()) ||
     f.category.toLowerCase().includes(search.toLowerCase())
   )
