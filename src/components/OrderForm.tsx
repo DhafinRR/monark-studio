@@ -2,35 +2,64 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { orderFormSchema, OrderFormData } from "@/lib/validation";
-import { PRICING_PACKAGES } from "@/config/pricing";
-import { addOrder } from "@/lib/store";
-import { Send, CheckCircle, Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, MessageCircle, Bot, FileText, ArrowRight, Loader2 } from "lucide-react";
 import heroBg from "../../public/assets/hero-bg.jpg";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner"; // Assuming sonner is used for toast, if not I'll just use simple alert/state, wait, package.json has sonner!
 
 export default function OrderForm() {
-  const [submitted, setSubmitted] = useState(false);
+  const router = useRouter();
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<OrderFormData>({
-    resolver: zodResolver(orderFormSchema),
-  });
+  const WA_NUMBER = "6281322639234"; // Added 62 for international format
+  const WA_LINK = `https://wa.me/${WA_NUMBER}?text=Halo%20tim%20Monark%20Studio,%20saya%20ingin%20berkonsultasi%20tentang%20pembuatan%20proyek%20digital.`;
 
-  const onSubmit = (data: OrderFormData) => {
-    addOrder(data as Omit<import("@/types").Order, "id" | "status" | "createdAt">);
-    setSubmitted(true);
-    reset();
-    setTimeout(() => setSubmitted(false), 4000);
+  const handleAiSubmit = async () => {
+    if (!aiPrompt.trim()) return;
+
+    // Buka tab baru SECARA SINKRONUS langsung saat diklik (bypass pop-up blocker browser)
+    const newTab = window.open("about:blank", "_blank");
+
+    setIsAiLoading(true);
+    try {
+      const res = await fetch("/api/ai/parse-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiPrompt }),
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        throw new Error("Gagal mem-parsing respons server.");
+      }
+
+      if (!res.ok) {
+        throw new Error(data.details || data.error || "Gagal menganalisis. Pastikan API key sudah benar.");
+      }
+      
+      // Pakai localStorage supaya datanya dibaca dengan aman di tab baru
+      localStorage.setItem("ai_order_data", JSON.stringify(data));
+      
+      // Navigasikan tab kosong tadi ke halaman form
+      if (newTab) {
+        newTab.location.href = "/order/ai";
+      } else {
+        window.open("/order/ai", "_blank");
+      }
+    } catch (error: any) {
+      // Tutup tab kosong tersebut jika terjadi error pada AI
+      if (newTab) newTab.close();
+      
+      console.error(error);
+      toast.error(error.message || "Terjadi kesalahan saat menghubungi peladen AI.");
+    } finally {
+      setIsAiLoading(false);
+    }
   };
-
-  const inputClasses =
-    "w-full rounded-xl border border-border bg-background/60 backdrop-blur-sm px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/40 transition-all";
 
   return (
     <section id="order" className="relative py-28 overflow-hidden">
@@ -42,7 +71,7 @@ export default function OrderForm() {
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <motion.span
               initial={{ opacity: 0, y: 10 }}
@@ -67,90 +96,112 @@ export default function OrderForm() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="text-muted-foreground text-base"
+              className="text-muted-foreground text-base max-w-2xl mx-auto"
             >
-              Isi formulir di bawah dan tim kami akan menghubungi Anda dalam 24 jam.
+              Pilih cara berkonsultasi yang paling nyaman untuk Anda. Tim atau AI kami siap membantu merumuskan kebutuhan proyek Anda.
             </motion.p>
           </div>
 
-          {submitted && (
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* 1. Konsultasi WhatsApp */}
+            <motion.a
+              href={WA_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              whileHover={{ y: -5 }}
+              className="flex flex-col h-full rounded-2xl border border-border/60 bg-card/60 backdrop-blur-xl p-8 shadow-xl shadow-primary/5 hover:border-primary/40 hover:shadow-primary/10 transition-all group"
+            >
+              <div className="w-14 h-14 rounded-xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center mb-6">
+                <MessageCircle size={28} />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Konsultasi Langsung</h3>
+              <p className="text-muted-foreground text-sm flex-1 mb-8">
+                Diskusikan ide proyek Anda langsung dengan tim ahli kami melalui WhatsApp. Cepat dan personal.
+              </p>
+              <div className="flex items-center text-sm font-semibold text-[#25D366] mt-auto">
+                Chat Sekarang <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </motion.a>
+
+            {/* 2. Tanya AI (Untuk Awam) */}
             <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              className="flex items-center gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20 text-primary mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="flex flex-col h-full rounded-2xl border-2 border-primary/30 bg-primary/5 backdrop-blur-xl p-8 shadow-2xl shadow-primary/10 md:col-span-2 lg:col-span-1 relative overflow-hidden"
             >
-              <CheckCircle size={20} />
-              <span className="text-sm font-medium">
-                Pesanan berhasil dikirim! Kami akan segera menghubungi Anda.
-              </span>
+              {/* Highlight badge */}
+              <div className="absolute top-0 right-0 bg-primary text-background text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
+                Rekomendasi
+              </div>
+
+              <div className="w-14 h-14 rounded-xl bg-primary/20 text-primary flex items-center justify-center mb-6">
+                <Bot size={28} />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Tanya Asisten AI</h3>
+              <p className="text-muted-foreground text-sm mb-5">
+                Ceritakan secara singkat apa yang Anda butuhkan dengan bahasa sehari-hari. AI kami akan merumuskan spesifikasinya.
+              </p>
+              
+              <div className="flex flex-col flex-1">
+                <textarea
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="Contoh: Saya butuh website untuk jualan baju online dengan fitur keranjang belanja..."
+                  className="w-full text-sm bg-background/80 border border-primary/20 rounded-xl p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 resize-none mb-4"
+                />
+                <button
+                  onClick={handleAiSubmit}
+                  disabled={isAiLoading || !aiPrompt.trim()}
+                  className="w-full mt-auto flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isAiLoading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Menganalisis...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={16} />
+                      Gunakan AI
+                    </>
+                  )}
+                </button>
+              </div>
             </motion.div>
-          )}
 
-          <motion.form
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-5 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-xl p-8 md:p-10 shadow-2xl shadow-primary/5"
-          >
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">
-                Nama Lengkap
-              </label>
-              <input {...register("name")} className={inputClasses} placeholder="John Doe" />
-              {errors.name && <p className="mt-1.5 text-xs text-destructive">{errors.name.message}</p>}
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">Email</label>
-                <input type="email" {...register("email")} className={inputClasses} placeholder="john@example.com" />
-                {errors.email && <p className="mt-1.5 text-xs text-destructive">{errors.email.message}</p>}
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">WhatsApp</label>
-                <input {...register("whatsapp")} className={inputClasses} placeholder="08123456789" />
-                {errors.whatsapp && <p className="mt-1.5 text-xs text-destructive">{errors.whatsapp.message}</p>}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">Pilih Paket</label>
-              <select {...register("packageType")} className={inputClasses}>
-                <option value="">— Pilih Paket —</option>
-                {PRICING_PACKAGES.map((pkg) => (
-                  <option key={pkg.id} value={pkg.id}>
-                    {pkg.name} — Rp {pkg.price}
-                  </option>
-                ))}
-              </select>
-              {errors.packageType && <p className="mt-1.5 text-xs text-destructive">{errors.packageType.message}</p>}
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">Detail Kebutuhan</label>
-              <textarea
-                {...register("details")}
-                rows={4}
-                className={`${inputClasses} resize-none`}
-                placeholder="Ceritakan kebutuhan proyek Anda..."
-              />
-              {errors.details && <p className="mt-1.5 text-xs text-destructive">{errors.details.message}</p>}
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.01, boxShadow: "0 0 25px rgba(180,140,40,0.2)" }}
-              whileTap={{ scale: 0.99 }}
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-gradient-secondary text-accent-foreground font-bold text-sm transition-all disabled:opacity-50"
+            {/* 3. Form Manual */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+              whileHover={{ y: -5 }}
+              className="flex flex-col h-full rounded-2xl border border-border/60 bg-card/60 backdrop-blur-xl p-8 shadow-xl shadow-primary/5 hover:border-primary/40 hover:shadow-primary/10 transition-all group"
             >
-              <Send size={15} />
-              Kirim Pesanan
-              <ArrowRight size={15} />
-            </motion.button>
-          </motion.form>
+              <div className="w-14 h-14 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center mb-6">
+                <FileText size={28} />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Isi Form Manual</h3>
+              <p className="text-muted-foreground text-sm flex-1 mb-8">
+                Sudah tahu persis apa yang Anda butuhkan? Isi formulir pemesanan secara mandiri dan pilih paket Anda.
+              </p>
+              
+              <Link 
+                href="/order/manual"
+                target="_blank"
+                className="mt-auto block w-full text-center py-3.5 rounded-xl border border-border bg-background hover:bg-muted font-semibold text-sm transition-colors"
+              >
+                Isi Formulir
+              </Link>
+            </motion.div>
+            
+          </div>
         </div>
       </div>
     </section>
