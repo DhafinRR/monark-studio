@@ -10,6 +10,10 @@ model PortfolioProject {
     features         String[] 
     client_name      String?
     project_url      String?
+    role             String?
+    status           String?     @default("Live")
+    start_date       DateTime?
+    end_date         DateTime?
     created_at       DateTime    @default(now())
 
     @@map("portfolio_project")

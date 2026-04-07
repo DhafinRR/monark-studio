@@ -38,6 +38,10 @@ export async function POST(req: Request) {
       features,
       client_name,
       project_url,
+      role,
+      status,
+      start_date,
+      end_date,
     } = body
 
     if (!title || typeof title !== 'string' || !title.trim()) {
@@ -61,6 +65,10 @@ export async function POST(req: Request) {
         features: Array.isArray(features) ? features : [],
         client_name: client_name || null,
         project_url: project_url || null,
+        role: role || null,
+        status: status || 'Live',
+        start_date: start_date ? new Date(start_date) : null,
+        end_date: end_date ? new Date(end_date) : null,
         stacks: Array.isArray(stacks) && stacks.length > 0
           ? { connect: stacks.map((id: string) => ({ id })) }
           : undefined,

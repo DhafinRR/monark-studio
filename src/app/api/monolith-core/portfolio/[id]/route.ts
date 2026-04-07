@@ -51,6 +51,10 @@ export async function PATCH(
       features,
       client_name,
       project_url,
+      role,
+      status,
+      start_date,
+      end_date,
     } = body
 
     const data: Record<string, unknown> = {}
@@ -63,6 +67,10 @@ export async function PATCH(
     if (features !== undefined) data.features = features
     if (client_name !== undefined) data.client_name = client_name || null
     if (project_url !== undefined) data.project_url = project_url || null
+    if (role !== undefined) data.role = role || null
+    if (status !== undefined) data.status = status || 'Live'
+    if (start_date !== undefined) data.start_date = start_date ? new Date(start_date) : null
+    if (end_date !== undefined) data.end_date = end_date ? new Date(end_date) : null
     if (stacks !== undefined) {
       data.stacks = {
         set: Array.isArray(stacks)

@@ -28,6 +28,10 @@ interface PortfolioData {
   features: string[]
   client_name: string | null
   project_url: string | null
+  role: string | null
+  status: string | null
+  start_date: string | null
+  end_date: string | null
 }
 
 interface PortfolioFormProps {
@@ -116,6 +120,10 @@ export default function PortfolioForm({ initialData, id }: PortfolioFormProps) {
   const [type, setType] = useState<'WEB' | 'MOBILE'>(initialData?.type || 'WEB')
   const [clientName, setClientName] = useState(initialData?.client_name || '')
   const [projectUrl, setProjectUrl] = useState(initialData?.project_url || '')
+  const [role, setRole] = useState(initialData?.role || '')
+  const [status, setStatus] = useState(initialData?.status || 'Live')
+  const [startDate, setStartDate] = useState(initialData?.start_date ? new Date(initialData.start_date).toISOString().split('T')[0] : '')
+  const [endDate, setEndDate] = useState(initialData?.end_date ? new Date(initialData.end_date).toISOString().split('T')[0] : '')
 
   // Image states
   const [thumbnail, setThumbnail] = useState<ImageItem | null>(
@@ -243,6 +251,10 @@ export default function PortfolioForm({ initialData, id }: PortfolioFormProps) {
             features,
             client_name: clientName || null,
             project_url: projectUrl || null,
+            role: role || null,
+            status: status || 'Live',
+            start_date: startDate || null,
+            end_date: endDate || null,
           }),
         })
         if (!createRes.ok) {
@@ -306,6 +318,10 @@ export default function PortfolioForm({ initialData, id }: PortfolioFormProps) {
           features,
           client_name: clientName || null,
           project_url: projectUrl || null,
+          role: role || null,
+          status: status || 'Live',
+          start_date: startDate || null,
+          end_date: endDate || null,
           image_url: imageUrl,
           gallery: galleryUrls,
         }),
@@ -407,6 +423,55 @@ export default function PortfolioForm({ initialData, id }: PortfolioFormProps) {
                   {t}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Role & Status */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Role *</label>
+              <input
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Misal: Fullstack Dev"
+                value={role}
+                onChange={e => setRole(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Status</label>
+              <select
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                value={status}
+                onChange={e => setStatus(e.target.value)}
+              >
+                <option value="Live">Live</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Beta">Beta</option>
+                <option value="Maintenance">Maintenance</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Start Date & End Date */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Tanggal Mulai</label>
+              <input
+                type="date"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Tanggal Selesai</label>
+              <input
+                type="date"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+              />
             </div>
           </div>
 

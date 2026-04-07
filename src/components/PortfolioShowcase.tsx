@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { Highlighter } from "./magicui/text-highlighter";
+import { Backlight } from "./magicui/backlight";
 
 interface TechStack {
   id: string
@@ -80,24 +81,24 @@ export default function PortfolioShowcase({ projects }: PortfolioShowcaseProps) 
               >
                 <div className="relative">
                   {/* Image — 58% width, positioned left or right */}
-                  <div className={`relative overflow-hidden rounded-2xl md:w-[58%] ${
-                    isEven ? 'md:mr-auto' : 'md:ml-auto'
-                  }`}>
-                    <div className="aspect-video">
-                      <img
-                        src={project.image_url}
-                        alt={project.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
+                  <Backlight blur={40} className="w-full">
+                    <div className={`relative overflow-hidden rounded-2xl md:w-[58%] ${isEven ? 'md:mr-auto' : 'md:ml-auto'
+                      }`}>
+                      <div className="aspect-video">
+                        <img
+                          src={project.image_url}
+                          alt={project.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/10 to-transparent" />
                     </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/10 to-transparent" />
-                  </div>
+                  </Backlight>
 
                   {/* Content — 58% width, overlaps ~1/3 of image */}
-                  <div className={`relative flex flex-col z-10 md:absolute md:top-1/2 md:-translate-y-1/2 md:w-[58%] ${
-                    isEven ? 'md:right-0 items-end' : 'md:left-0 items-start'
-                  }`}>
+                  <div className={`relative flex flex-col z-10 md:absolute md:top-1/2 md:-translate-y-1/2 md:w-[58%] ${isEven ? 'md:right-0 items-end' : 'md:left-0 items-start'
+                    }`}>
                     {/* Type + Title */}
                     <div className={`mb-4 mt-4 md:w-2/3 md:mt-0 ${isEven ? 'md:text-right md:right-0' : 'md:text-left md:left-0'}`}>
                       <span className="text-accent text-sm font-semibold tracking-wide">
