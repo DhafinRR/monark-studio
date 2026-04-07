@@ -1,7 +1,10 @@
+"use client"
+
 import { PRICING_PACKAGES } from "@/config/pricing";
 import { motion } from "framer-motion";
 import PricingCard from "./PricingCard";
 import patternBg from "../../public/assets/pattern-bg.jpg"
+import { Highlighter } from "./magicui/text-highlighter";
 
 export default function PricingSection() {
   return (
@@ -41,16 +44,9 @@ export default function PricingSection() {
             className="text-3xl md:text-5xl font-display font-bold text-foreground mb-5"
           >
             Investasi untuk{" "}
-            <span className="relative">
-              <span className="text-gradient-secondary">Masa Depan</span>
-              <motion.span
-                className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-secondary rounded-full"
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.5, duration: 0.6 }}
-              />
-            </span>{" "}
+            <Highlighter action="highlight" iterations={3} color="#C69B28" isView={true}>
+              <span className="text-secondary">Masa Depan</span>
+            </Highlighter>{" "}
             Digital
           </motion.h2>
           <motion.p

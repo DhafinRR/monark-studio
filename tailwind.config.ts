@@ -100,6 +100,9 @@ export default {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        "border-beam": {
+          "100%": { "offset-distance": "100%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -110,6 +113,7 @@ export default {
         "slide-up": "slide-up 0.5s ease-out",
         "gradient-shift": "gradient-shift 6s ease infinite",
         "shimmer": "shimmer 3s linear infinite",
+        "border-beam": "border-beam var(--duration) infinite linear",
       },
     },
   },

@@ -3,6 +3,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowUpRight, Globe, Smartphone, Palette } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import { Highlighter } from "./magicui/text-highlighter";
 
 /* ─── Typed words ─── */
 const WORDS = ["Website", "Mobile App", "Web App", "E-Commerce"];
@@ -140,8 +141,8 @@ export default function HeroSection() {
                     {typed}
                   </span>
                   <motion.span
-                    animate={{ opacity: `` }}
-                    transition={{ duration: 0.9, repeat: Infinity }}
+                    animate={{ opacity: [0, 1] }}
+                    transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
                     style={{
                       display: "inline-block", width: 3, marginLeft: 4,
                       height: "0.75em", verticalAlign: "middle", borderRadius: 2, background: "#C69B28",
@@ -178,8 +179,8 @@ export default function HeroSection() {
                 }}
               >
                 Dari landing page sederhana hingga aplikasi mobile custom — solusi digital yang{" "}
-                <span style={{ color: "#A07820", fontWeight: 600 }}>cepat</span>,{" "}
-                <span style={{ color: "#111827", fontWeight: 600 }}>scalable</span>
+                <Highlighter action="underline" color="#C69B28" isView={true}>cepat</Highlighter>,{" "}
+                <Highlighter action="circle" color="#214533" isView={true}>scalable</Highlighter>
                 {" "}dan berperforma tinggi.
               </motion.p>
 

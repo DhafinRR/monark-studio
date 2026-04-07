@@ -7,6 +7,7 @@ import heroBg from "../../public/assets/hero-bg.jpg";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner"; // Assuming sonner is used for toast, if not I'll just use simple alert/state, wait, package.json has sonner!
+import { Highlighter } from "./magicui/text-highlighter";
 
 export default function OrderForm() {
   const router = useRouter();
@@ -89,7 +90,7 @@ export default function OrderForm() {
               transition={{ delay: 0.1 }}
               className="text-3xl md:text-5xl font-display font-bold text-foreground mb-5"
             >
-              Wujudkan <span className="text-gradient-secondary">Ide</span> Anda
+              Wujudkan <Highlighter action="circle" color="#C69B28" isView={true}> <span className="text-gradient-secondary">Ide</span></Highlighter> Anda
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 10 }}

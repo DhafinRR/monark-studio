@@ -17,6 +17,8 @@ import {
   LogOut,
   User,
   ShoppingBag,
+  Briefcase,
+  Cpu,
 } from 'lucide-react'
 import { Toaster } from 'sonner'
 
@@ -62,6 +64,13 @@ export default function AdminLayout({
       title: 'Content',
       items: [
         { href: '/monolith-core/posts', label: 'Posts', icon: FileText },
+      ]
+    },
+    {
+      title: 'Portfolios',
+      items: [
+        { href: '/monolith-core/portfolio', label: 'Portfolio', icon: Briefcase },
+        { href: '/monolith-core/tech-stacks', label: 'Tech Stacks', icon: Cpu },
       ]
     },
     {

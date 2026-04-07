@@ -7,16 +7,19 @@ import { useState, useEffect } from "react";
 import logoImg from "../../public/assets/logo.jpg";
 
 const navLinks = [
-  { label: "Layanan", href: "#pricing" },
-  { label: "Portfolio", href: "#portfolio" },
-  { label: "Order", href: "#order" },
+  { label: "Home", href: "/" },
+  { label: "Portfolio", href: "/portfolio" },
+  { label: "Order", href: "/#order" },
 ];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -48,25 +51,31 @@ export default function Navbar() {
 
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-1">
-          {navLinks.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="relative px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors group"
-            >
-              {l.label}
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 group-hover:w-4/5 h-[2px] bg-accent rounded-full transition-all duration-300" />
-            </a>
-          ))}
+          {mounted ? (
+            navLinks.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="relative px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors group"
+              >
+                {l.label}
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 group-hover:w-4/5 h-[2px] bg-accent rounded-full transition-all duration-300" />
+              </Link>
+            ))
+          ) : (
+            <div className="flex gap-1">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="px-4 py-2 w-20 h-8 rounded-lg bg-secondary/20 animate-pulse" />
+              ))}
+            </div>
+          )}
 
-          <motion.a
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            href="#order"
-            className="ml-3 px-5 py-2 rounded-lg bg-gradient-secondary text-accent-foreground text-sm font-bold transition-all"
+          <Link
+            href="/#order"
+            className="ml-3 px-5 py-2 rounded-lg bg-gradient-secondary text-accent-foreground text-sm font-bold transition-all hover:scale-[1.03] active:scale-[0.97] inline-block"
           >
             Mulai Proyek
-          </motion.a>
+          </Link>
         </div>
 
         {/* Mobile toggle */}
@@ -88,24 +97,24 @@ export default function Navbar() {
             className="md:hidden bg-card/95 backdrop-blur-2xl border-t border-border/30 overflow-hidden"
           >
             <div className="container mx-auto flex flex-col gap-1 py-4 px-4">
-              {navLinks.map((l) => (
-                <a
+              {mounted && navLinks.map((l) => (
+                <Link
                   key={l.href}
                   href={l.href}
                   onClick={() => setOpen(false)}
                   className="px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
                 >
                   {l.label}
-                </a>
+                </Link>
               ))}
 
-              <a
-                href="#order"
+              <Link
+                href="/#order"
                 onClick={() => setOpen(false)}
                 className="mt-2 px-5 py-3 rounded-lg bg-gradient-secondary text-accent-foreground text-sm font-bold text-center"
               >
                 Mulai Proyek
-              </a>
+              </Link>
             </div>
           </motion.div>
         )}

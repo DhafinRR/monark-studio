@@ -6,7 +6,7 @@ model PortfolioProject {
     type             ProjectType @default(WEB)
     image_url        String 
     gallery          String[] 
-    stack            String[] 
+    stacks           TechStack[] 
     features         String[] 
     client_name      String?
     project_url      String?
