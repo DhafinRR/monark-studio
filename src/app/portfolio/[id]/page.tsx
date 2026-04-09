@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma"
 import ProjectDetailContent from "@/components/portfolio/ProjectDetailContent"
 import { Metadata } from "next"
 
+export const dynamic = 'force-dynamic'
 interface ProjectPageProps {
   params: Promise<{ id: string }>
 }

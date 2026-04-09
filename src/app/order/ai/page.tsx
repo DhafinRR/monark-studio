@@ -2,68 +2,59 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { orderFormSchema, OrderFormData } from "@/lib/validation";
-import { PRICING_PACKAGES } from "@/config/pricing";
-import { addOrder } from "@/lib/store";
-import { Send, CheckCircle, Sparkles, ArrowRight, ArrowLeft, Bot } from "lucide-react";
+import { ArrowLeft, Bot } from "lucide-react";
 import heroBg from "../../../../public/assets/hero-bg.jpg"; // Adjust path if needed
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ParticleField from "@/components/ParticleField";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import ClientOrderForm from "@/components/ClientOrderForm";
+import { PRICING_PACKAGES } from "@/config/pricing";
 
 export default function AIOrderPage() {
-  const [submitted, setSubmitted] = useState(false);
-  const router = useRouter();
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<OrderFormData>({
-    resolver: zodResolver(orderFormSchema),
-  });
-
-  const packageType = watch("packageType");
-  const selectedPackage = PRICING_PACKAGES.find(p => p.id === packageType);
+  const [initialData, setInitialData] = useState<any>(null);
+  const [initialItems, setInitialItems] = useState<any[]>([]);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     // Check for AI data in localStorage
     const storedData = localStorage.getItem("ai_order_data");
     if (storedData) {
       try {
-        const parsed: Partial<OrderFormData> = JSON.parse(storedData);
-        if (parsed.name) setValue("name", parsed.name);
-        if (parsed.email) setValue("email", parsed.email);
-        if (parsed.whatsapp) setValue("whatsapp", parsed.whatsapp);
-        if (parsed.packageType) setValue("packageType", parsed.packageType);
-        if (parsed.details) setValue("details", parsed.details);
+        const parsed = JSON.parse(storedData);
+        // Mapping packageType to the string representation if necessary
+        const selectedPackage = PRICING_PACKAGES.find(p => p.id === parsed.packageType);
+        
+        setInitialData({
+          name: parsed.name || "",
+          email: parsed.email || "",
+          whatsapp: parsed.whatsapp || "",
+          package_type: selectedPackage ? selectedPackage.name : (parsed.packageType || ""),
+          details: parsed.details || ""
+        });
+
+        if (selectedPackage) {
+          let parsedPrice = 0;
+          if (selectedPackage.price.toLowerCase().includes('juta')) {
+            parsedPrice = parseFloat(selectedPackage.price) * 1000000;
+          } else {
+            parsedPrice = parseInt(selectedPackage.price.replace(/\D/g, '')) || 0;
+          }
+
+          setInitialItems([{
+            id: crypto.randomUUID(),
+            type: 'CUSTOM',
+            description: `Paket Rekomendasi AI: ${selectedPackage.name}`,
+            price: parsedPrice,
+            reason: parsed.details
+          }]);
+        }
       } catch (e) {
         console.error("Failed to parse AI data", e);
       }
     }
-  }, [setValue]);
-
-  const onSubmit = (data: OrderFormData) => {
-    addOrder(data as Omit<import("@/types").Order, "id" | "status" | "createdAt">);
-    setSubmitted(true);
-    reset();
-    localStorage.removeItem("ai_order_data");
-    setTimeout(() => setSubmitted(false), 4000);
-  };
-
-  const inputClasses =
-    "w-full rounded-xl border border-border bg-background/60 backdrop-blur-sm px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/40 transition-all";
-
-  // Readonly inputs have slightly different styling to indicate they shouldn't be touched unless necessary
-  const readonlyClasses = 
-    "w-full rounded-xl border border-primary/20 bg-primary/5 px-4 py-3.5 text-sm text-foreground cursor-not-allowed opacity-90";
+    setIsReady(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background relative flex flex-col">
@@ -77,7 +68,7 @@ export default function AIOrderPage() {
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto mb-10">
             <Link 
               href="/#order" 
               className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
@@ -86,7 +77,7 @@ export default function AIOrderPage() {
               Kembali
             </Link>
 
-            <div className="text-center mb-10">
+            <div className="text-center">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -112,94 +103,10 @@ export default function AIOrderPage() {
                 AI kami telah menyusun kebutuhan proyek Anda. Silakan periksa dan lengkapi data diri Anda.
               </motion.p>
             </div>
+          </div>
 
-            {submitted && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                className="flex items-center gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20 text-primary mb-8"
-              >
-                <CheckCircle size={20} />
-                <span className="text-sm font-medium">
-                  Pesanan berhasil dikirim! Kami akan segera menghubungi Anda.
-                </span>
-              </motion.div>
-            )}
-
-            <motion.form
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              onSubmit={handleSubmit(onSubmit)}
-              className="space-y-5 rounded-2xl border border-primary/30 bg-card/60 backdrop-blur-xl p-8 md:p-10 shadow-2xl shadow-primary/10"
-            >
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">
-                  Nama Lengkap
-                </label>
-                <input {...register("name")} className={inputClasses} placeholder="John Doe" />
-                {errors.name && <p className="mt-1.5 text-xs text-destructive">{errors.name.message}</p>}
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">Email</label>
-                  <input type="email" {...register("email")} className={inputClasses} placeholder="john@example.com" />
-                  {errors.email && <p className="mt-1.5 text-xs text-destructive">{errors.email.message}</p>}
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">WhatsApp</label>
-                  <input {...register("whatsapp")} className={inputClasses} placeholder="08123456789" />
-                  {errors.whatsapp && <p className="mt-1.5 text-xs text-destructive">{errors.whatsapp.message}</p>}
-                </div>
-              </div>
-
-               {/* AI READONLY FIELDS */}
-               <div className="p-5 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 mt-6 mb-2">
-                <div className="flex items-center gap-2 mb-4">
-                  <Bot size={16} className="text-primary" />
-                  <span className="text-sm font-medium text-primary">Rekomendasi Paket AI</span>
-                </div>
-                
-                <div className="mb-4">
-                  <label className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Paket Terpilih</label>
-                  <div className="w-full rounded-lg border border-primary/20 bg-background/50 px-4 py-3 text-sm font-medium flex justify-between items-center">
-                    <span>{selectedPackage?.name || "Memuat..."}</span>
-                    <span className="text-primary font-bold">
-                      {selectedPackage ? `Rp ${selectedPackage.price}` : ""}
-                    </span>
-                  </div>
-                  {/* Hidden input to pass value */}
-                  <input type="hidden" {...register("packageType")} />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Detail Kebutuhan (Disusun AI)</label>
-                  <textarea
-                    {...register("details")}
-                    rows={4}
-                    className={`${inputClasses} bg-background/50`}
-                    placeholder="Ceritakan kebutuhan proyek Anda..."
-                  />
-                  {errors.details && <p className="mt-1.5 text-xs text-destructive">{errors.details.message}</p>}
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    *Anda masih dapat mengubah detail ini jika ada yang kurang sesuai.
-                  </p>
-                </div>
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.01, boxShadow: "0 0 25px rgba(180,140,40,0.2)" }}
-                whileTap={{ scale: 0.99 }}
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-gradient-secondary text-accent-foreground font-bold text-sm transition-all disabled:opacity-50 mt-4"
-              >
-                <Send size={15} />
-                Kirim Pesanan
-                <ArrowRight size={15} />
-              </motion.button>
-            </motion.form>
+          <div className="max-w-4xl mx-auto relative z-10">
+            {isReady && <ClientOrderForm isPublic={true} initialData={initialData} initialItems={initialItems} />}
           </div>
         </div>
       </main>
