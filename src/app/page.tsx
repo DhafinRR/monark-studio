@@ -8,6 +8,8 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import ParticleField from "@/components/ParticleField";
 import prisma from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   const projects = await prisma.portfolioProject.findMany({
     orderBy: { created_at: 'desc' },

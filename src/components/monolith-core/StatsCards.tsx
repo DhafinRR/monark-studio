@@ -5,46 +5,68 @@ import {
     Clock
 } from 'lucide-react'
 
-interface Stat {
-    title: string
-    value: string
-    icon: any
-    color: string
-    description: string
-}
+import prisma from '@/lib/prisma'
 
-const stats: Stat[] = [
-    {
-        title: 'Total Order',
-        value: '24',
-        icon: ShoppingBag,
-        color: 'text-blue-600 bg-blue-100',
-        description: 'Semua pesanan masuk'
-    },
-    {
-        title: 'Antrian Aktif',
-        value: '5',
-        icon: Clock,
-        color: 'text-orange-600 bg-orange-100',
-        description: 'Proyek sedang berjalan'
-    },
-    {
-        title: 'Total Omzet',
-        value: 'Rp 45.5M',
-        icon: DollarSign,
-        color: 'text-green-600 bg-green-100',
-        description: 'Pendapatan selesai'
-    },
-    {
-        title: 'Klien Puas',
-        value: '18',
-        icon: Users,
-        color: 'text-purple-600 bg-purple-100',
-        description: 'Testimoni positif'
+export default async function StatsCards() {
+    // Fetch statistics
+    const totalOrder = await prisma.order.count();
+    
+    // Antrian Aktif (Pending, Active, On Progress)
+    const activeCount = await prisma.order.count({
+        where: {
+            status: { in: ['PENDING', 'ACTIVE', 'ON_PROGRESS'] }
+        }
+    });
+
+    // Klien Puas & Omzet (Done)
+    const doneOrders = await prisma.order.findMany({
+        where: { status: 'DONE' },
+        select: { total_price: true }
+    });
+    
+    const satisfiedClients = doneOrders.length;
+    const totalRevenue = doneOrders.reduce((sum, order) => sum + Number(order.total_price || 0), 0);
+    
+    // Format Revenue
+    const formatShortCurrency = (val: number) => {
+        if (val === 0) return 'Rp 0'
+        if (val >= 1_000_000_000) return `Rp ${(val / 1_000_000_000).toFixed(1)}M`
+        if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(1)} Juta`
+        if (val >= 1_000) return `Rp ${(val / 1_000).toFixed(1)}K`
+        return `Rp ${val.toLocaleString('id-ID')}`
     }
-]
 
-export default function StatsCards() {
+    const stats = [
+        {
+            title: 'Total Order',
+            value: totalOrder.toString(),
+            icon: ShoppingBag,
+            color: 'text-blue-600 bg-blue-100',
+            description: 'Semua pesanan masuk'
+        },
+        {
+            title: 'Antrian Aktif',
+            value: activeCount.toString(),
+            icon: Clock,
+            color: 'text-orange-600 bg-orange-100',
+            description: 'Proyek sedang berjalan'
+        },
+        {
+            title: 'Total Omzet',
+            value: formatShortCurrency(totalRevenue),
+            icon: DollarSign,
+            color: 'text-green-600 bg-green-100',
+            description: 'Pendapatan selesai'
+        },
+        {
+            title: 'Klien Puas',
+            value: satisfiedClients.toString(),
+            icon: Users,
+            color: 'text-purple-600 bg-purple-100',
+            description: 'Testimoni positif'
+        }
+    ]
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {stats.map((stat, index) => {

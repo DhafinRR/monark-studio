@@ -1,41 +1,15 @@
 'use client'
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { orderFormSchema, OrderFormData } from "@/lib/validation";
-import { PRICING_PACKAGES } from "@/config/pricing";
-import { addOrder } from "@/lib/store";
-import { Send, CheckCircle, Sparkles, ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import heroBg from "../../../../public/assets/hero-bg.jpg"; // Adjust path if needed
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ParticleField from "@/components/ParticleField";
 import Link from "next/link";
+import ClientOrderForm from "@/components/ClientOrderForm";
 
 export default function ManualOrderPage() {
-  const [submitted, setSubmitted] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<OrderFormData>({
-    resolver: zodResolver(orderFormSchema),
-  });
-
-  const onSubmit = (data: OrderFormData) => {
-    addOrder(data as Omit<import("@/types").Order, "id" | "status" | "createdAt">);
-    setSubmitted(true);
-    reset();
-    setTimeout(() => setSubmitted(false), 4000);
-  };
-
-  const inputClasses =
-    "w-full rounded-xl border border-border bg-background/60 backdrop-blur-sm px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/40 transition-all";
-
   return (
     <div className="min-h-screen bg-background relative flex flex-col">
       <ParticleField />
@@ -49,7 +23,7 @@ export default function ManualOrderPage() {
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto mb-10">
             <Link 
               href="/#order" 
               className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
@@ -58,7 +32,7 @@ export default function ManualOrderPage() {
               Kembali
             </Link>
 
-            <div className="text-center mb-10">
+            <div className="text-center">
               <motion.h1
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -75,84 +49,10 @@ export default function ManualOrderPage() {
                 Silakan isi detail proyek Anda di bawah ini
               </motion.p>
             </div>
+          </div>
 
-            {submitted && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                className="flex items-center gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20 text-primary mb-8"
-              >
-                <CheckCircle size={20} />
-                <span className="text-sm font-medium">
-                  Pesanan berhasil dikirim! Kami akan segera menghubungi Anda.
-                </span>
-              </motion.div>
-            )}
-
-            <motion.form
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              onSubmit={handleSubmit(onSubmit)}
-              className="space-y-5 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-xl p-8 md:p-10 shadow-2xl shadow-primary/5"
-            >
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">
-                  Nama Lengkap
-                </label>
-                <input {...register("name")} className={inputClasses} placeholder="John Doe" />
-                {errors.name && <p className="mt-1.5 text-xs text-destructive">{errors.name.message}</p>}
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">Email</label>
-                  <input type="email" {...register("email")} className={inputClasses} placeholder="john@example.com" />
-                  {errors.email && <p className="mt-1.5 text-xs text-destructive">{errors.email.message}</p>}
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">WhatsApp</label>
-                  <input {...register("whatsapp")} className={inputClasses} placeholder="08123456789" />
-                  {errors.whatsapp && <p className="mt-1.5 text-xs text-destructive">{errors.whatsapp.message}</p>}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">Pilih Paket</label>
-                <select {...register("packageType")} className={inputClasses}>
-                  <option value="">— Pilih Paket —</option>
-                  {PRICING_PACKAGES.map((pkg) => (
-                    <option key={pkg.id} value={pkg.id}>
-                      {pkg.name} — Rp {pkg.price}
-                    </option>
-                  ))}
-                </select>
-                {errors.packageType && <p className="mt-1.5 text-xs text-destructive">{errors.packageType.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">Detail Kebutuhan</label>
-                <textarea
-                  {...register("details")}
-                  rows={4}
-                  className={`${inputClasses} resize-none`}
-                  placeholder="Ceritakan kebutuhan proyek Anda..."
-                />
-                {errors.details && <p className="mt-1.5 text-xs text-destructive">{errors.details.message}</p>}
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.01, boxShadow: "0 0 25px rgba(180,140,40,0.2)" }}
-                whileTap={{ scale: 0.99 }}
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-gradient-secondary text-accent-foreground font-bold text-sm transition-all disabled:opacity-50"
-              >
-                <Send size={15} />
-                Kirim Pesanan
-                <ArrowRight size={15} />
-              </motion.button>
-            </motion.form>
+          <div className="max-w-4xl mx-auto bg-transparent relative z-10">
+             <ClientOrderForm isPublic={true} />
           </div>
         </div>
       </main>

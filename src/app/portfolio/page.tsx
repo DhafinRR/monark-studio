@@ -7,6 +7,8 @@ import { ShimmerButton } from '@/components/ui/shimmer-button'
 import PortfolioContent from '@/components/PortfolioContent'
 import prisma from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PortfolioPage() {
   const projects = await prisma.portfolioProject.findMany({
     orderBy: { created_at: 'desc' },

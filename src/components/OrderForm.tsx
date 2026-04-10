@@ -20,9 +20,6 @@ export default function OrderForm() {
   const handleAiSubmit = async () => {
     if (!aiPrompt.trim()) return;
 
-    // Buka tab baru SECARA SINKRONUS langsung saat diklik (bypass pop-up blocker browser)
-    const newTab = window.open("about:blank", "_blank");
-
     setIsAiLoading(true);
     try {
       const res = await fetch("/api/ai/parse-order", {
@@ -45,16 +42,8 @@ export default function OrderForm() {
       // Pakai localStorage supaya datanya dibaca dengan aman di tab baru
       localStorage.setItem("ai_order_data", JSON.stringify(data));
       
-      // Navigasikan tab kosong tadi ke halaman form
-      if (newTab) {
-        newTab.location.href = "/order/ai";
-      } else {
-        window.open("/order/ai", "_blank");
-      }
+      router.push("/order/ai");
     } catch (error: any) {
-      // Tutup tab kosong tersebut jika terjadi error pada AI
-      if (newTab) newTab.close();
-      
       console.error(error);
       toast.error(error.message || "Terjadi kesalahan saat menghubungi peladen AI.");
     } finally {
