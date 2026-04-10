@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowUpRight, Globe, Smartphone, Palette } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Highlighter } from "./magicui/text-highlighter";
+import { MorphingText } from "./magicui/morphing-text";
 
 /* ─── Typed words ─── */
 const WORDS = ["Website", "Mobile App", "Web App", "E-Commerce"];
@@ -47,7 +48,7 @@ const SERVICES = [
 ];
 
 export default function HeroSection() {
-  const typed = useTypingEffect();
+  const text = ["Website", "Mobile App", "Web App", "E-Commerce"]
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
 
@@ -133,32 +134,13 @@ export default function HeroSection() {
               >
                 Kami Bangun
                 <br />
-                <span style={{ position: "relative", display: "inline-block" }}>
-                  <span style={{
-                    background: "linear-gradient(120deg, #B08020 0%, #D4A330 55%, #8B6510 100%)",
-                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-                  }}>
-                    {typed}
-                  </span>
-                  <motion.span
-                    animate={{ opacity: [0, 1] }}
-                    transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
-                    style={{
-                      display: "inline-block", width: 3, marginLeft: 4,
-                      height: "0.75em", verticalAlign: "middle", borderRadius: 2, background: "#C69B28",
-                    }}
+                <Highlighter action="underline" iterations={5} animationDuration={2000} color="#C69B28" isView={true}>
+                  <MorphingText 
+                    texts={text} 
+                    className="h-[1.2em] md:h-[1.2em] lg:h-[1.2em] mb-4 text-start"
+                    style={{ color: '#C69B28' } as any}
                   />
-                  <motion.span
-                    initial={{ scaleX: 0, originX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ duration: 0.9, delay: 0.9, ease: [0.22, 1, 0.36, 1] }}
-                    style={{
-                      position: "absolute", bottom: -4, left: 0, right: 0, height: 1.5, borderRadius: 2,
-                      background: "linear-gradient(90deg, #C69B28 0%, rgba(198,155,40,0.0) 100%)",
-                    }}
-                  />
-                </span>
-                <br />
+                </Highlighter>
                 <span style={{
                   color: "#6B7280", fontWeight: 400,
                   fontSize: "clamp(2.2rem, 4.5vw, 4.2rem)", letterSpacing: "-0.015em",
