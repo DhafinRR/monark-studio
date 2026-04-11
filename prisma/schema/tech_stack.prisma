@@ -1,9 +1,9 @@
 model TechStack {
-    id        String             @id @default(uuid())
-    name      String             @unique
-    icon_url  String?            // URL icon SVG/PNG
-    color_hex String?            @default("#3b82f6") // Warna untuk pills (hex)
-    projects  PortfolioProject[]
+  id        String             @id @default(uuid())
+  name      String             @unique
+  icon_url  String?
+  color_hex String?            @default("#3b82f6")
+  projects  PortfolioProject[] @relation("PortfolioProjectToTechStack")
 
-    @@map("tech_stack")
+  @@map("tech_stack")
 }

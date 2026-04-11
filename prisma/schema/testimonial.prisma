@@ -1,11 +1,11 @@
 model Testimonial {
-    id         String   @id @default(uuid())
-    name       String
-    role       String
-    content    String
-    rating     Int      @default(5)
-    avatar_url String?
-    created_at DateTime @default(now())
+  id         String   @id @default(uuid())
+  name       String
+  role       String
+  content    String
+  rating     Int      @default(5)
+  avatar_url String?
+  created_at DateTime @default(now())
 
-    @@map("testimonial")
+  @@map("testimonial")
 }

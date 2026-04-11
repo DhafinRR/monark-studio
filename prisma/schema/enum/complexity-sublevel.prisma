@@ -1,4 +1,4 @@
 enum ComplexitySubLevel {
-    MINOR
-    MAJOR
+  MINOR
+  MAJOR
 }

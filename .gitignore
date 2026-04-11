@@ -28,3 +28,6 @@ dist-ssr
 /src/generated/prisma
 .aider*
 .openclaude-profile.json
+
+CLAUDE.md
+pricing-order-business-logic.md

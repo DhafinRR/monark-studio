@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import '@/index.css'
+import { Toaster } from 'sonner'
 
 export const metadata: Metadata = {
     title: 'Monark Studio',
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body suppressHydrationWarning>{children}</body>
+            <body suppressHydrationWarning>
+                {children}
+                <Toaster richColors position="top-center" />
+            </body>
         </html>
     )
 }

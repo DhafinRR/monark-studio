@@ -28,6 +28,7 @@ export async function POST(req: Request) {
       // 2. Buat Order
       return await tx.order.create({
         data: {
+          project_title: body.project_title || null,
           name: body.name,
           whatsapp: body.whatsapp,
           email: body.email,
@@ -38,11 +39,13 @@ export async function POST(req: Request) {
           items: {
             create: body.items.map((item: any) => ({
               type: item.type,
+              classification: item.classification,
               description: item.description,
               price: item.price,
               level: item.level,
               sub_level: item.sub_level,
               reason: item.reason,
+              custom_note: item.custom_note,
               feature_id: item.feature_id
             }))
           }

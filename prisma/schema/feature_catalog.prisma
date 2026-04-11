@@ -1,7 +1,7 @@
 model FeatureCatalog {
   id          String   @id @default(uuid())
-  name        String   
-  category    String   
+  name        String   @unique
+  category    String
   price       Decimal  @db.Decimal(12, 2)
   description String?
   is_active   Boolean  @default(true)

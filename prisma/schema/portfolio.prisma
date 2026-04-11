@@ -1,20 +1,20 @@
 model PortfolioProject {
-    id               String      @id @default(uuid())
-    title            String
-    description      String 
-    full_description String?     @db.Text 
-    type             ProjectType @default(WEB)
-    image_url        String 
-    gallery          String[] 
-    stacks           TechStack[] 
-    features         String[] 
-    client_name      String?
-    project_url      String?
-    role             String?
-    status           String?     @default("Live")
-    start_date       DateTime?
-    end_date         DateTime?
-    created_at       DateTime    @default(now())
+  id               String      @id @default(uuid())
+  title            String
+  description      String
+  full_description String?
+  type             ProjectType @default(WEB)
+  image_url        String
+  gallery          String[]
+  features         String[]
+  client_name      String?
+  project_url      String?
+  created_at       DateTime    @default(now())
+  end_date         DateTime?
+  role             String?
+  start_date       DateTime?
+  status           String?     @default("Live")
+  stacks           TechStack[] @relation("PortfolioProjectToTechStack")
 
-    @@map("portfolio_project")
+  @@map("portfolio_project")
 }

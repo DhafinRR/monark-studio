@@ -13,19 +13,32 @@ export default function OrderForm() {
   const router = useRouter();
   const [aiPrompt, setAiPrompt] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [showPlatformModal, setShowPlatformModal] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<"ANDROID" | "IOS" | "BOTH" | null>(null);
 
   const WA_NUMBER = "6281322639234"; // Added 62 for international format
   const WA_LINK = `https://wa.me/${WA_NUMBER}?text=Halo%20tim%20Monark%20Studio,%20saya%20ingin%20berkonsultasi%20tentang%20pembuatan%20proyek%20digital.`;
 
-  const handleAiSubmit = async () => {
+  const handleAiSubmit = async (platformOverride?: string) => {
     if (!aiPrompt.trim()) return;
+
+    // Deteksi kata kunci mobile jika belum memilih platform
+    const isMobileKeyword = /mobile|aplikasi|android|ios|iphone|seluler/i.test(aiPrompt);
+    if (isMobileKeyword && !selectedPlatform && !platformOverride) {
+      setShowPlatformModal(true);
+      return;
+    }
 
     setIsAiLoading(true);
     try {
-      const res = await fetch("/api/ai/parse-order", {
+      const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: aiPrompt }),
+        body: JSON.stringify({
+          story: aiPrompt,
+          action: "PARSE_ORDER",
+          platform: platformOverride || selectedPlatform
+        }),
       });
 
       let data;
@@ -38,17 +51,28 @@ export default function OrderForm() {
       if (!res.ok) {
         throw new Error(data.details || data.error || "Gagal menganalisis. Pastikan API key sudah benar.");
       }
-      
-      // Pakai localStorage supaya datanya dibaca dengan aman di tab baru
+
+      // Show fallback notice if applicable
+      if (data.is_fallback || data.fallback_note) {
+        toast.warning(data.fallback_note || "Layanan AI sedang sibuk. Menampilkan estimasi dasar.", {
+          duration: 5000,
+        });
+      }
+
       localStorage.setItem("ai_order_data", JSON.stringify(data));
-      
       router.push("/order/ai");
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || "Terjadi kesalahan saat menghubungi peladen AI.");
     } finally {
       setIsAiLoading(false);
+      setShowPlatformModal(false);
     }
+  };
+
+  const handleSelectPlatform = (platform: "ANDROID" | "IOS" | "BOTH") => {
+    setSelectedPlatform(platform);
+    handleAiSubmit(platform);
   };
 
   return (
@@ -146,7 +170,7 @@ export default function OrderForm() {
                   className="w-full text-sm bg-background/80 border border-primary/20 rounded-xl p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 resize-none mb-4"
                 />
                 <button
-                  onClick={handleAiSubmit}
+                  onClick={() => handleAiSubmit()}
                   disabled={isAiLoading || !aiPrompt.trim()}
                   className="w-full mt-auto flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -194,6 +218,72 @@ export default function OrderForm() {
           </div>
         </div>
       </div>
+      {/* Platform Selection Modal */}
+      {showPlatformModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+            onClick={() => setShowPlatformModal(false)}
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative w-full max-w-lg bg-card border border-border/60 shadow-2xl rounded-3xl p-8"
+          >
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-6">
+                <Sparkles size={32} />
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Pilih Platform Aplikasi</h3>
+              <p className="text-muted-foreground text-sm">
+                Kami mendeteksi kebutuhan aplikasi mobile. Mana yang Anda butuhkan?
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <button 
+                onClick={() => handleSelectPlatform("ANDROID")}
+                className="flex items-center justify-between p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
+              >
+                <div>
+                  <div className="font-bold text-lg">Android</div>
+                  <div className="text-xs text-muted-foreground">Aplikasi untuk Play Store</div>
+                </div>
+                <ArrowRight size={20} className="text-primary group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button 
+                onClick={() => handleSelectPlatform("IOS")}
+                className="flex items-center justify-between p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
+              >
+                <div>
+                  <div className="font-bold text-lg">iOS</div>
+                  <div className="text-xs text-muted-foreground">Aplikasi untuk App Store</div>
+                </div>
+                <ArrowRight size={20} className="text-primary group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button 
+                onClick={() => handleSelectPlatform("BOTH")}
+                className="flex items-center justify-between p-4 rounded-xl border-2 border-primary/50 bg-primary/5 hover:bg-primary/10 transition-all text-left group"
+              >
+                <div>
+                  <div className="font-bold text-lg text-primary">Keduanya (Android & iOS)</div>
+                  <div className="text-xs text-primary/70">Dua platform sekaligus dengan harga khusus</div>
+                </div>
+                <Sparkles size={20} className="text-primary group-hover:scale-110 transition-transform" />
+              </button>
+            </div>
+
+            <button 
+              onClick={() => setShowPlatformModal(false)}
+              className="mt-6 w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Batal
+            </button>
+          </motion.div>
+        </div>
+      )}
     </section>
   );
 }

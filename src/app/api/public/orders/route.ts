@@ -12,21 +12,24 @@ export async function POST(req: Request) {
       // 2. Buat Order
       return await tx.order.create({
         data: {
+          project_title: body.project_title || null,
           name: body.name,
           whatsapp: body.whatsapp,
           email: body.email,
           package_type: body.package_type || 'Custom Services',
           details: body.details,
-          status: 'DRAFT', // Or 'NEW' if it should distinguish public orders
+          status: 'DRAFT',
           total_price: totalPrice,
           items: {
             create: body.items.map((item: any) => ({
               type: item.type,
+              classification: item.classification,
               description: item.description,
               price: item.price,
               level: item.level,
               sub_level: item.sub_level,
               reason: item.reason,
+              custom_note: item.custom_note,
               feature_id: item.feature_id
             }))
           }

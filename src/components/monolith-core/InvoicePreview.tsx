@@ -13,6 +13,8 @@ interface InvoicePreviewProps {
     description: string
     price: number
     type: string
+    classification?: string
+    custom_note?: string
     level?: string
     sub_level?: string
   }>
@@ -121,6 +123,11 @@ export default function InvoicePreview({ client, items, total, status }: Invoice
               </div>
               <div className="col-span-8 space-y-1">
                 <p className="text-sm font-medium text-gray-900 print:text-xs">{item.description}</p>
+                {item.custom_note && (
+                  <p className="text-[10px] text-gray-500 italic print:text-[8px] leading-relaxed">
+                    Note: {item.custom_note}
+                  </p>
+                )}
                 {item.level && (
                   <div className="flex gap-2 items-center opacity-70">
                     <span className="inline-flex px-1.5 py-0.5 bg-gray-100 text-[10px] text-gray-600 font-bold rounded print:text-[8px]">
@@ -133,7 +140,9 @@ export default function InvoicePreview({ client, items, total, status }: Invoice
                 )}
               </div>
               <div className="col-span-3 text-sm font-bold text-gray-900 text-right print:text-xs italic">
-                {item.price > 0 ? `Rp ${Number(item.price).toLocaleString('id-ID')}` : '–'}
+                {item.price > 0 
+                  ? `Rp ${Number(item.price).toLocaleString('id-ID')}` 
+                  : item.classification === 'STANDARD' ? 'INCLUDED' : '–'}
               </div>
             </div>
           ))}

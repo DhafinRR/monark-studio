@@ -1,4 +1,4 @@
 enum ItemCategory {
-    FEATURE
-    TASK
+  FEATURE
+  TASK
 }

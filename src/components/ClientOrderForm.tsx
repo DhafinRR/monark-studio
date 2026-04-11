@@ -2,18 +2,20 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { 
-  Plus, 
-  Trash2, 
-  ArrowLeft, 
-  Sparkles, 
-  Loader2, 
-  Save, 
+import {
+  Plus,
+  Trash2,
+  ArrowLeft,
+  Sparkles,
+  Loader2,
+  Save,
   ShoppingBag,
   User,
   Eye,
   X,
-  CheckCircle
+  CheckCircle,
+  Package,
+  Layers
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -27,19 +29,28 @@ interface Feature {
   price: string
 }
 
+interface StandardItem {
+  id: string
+  description: string
+  custom_note?: string
+}
+
 interface OrderItem {
   id: string
   type: 'CATALOG' | 'CUSTOM'
+  classification: 'STANDARD' | 'ADDON'
   description: string
   price: number
   level?: string
   sub_level?: string
   feature_id?: string
   reason?: string
+  custom_note?: string
   isAnalyzing?: boolean
 }
 
 interface ClientData {
+  project_title: string
   name: string
   whatsapp: string
   email: string
@@ -47,77 +58,139 @@ interface ClientData {
   details: string
 }
 
+interface DBPackage {
+  id: string
+  name: string
+  floor_price: string
+  max_slots: number
+  benefits: string[]
+  default_features: string[]
+  is_popular: boolean
+}
+
 interface ClientOrderFormProps {
   isPublic?: boolean
   initialData?: Partial<ClientData>
-  initialItems?: OrderItem[]
+  initialStandardItems?: { description: string }[]
+  initialAddonItems?: OrderItem[]
+  initialBenefits?: string[]
 }
 
-export default function ClientOrderForm({ isPublic = false, initialData, initialItems }: ClientOrderFormProps) {
+export default function ClientOrderForm({ isPublic = false, initialData, initialStandardItems, initialAddonItems, initialBenefits }: ClientOrderFormProps) {
   const router = useRouter()
   const [catalog, setCatalog] = useState<Feature[]>([])
   const [complexityPrices, setComplexityPrices] = useState<any[]>([])
   const [client, setClient] = useState<ClientData>({
+    project_title: initialData?.project_title || '',
     name: initialData?.name || '',
     whatsapp: initialData?.whatsapp || '',
     email: initialData?.email || '',
     package_type: initialData?.package_type || (isPublic ? '' : 'Custom Project'),
     details: initialData?.details || ''
   })
-  const [items, setItems] = useState<OrderItem[]>(
-    initialItems && initialItems.length > 0 
-      ? initialItems 
-      : [{ id: crypto.randomUUID(), type: 'CATALOG', description: '', price: 0 }]
-  )
+
+  const [standardItems, setStandardItems] = useState<StandardItem[]>([])
+  const [addonItems, setAddonItems] = useState<OrderItem[]>([])
+  const [hasAppliedInitial, setHasAppliedInitial] = useState(false)
+
   const [loading, setLoading] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [dbPackages, setDbPackages] = useState<DBPackage[]>([])
+  const [benefits, setBenefits] = useState<string[]>(initialBenefits || [])
 
-  // API base path differs if it's public vs admin
   const apiPath = isPublic ? '/api/public' : '/api/monolith-core';
 
-  // Fetch References
+  // Fetch catalog, complexity prices, and packages
   useEffect(() => {
     fetch(`${apiPath}/features`).then(res => res.json()).then(data => setCatalog(Array.isArray(data) ? data : []))
     fetch(`${apiPath}/complexity-price`).then(res => res.json()).then(data => setComplexityPrices(Array.isArray(data) ? data : []))
+    fetch('/api/public/pricing-packages').then(res => res.json()).then(data => {
+      if (Array.isArray(data)) setDbPackages(data)
+    })
   }, [apiPath])
 
-  // Debounce for AI Analysis
+  // Apply initial AI data once when dbPackages are loaded
   useEffect(() => {
-    if (isPublic) return;
+    if (hasAppliedInitial || dbPackages.length === 0 || !client.package_type) return
+    setHasAppliedInitial(true)
 
+    const selectedPkg = dbPackages.find(p => p.id === client.package_type)
+    if (!selectedPkg) return
+
+    setBenefits(selectedPkg.benefits || [])
+    const maxSlots = selectedPkg.max_slots
+
+    // Standard items: use AI data if available, else default features
+    if (initialStandardItems && initialStandardItems.length > 0) {
+      setStandardItems(Array.from({ length: maxSlots }, (_, i) => ({
+        id: crypto.randomUUID(),
+        description: initialStandardItems[i]?.description || ''
+      })))
+    } else {
+      setStandardItems(Array.from({ length: maxSlots }, (_, i) => ({
+        id: crypto.randomUUID(),
+        description: selectedPkg.default_features[i] || ''
+      })))
+    }
+
+    // Addon items: use AI data if available
+    if (initialAddonItems && initialAddonItems.length > 0) {
+      console.log("Applying initial addon items:", initialAddonItems)
+      setAddonItems(initialAddonItems)
+    }
+  }, [dbPackages, client.package_type, hasAppliedInitial])
+
+  // When user manually changes package (after initial load), reset items
+  const [prevPackageType, setPrevPackageType] = useState(client.package_type)
+  useEffect(() => {
+    if (client.package_type === prevPackageType) return
+    setPrevPackageType(client.package_type)
+
+    // Skip if initial data hasn't been applied yet
+    if (!hasAppliedInitial || dbPackages.length === 0) return
+
+    const selectedPkg = dbPackages.find(p => p.id === client.package_type)
+    if (!selectedPkg) return
+
+    setBenefits(selectedPkg.benefits || [])
+    const maxSlots = selectedPkg.max_slots
+    setStandardItems(Array.from({ length: maxSlots }, (_, i) => ({
+      id: crypto.randomUUID(),
+      description: selectedPkg.default_features[i] || ''
+    })))
+    setAddonItems([])
+  }, [client.package_type, dbPackages, hasAppliedInitial, prevPackageType]);
+
+  // AI auto-analysis for CUSTOM addon items
+  useEffect(() => {
     const timers: NodeJS.Timeout[] = []
-    
-    items.forEach((item, index) => {
-      if (item.type === 'CUSTOM' && item.description.length > 5 && !item.level && !item.isAnalyzing) {
+    addonItems.forEach((item, index) => {
+      if (item.type === 'CUSTOM' && item.description.length > 5 && !item.level && !item.isAnalyzing && !item.reason) {
         const timer = setTimeout(() => {
-          analyzeItem(index)
+          analyzeAddonItem(index)
         }, 3000)
         timers.push(timer)
       }
     })
-
     return () => timers.forEach(clearTimeout)
-  }, [items, isPublic])
+  }, [addonItems])
 
-  const analyzeItem = async (index: number) => {
-    const item = items[index]
+  const analyzeAddonItem = async (index: number) => {
+    const item = addonItems[index]
     if (!item.description) return
-
-    updateItem(index, { isAnalyzing: true })
-
+    updateAddonItem(index, { isAnalyzing: true })
     try {
-      const res = await fetch('/api/ai/analyze-item', {
+      const res = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: item.description })
+        body: JSON.stringify({ description: item.description, action: 'ANALYZE_ITEM' })
       })
       const data = await res.json()
-      
       if (data.level) {
         const priceObj = complexityPrices.find(p => p.level === data.level && p.sub_level === data.sub_level)
-        updateItem(index, {
+        updateAddonItem(index, {
           level: data.level,
           sub_level: data.sub_level,
           price: priceObj ? Number(priceObj.price) : Number(data.price),
@@ -126,39 +199,36 @@ export default function ClientOrderForm({ isPublic = false, initialData, initial
         })
       }
     } catch (error) {
-      updateItem(index, { isAnalyzing: false })
+      updateAddonItem(index, { isAnalyzing: false })
     }
   }
 
-  const addItem = () => {
-    setItems([...items, { id: crypto.randomUUID(), type: 'CATALOG', description: '', price: 0 }])
-  }
-
-  const removeItem = (id: string) => {
-    setItems(items.filter(i => i.id !== id))
-  }
-
-  const updateItem = (index: number, updates: Partial<OrderItem>) => {
-    const newItems = [...items]
+  // Standard item helpers
+  const updateStandardItem = (index: number, updates: Partial<StandardItem>) => {
+    const newItems = [...standardItems]
     newItems[index] = { ...newItems[index], ...updates }
-    setItems(newItems)
+    setStandardItems(newItems)
+  }
+
+  // Addon item helpers
+  const addAddonItem = () => {
+    setAddonItems([...addonItems, { id: crypto.randomUUID(), type: 'CUSTOM', classification: 'ADDON', description: '', price: 0 }])
+  }
+
+  const removeAddonItem = (id: string) => {
+    setAddonItems(addonItems.filter(i => i.id !== id))
+  }
+
+  const updateAddonItem = (index: number, updates: Partial<OrderItem>) => {
+    const newItems = [...addonItems]
+    newItems[index] = { ...newItems[index], ...updates }
+    setAddonItems(newItems)
   }
 
   const handleCatalogSelect = (index: number, featureId: string) => {
-    const staticPkg = PRICING_PACKAGES.find(p => p.id === featureId)
-    if (staticPkg) {
-      const numericPrice = staticPkg.price.includes('Juta') ? parseFloat(staticPkg.price) * 1000000 : 0
-      updateItem(index, {
-        feature_id: staticPkg.id,
-        description: `Paket: ${staticPkg.name}`,
-        price: numericPrice
-      })
-      return
-    }
-
     const feature = catalog.find(f => f.id === featureId)
     if (feature) {
-      updateItem(index, {
+      updateAddonItem(index, {
         feature_id: featureId,
         description: feature.name,
         price: Number(feature.price)
@@ -166,382 +236,335 @@ export default function ClientOrderForm({ isPublic = false, initialData, initial
     }
   }
 
-  const handleComplexityChange = (index: number, field: 'level' | 'sub_level', value: string) => {
-    const item = items[index]
-    const nextLevel = field === 'level' ? value : (item.level || 'MUDAH')
-    const nextSub = field === 'sub_level' ? value : (item.sub_level || 'MINOR')
-    
-    const priceObj = complexityPrices.find(p => p.level === nextLevel && p.sub_level === nextSub)
-    updateItem(index, {
-      [field]: value,
-      price: priceObj ? Number(priceObj.price) : item.price
-    })
-  }
+  // Pricing
+  const selectedPkg = dbPackages.find(p => p.id === client.package_type)
+  const basePrice = Number(selectedPkg?.floor_price) || 0
+  const addonTotal = addonItems.reduce((sum, item) => sum + item.price, 0)
+  const grandTotal = basePrice + addonTotal
 
-  const totalPrice = items.reduce((sum, item) => sum + item.price, 0)
-
+  // Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setErrorMsg('')
+
+    // Validate client identity
+    const missing: string[] = []
+    if (!client.project_title.trim()) missing.push('Judul Proyek')
+    if (!client.name.trim()) missing.push('Nama')
+    if (!client.whatsapp.trim()) missing.push('WhatsApp')
+    if (!client.email.trim()) missing.push('Email')
+    if (!client.package_type) missing.push('Paket')
+
+    if (missing.length > 0) {
+      toast.error(`Mohon lengkapi data berikut: ${missing.join(', ')}`)
+      return
+    }
+
+    setLoading(true)
+
+    // Combine standard + addon items for submission
+    const allItems: OrderItem[] = [
+      // Standard items (price=0, included in base)
+      ...standardItems.filter(s => s.description.trim()).map(s => ({
+        id: s.id,
+        type: 'CATALOG' as const,
+        classification: 'STANDARD' as const,
+        description: s.description,
+        price: 0,
+        custom_note: s.custom_note || ''
+      })),
+      // Addon items
+      ...addonItems
+    ]
+
     try {
       const res = await fetch(`${apiPath}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...client, items })
+        body: JSON.stringify({ ...client, items: allItems })
       })
       if (res.ok) {
         if (isPublic) {
           setSubmitted(true)
-          if (typeof window !== 'undefined') {
-             window.scrollTo({ top: 0, behavior: 'smooth' })
-          }
+          if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' })
         } else {
-          toast.success('Pesanan baru berhasil dibuat!')
+          toast.success('Pesanan berhasil dibuat!')
           router.push('/monolith-core/orders')
         }
       } else {
-        const errorData = await res.json().catch(() => ({}))
-        setErrorMsg(errorData.error || 'Gagal membuat pesanan. Silakan coba lagi.')
-        toast.error('Gagal membuat pesanan.')
+        const d = await res.json().catch(() => ({}))
+        setErrorMsg(d.error || 'Gagal membuat pesanan.')
       }
     } catch (err) {
-      setErrorMsg('Gagal membuat pesanan. Periksa koneksi internet Anda.')
+      setErrorMsg('Gagal membuat pesanan. Cek koneksi.')
     } finally {
       setLoading(false)
     }
   }
 
+  // For InvoicePreview compatibility
+  const allItemsForPreview: OrderItem[] = [
+    ...standardItems.filter(s => s.description.trim()).map(s => ({
+      id: s.id, type: 'CATALOG' as const, classification: 'STANDARD' as const, description: s.description, price: 0, custom_note: s.custom_note || ''
+    })),
+    ...addonItems
+  ]
+
   return (
-    <div className={`mx-auto space-y-8 animate-in fade-in duration-500 ${isPublic ? 'w-full' : 'max-w-5xl pb-20 p-4 sm:p-6 lg:p-8'}`}>
+    <div className={`mx-auto space-y-8 animate-in fade-in duration-500 ${isPublic ? 'w-full' : 'max-w-5xl pb-20 p-4'}`}>
       {!isPublic && (
         <div className="flex items-center gap-4">
           <Link href="/monolith-core/orders" className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
-            <ArrowLeft className="w-6 h-6 text-gray-600 group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className="w-6 h-6" />
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Buat Pesanan Baru</h1>
-            <p className="text-gray-500 text-sm">Input data klien dan rincian pekerjaan secara manual</p>
-          </div>
+          <h1 className="text-2xl font-bold">Buat Pesanan</h1>
           <div className="flex-1" />
-          <button 
-            type="button"
-            onClick={() => setShowPreview(true)}
-            className="flex items-center px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-all shadow-sm font-bold text-sm"
-          >
-            <Eye className="w-4 h-4 mr-2" />
-            Preview Invoice
+          <button onClick={() => setShowPreview(true)} className="px-4 py-2 border rounded-lg text-sm font-bold bg-white">
+            <Eye className="w-4 h-4 inline mr-2" /> Preview
           </button>
         </div>
       )}
 
       {isPublic && submitted && (
-        <motion.div
-          initial={{ opacity: 0, y: -10, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          className="flex items-center gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20 text-primary mb-8"
-        >
-          <CheckCircle size={20} />
-          <span className="text-sm font-medium">
-            Penawaran berhasil dikirim! Tim kami akan segera menghubungi Anda melalui WhatsApp.
-          </span>
-        </motion.div>
+        <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 text-primary">
+          <CheckCircle className="inline mr-2" /> Penawaran terkirim!
+        </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Client Info Section */}
-        <section className={`p-6 rounded-2xl border shadow-sm space-y-6 ${isPublic ? 'bg-card/60 backdrop-blur-xl border-border/60 shadow-primary/5' : 'bg-white border-gray-200'}`}>
-          <div className={`flex items-center gap-2 border-b pb-4 ${isPublic ? 'border-primary/10' : 'border-gray-50'}`}>
-            <User className={`w-5 h-5 ${isPublic ? 'text-primary' : 'text-blue-600'}`} />
-            <h2 className={`font-bold uppercase tracking-widest text-sm ${isPublic ? 'text-foreground' : 'text-gray-900'}`}>Informasi Klien</h2>
+        {/* ── Section: Informasi Klien ── */}
+        <section className="p-6 rounded-2xl border shadow-sm space-y-6 bg-white">
+          <div className="flex items-center gap-2 border-b pb-4">
+            <User className="w-5 h-5 text-blue-600" />
+            <h2 className="font-bold uppercase tracking-widest text-sm">Informasi Klien</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className={`text-xs font-bold uppercase tracking-wider ${isPublic ? 'text-muted-foreground' : 'text-gray-500'}`}>Nama Lengkap *</label>
-              <input 
-                required
-                className={`w-full px-4 py-3 rounded-xl outline-none focus:ring-2 font-medium ${isPublic ? 'bg-background/60 border border-border text-foreground placeholder:text-muted-foreground/60 focus:ring-primary/30 focus:border-primary/40' : 'bg-gray-50 border border-gray-100 focus:ring-blue-500'}`}
-                placeholder="Contoh: Budi Santoso"
-                value={client.name}
-                onChange={e => setClient({...client, name: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className={`text-xs font-bold uppercase tracking-wider ${isPublic ? 'text-muted-foreground' : 'text-gray-500'}`}>Nomor WhatsApp *</label>
-              <input 
-                required
-                className={`w-full px-4 py-3 rounded-xl outline-none focus:ring-2 font-medium ${isPublic ? 'bg-background/60 border border-border text-foreground placeholder:text-muted-foreground/60 focus:ring-primary/30 focus:border-primary/40' : 'bg-gray-50 border border-gray-100 focus:ring-blue-500'}`}
-                placeholder="628123456789"
-                value={client.whatsapp}
-                onChange={e => setClient({...client, whatsapp: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className={`text-xs font-bold uppercase tracking-wider ${isPublic ? 'text-muted-foreground' : 'text-gray-500'}`}>Email (Opsional)</label>
-              <input 
-                type="email"
-                className={`w-full px-4 py-3 rounded-xl outline-none focus:ring-2 font-medium ${isPublic ? 'bg-background/60 border border-border text-foreground placeholder:text-muted-foreground/60 focus:ring-primary/30 focus:border-primary/40' : 'bg-gray-50 border border-gray-100 focus:ring-blue-500'}`}
-                placeholder="budi@example.com"
-                value={client.email}
-                onChange={e => setClient({...client, email: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className={`text-xs font-bold uppercase tracking-wider ${isPublic ? 'text-muted-foreground' : 'text-gray-500'}`}>Judul Proyek</label>
-              <input 
-                className={`w-full px-4 py-3 rounded-xl outline-none focus:ring-2 font-medium ${isPublic ? 'bg-background/60 border border-border text-foreground placeholder:text-muted-foreground/60 focus:ring-primary/30 focus:border-primary/40' : 'bg-gray-50 border border-gray-100 focus:ring-blue-500'}`}
-                placeholder="Contoh: Landing Page Startup X"
-                value={client.package_type}
-                onChange={e => setClient({...client, package_type: e.target.value})}
-              />
+          <div className="space-y-6">
+            <input className="w-full px-4 py-3 rounded-xl border" placeholder="Judul Proyek, misal: Website Portfolio Dafin" value={client.project_title} onChange={e => setClient({...client, project_title: e.target.value})} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <input className="w-full px-4 py-3 rounded-xl border" placeholder="Nama" value={client.name} onChange={e => setClient({...client, name: e.target.value})} />
+              <input className="w-full px-4 py-3 rounded-xl border" placeholder="WhatsApp" value={client.whatsapp} onChange={e => setClient({...client, whatsapp: e.target.value})} />
+              <input className="w-full px-4 py-3 rounded-xl border" placeholder="Email" value={client.email} onChange={e => setClient({...client, email: e.target.value})} />
+              <select className="w-full px-4 py-3 rounded-xl border" value={client.package_type} onChange={e => setClient({...client, package_type: e.target.value})}>
+              <option value="">-- Pilih Paket --</option>
+              {dbPackages.length > 0
+                ? dbPackages.map(pkg => <option key={pkg.id} value={pkg.id}>{pkg.name}</option>)
+                : PRICING_PACKAGES.map(pkg => <option key={pkg.id} value={pkg.id}>{pkg.name}</option>)
+              }
+            </select>
             </div>
           </div>
-          
-          <div className="space-y-2 pt-2">
-            <label className={`text-xs font-bold uppercase tracking-wider ${isPublic ? 'text-muted-foreground' : 'text-gray-500'}`}>Deskripsi / Catatan Proyek (Opsional)</label>
-            <textarea 
-              rows={3}
-              className={`w-full px-4 py-3 rounded-xl outline-none focus:ring-2 text-sm italic ${isPublic ? 'bg-background/60 border border-border text-foreground placeholder:text-muted-foreground/60 focus:ring-primary/30 focus:border-primary/40' : 'bg-gray-50 border border-gray-100 focus:ring-blue-500'}`}
-              placeholder="Contoh: Klien ingin nuansa warna biru monark, deadline akhir bulan..."
-              value={client.details || ''}
-              onChange={e => setClient({...client, details: e.target.value})}
-            />
-          </div>
+          {client.details && (
+            <div className="pt-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Catatan AI</label>
+              <p className="text-sm text-muted-foreground mt-1 bg-gray-50 p-3 rounded-lg">{client.details}</p>
+            </div>
+          )}
         </section>
 
-        {/* Order Items Section */}
-        <section className={`p-6 rounded-2xl border shadow-sm space-y-6 ${isPublic ? 'bg-card/60 backdrop-blur-xl border-border/60 shadow-primary/5' : 'bg-white border-gray-200'}`}>
-          <div className={`flex items-center justify-between border-b pb-4 ${isPublic ? 'border-primary/10' : 'border-gray-50'}`}>
-            <div className="flex items-center gap-2">
-              <ShoppingBag className={`w-5 h-5 ${isPublic ? 'text-primary' : 'text-blue-600'}`} />
-              <h2 className={`font-bold uppercase tracking-widest text-sm ${isPublic ? 'text-foreground' : 'text-gray-900'}`}>Rincian Pekerjaan</h2>
+        {/* ── Section: Benefits (read-only) ── */}
+        {benefits.length > 0 && (
+          <section className="p-6 rounded-2xl border border-primary/20 bg-primary/5 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 border-b border-primary/10 pb-4">
+              <CheckCircle className="w-5 h-5 text-primary" />
+              <h2 className="font-bold uppercase tracking-widest text-sm text-primary">Benefit Paket</h2>
+              <span className="ml-auto text-[10px] text-muted-foreground italic">Otomatis termasuk</span>
             </div>
-            {!isPublic && (
-              <button 
-                type="button"
-                onClick={addItem}
-                className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center transition-all"
-              >
-                <Plus className="w-4 h-4 mr-2" /> Tambah Item
-              </button>
-            )}
-          </div>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {benefits.map((benefit, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm text-foreground">
+                  <CheckCircle className="w-4 h-4 text-primary shrink-0" />
+                  {benefit}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-          {/* Static Pricing Packages List */}
-          <div className={`p-5 rounded-2xl border ${isPublic ? 'bg-primary/5 border-primary/20' : 'bg-blue-50/50 border-blue-100'}`}>
-            <h3 className={`text-[11px] font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isPublic ? 'text-primary' : 'text-blue-700'}`}>
-              <Sparkles className="w-4 h-4" /> Referensi Harga Paket / Layanan
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {PRICING_PACKAGES.map(pkg => (
-                <div key={pkg.id} className={`flex flex-col justify-center p-3 rounded-xl border transition-all hover:-translate-y-0.5 ${isPublic ? 'bg-background/80 border-primary/10 hover:border-primary/40 hover:shadow-[0_0_15px_rgba(var(--primary),0.2)]' : 'bg-white border-blue-100 hover:border-blue-300 hover:shadow-md'}`}>
-                  <span className={`text-xs font-bold mb-1 ${isPublic ? 'text-foreground' : 'text-gray-900'}`}>{pkg.name}</span>
-                  <span className={`text-[11px] font-black tracking-widest ${isPublic ? 'text-primary/80' : 'text-blue-600'}`}>Mulai dari Rp {pkg.price}</span>
+        {/* ── Section: Fitur Standar ── */}
+        {standardItems.length > 0 && (
+          <section className="p-6 rounded-2xl border bg-white shadow-sm space-y-6">
+            <div className="flex items-center justify-between border-b pb-4">
+              <div className="flex items-center gap-2">
+                <Package className="w-5 h-5 text-blue-600" />
+                <h2 className="font-bold text-sm uppercase tracking-widest">Fitur Standar</h2>
+              </div>
+              <span className="text-xs text-muted-foreground font-mono">
+                {standardItems.filter(s => s.description.trim()).length}/{standardItems.length} slot
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {standardItems.map((item, index) => (
+                <div key={item.id} className="space-y-1.5">
+                  <div className="flex items-center gap-3">
+                    <span className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">
+                      {index + 1}
+                    </span>
+                    <input
+                      className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                      placeholder={`Fitur standar ${index + 1}...`}
+                      value={item.description}
+                      onChange={e => updateStandardItem(index, { description: e.target.value })}
+                    />
+                    <span className="text-[10px] text-primary font-bold shrink-0">INCLUDED</span>
+                  </div>
+                  <div className="ml-10">
+                    <input
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                      placeholder="Catatan untuk fitur ini, misal: ingin warna biru dominan (opsional)"
+                      value={item.custom_note || ''}
+                      onChange={e => updateStandardItem(index, { custom_note: e.target.value })}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-dashed">
+              <span className="text-sm font-semibold text-muted-foreground">Base Price ({selectedPkg?.name || 'Paket'})</span>
+              <span className="text-lg font-bold">Rp {basePrice.toLocaleString('id-ID')}</span>
+            </div>
+          </section>
+        )}
+
+        {/* ── Section: Fitur Addon ── */}
+        <section className="p-6 rounded-2xl border bg-white shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b pb-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-500" />
+              <h2 className="font-bold text-sm uppercase tracking-widest">Fitur Tambahan (Addon)</h2>
+            </div>
+            <button type="button" onClick={addAddonItem} className="inline-flex items-center gap-1 text-blue-600 text-xs font-bold hover:text-blue-700 transition-colors">
+              <Plus className="w-4 h-4" /> Tambah
+            </button>
           </div>
 
-          {/* Catalog Price List */}
-          {catalog.length > 0 && (
-            <div className={`p-5 rounded-2xl border ${isPublic ? 'bg-primary/5 border-primary/20' : 'bg-blue-50/50 border-blue-100'}`}>
-              <h3 className={`text-[11px] font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isPublic ? 'text-primary' : 'text-blue-700'}`}>
-                <Sparkles className="w-4 h-4" /> Daftar Harga Fitur Tambahan (Katalog)
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {catalog.map(f => (
-                  <div key={f.id} className={`flex flex-col justify-center p-3 rounded-xl border transition-all hover:-translate-y-0.5 ${isPublic ? 'bg-background/80 border-primary/10 hover:border-primary/40 hover:shadow-[0_0_15px_rgba(var(--primary),0.2)]' : 'bg-white border-blue-100 hover:border-blue-300 hover:shadow-md'}`}>
-                    <span className={`text-xs font-bold mb-1 ${isPublic ? 'text-foreground' : 'text-gray-900'}`}>{f.name}</span>
-                    <span className={`text-[11px] font-black tracking-widest ${isPublic ? 'text-primary/80' : 'text-blue-600'}`}>Rp {Number(f.price).toLocaleString('id-ID')}</span>
+          {addonItems.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Layers className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">Belum ada fitur tambahan.</p>
+              <button type="button" onClick={addAddonItem} className="mt-3 text-blue-600 text-xs font-bold hover:underline">
+                + Tambah fitur addon
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {addonItems.map((item, index) => (
+                <div key={item.id} className="p-4 rounded-xl border border-gray-100 bg-gray-50">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="w-full md:w-32">
+                      <select className="w-full p-2 text-xs font-bold border rounded-lg" value={item.type} onChange={e => updateAddonItem(index, { type: e.target.value as any, description: '', price: 0, feature_id: undefined, level: undefined, sub_level: undefined })}>
+                        <option value="CATALOG">Katalog</option>
+                        <option value="CUSTOM">Custom</option>
+                      </select>
+                    </div>
+
+                    <div className="flex-1">
+                      {item.type === 'CATALOG' ? (
+                        <select className="w-full p-2 border rounded-lg text-sm" value={item.feature_id || ''} onChange={e => handleCatalogSelect(index, e.target.value)}>
+                          <option value="">-- Pilih Fitur --</option>
+                          {catalog.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                        </select>
+                      ) : (
+                        <div className="space-y-2">
+                          <input className="w-full p-2 border rounded-lg text-sm" placeholder="Deskripsi fitur tambahan..." value={item.description} onChange={e => updateAddonItem(index, { description: e.target.value })} />
+                          {item.isAnalyzing && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-blue-500">
+                              <Loader2 className="w-3 h-3 animate-spin" /> Menganalisis...
+                            </span>
+                          )}
+                          {item.level && (
+                            <div className="flex gap-1">
+                              <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{item.level}</span>
+                              {item.sub_level && <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{item.sub_level}</span>}
+                            </div>
+                          )}
+                          {item.reason && (
+                            <p className="text-[10px] text-muted-foreground bg-blue-50 px-2 py-1 rounded">
+                              <Sparkles className="w-3 h-3 inline mr-1 text-amber-500" />
+                              {item.reason}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="w-full md:w-48">
+                      {isPublic ? (
+                        <div className="p-2 bg-white border rounded-lg text-sm font-bold text-right">
+                          Rp {item.price.toLocaleString('id-ID')}
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <span className="absolute left-2 top-2 text-xs text-gray-400">Rp</span>
+                          <input type="number" className="w-full pl-8 p-2 border rounded-lg text-sm font-bold" value={item.price} onChange={e => updateAddonItem(index, { price: Number(e.target.value) })} />
+                        </div>
+                      )}
+                    </div>
+
+                    <button type="button" onClick={() => removeAddonItem(item.id)} className="p-2 text-gray-300 hover:text-red-500 transition-colors shrink-0">
+                      <Trash2 className="w-5 h-5" />
+                    </button>
                   </div>
-                ))}
-              </div>
+                  <div className="mt-2">
+                    <input
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                      placeholder="Catatan untuk fitur ini, misal: harus support login Google (opsional)"
+                      value={item.custom_note || ''}
+                      onChange={e => updateAddonItem(index, { custom_note: e.target.value })}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
-          <div className="space-y-4">
-            {items.map((item, index) => (
-              <div key={item.id} className={`p-4 rounded-xl border space-y-4 ${isPublic ? 'bg-background/50 border-primary/20' : 'bg-gray-50 border-gray-100'}`}>
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="w-full md:w-48">
-                    <label className={`text-[10px] font-black uppercase mb-1 block ${isPublic ? 'text-muted-foreground' : 'text-gray-400'}`}>Tipe</label>
-                    <select 
-                      className={`w-full px-3 py-2 rounded-lg outline-none text-sm font-bold ${isPublic ? 'bg-background border border-border text-foreground' : 'bg-white border border-gray-200 text-gray-900'}`}
-                      value={item.type}
-                      onChange={e => updateItem(index, { type: e.target.value as any, description: '', price: 0, level: undefined })}
-                    >
-                      <option value="CATALOG">Katalog</option>
-                      <option value="CUSTOM">Custom (AI)</option>
-                    </select>
-                  </div>
-
-                  <div className="flex-1">
-                    <label className={`text-[10px] font-black uppercase mb-1 block ${isPublic ? 'text-muted-foreground' : 'text-gray-400'}`}>
-                      {item.type === 'CATALOG' ? 'Pilih Fitur' : 'Deskripsi Fitur'}
-                    </label>
-                    {item.type === 'CATALOG' ? (
-                      <select 
-                        className={`w-full px-3 py-2 rounded-lg outline-none text-sm font-medium ${isPublic ? 'bg-background border border-border text-foreground' : 'bg-white border border-gray-200 text-gray-900'}`}
-                        value={item.feature_id || ''}
-                        onChange={e => handleCatalogSelect(index, e.target.value)}
-                      >
-                        <option value="">-- Pilih dari Katalog --</option>
-                        <optgroup label="Paket Utama">
-                          {PRICING_PACKAGES.map(pkg => {
-                            const numericPrice = pkg.price.includes('Juta') ? parseFloat(pkg.price) * 1000000 : 0
-                            return (
-                              <option key={pkg.id} value={pkg.id}>{pkg.name} (Rp {numericPrice.toLocaleString('id-ID')})</option>
-                            )
-                          })}
-                        </optgroup>
-                        {catalog.length > 0 && (
-                          <optgroup label="Fitur Tambahan (DB)">
-                            {catalog.map(f => (
-                              <option key={f.id} value={f.id}>{f.name} (Rp {Number(f.price).toLocaleString('id-ID')})</option>
-                            ))}
-                          </optgroup>
-                        )}
-                      </select>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="relative">
-                          <input 
-                            className={`w-full px-3 py-2 rounded-lg outline-none text-sm placeholder:italic ${isPublic ? 'bg-background border border-border text-foreground' : 'bg-white border border-gray-200 text-gray-900'}`}
-                            placeholder="Jelaskan kebutuhan fitur klien..."
-                            value={item.description}
-                            onChange={e => updateItem(index, { description: e.target.value, level: undefined })}
-                          />
-                          {item.isAnalyzing && (
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[10px] text-blue-600 font-black bg-white pl-2">
-                               <Loader2 className="w-3 h-3 animate-spin" />
-                               ANALYZING...
-                            </div>
-                          )}
-                        </div>
-                        
-                        {item.reason && !item.isAnalyzing && (
-                          <div className={`flex items-start gap-2 p-2 rounded-lg border ${isPublic ? 'bg-primary/10 border-primary/20' : 'bg-blue-50/50 border-blue-100/50'}`}>
-                             <Sparkles className={`w-3 h-3 mt-0.5 shrink-0 ${isPublic ? 'text-primary' : 'text-blue-500'}`} />
-                             <p className={`text-[10px] italic ${isPublic ? 'text-foreground' : 'text-blue-700'}`}>AI: {item.reason}</p>
-                          </div>
-                        )}
-                        
-                        <div className="flex gap-3">
-                          <div className="flex-1">
-                            {/* Disabled on public side so they just see the level the AI assigned */}
-                            <select 
-                              className={`w-full px-2 py-1.5 rounded-lg outline-none text-[10px] font-black ${isPublic ? 'bg-background/50 border-transparent text-muted-foreground cursor-not-allowed' : 'bg-white border-gray-200 text-gray-700 cursor-pointer'}`}
-                              value={item.level || ''}
-                              onChange={e => handleComplexityChange(index, 'level', e.target.value)}
-                              disabled={isPublic}
-                            >
-                              <option value="" disabled>-- Level --</option>
-                              <option value="MUDAH">MUDAH</option>
-                              <option value="SEDANG">SEDANG</option>
-                              <option value="SULIT">SULIT</option>
-                              <option value="SANGAT_SULIT">SANGAT SULIT</option>
-                            </select>
-                          </div>
-                          <div className="flex-1">
-                            <select 
-                              className={`w-full px-2 py-1.5 rounded-lg outline-none text-[10px] font-black ${isPublic ? 'bg-background/50 border-transparent text-muted-foreground cursor-not-allowed' : 'bg-white border-gray-200 text-gray-700 cursor-pointer'}`}
-                              value={item.sub_level || ''}
-                              onChange={e => handleComplexityChange(index, 'sub_level', e.target.value)}
-                              disabled={isPublic}
-                            >
-                              <option value="" disabled>-- Sub Level --</option>
-                              <option value="MINOR">MINOR</option>
-                              <option value="MAJOR">MAJOR</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="w-full md:w-48">
-                    <label className={`text-[10px] font-black uppercase mb-1 block ${isPublic ? 'text-muted-foreground' : 'text-gray-400'}`}>Harga (IDR)</label>
-                    <div className="relative">
-                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold ${isPublic ? 'text-muted-foreground' : 'text-gray-400'}`}>Rp</span>
-                      <input 
-                        type="number"
-                        readOnly={isPublic}
-                        className={`w-full pl-9 pr-3 py-2 rounded-lg outline-none text-sm font-black ${isPublic ? 'bg-primary/5 border border-primary/20 text-foreground cursor-not-allowed opacity-90' : 'bg-white border border-gray-200 text-gray-900 cursor-text'}`}
-                        value={item.price}
-                        onChange={e => updateItem(index, { price: Number(e.target.value) })}
-                      />
-                    </div>
-                  </div>
-
-                  {!isPublic && (
-                    <div className="flex items-end pb-1">
-                      <button 
-                        type="button"
-                        onClick={() => removeItem(item.id)}
-                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          {addonItems.length > 0 && (
+            <div className="flex items-center justify-between pt-4 border-t border-dashed">
+              <span className="text-sm font-semibold text-muted-foreground">Subtotal Addon ({addonItems.length} item)</span>
+              <span className="text-lg font-bold">Rp {addonTotal.toLocaleString('id-ID')}</span>
+            </div>
+          )}
         </section>
 
-        {/* Footer Summary */}
-        <div className={`rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between shadow-xl ${isPublic ? 'bg-primary/10 border border-primary/20' : 'bg-gray-900'}`}>
-          <div className="text-center md:text-left mb-4 md:mb-0">
-            <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] ${isPublic ? 'text-primary' : 'text-gray-500'}`}>Total Estimasi</h3>
-            <p className={`text-3xl font-black mt-1 italic tracking-tighter ${isPublic ? 'text-foreground' : 'text-white'}`}>
-              Rp {totalPrice.toLocaleString('id-ID')}
-            </p>
+        {/* ── Section: Grand Total ── */}
+        <div className="p-8 rounded-2xl bg-gray-900 text-white space-y-4">
+          <div className="flex justify-between text-sm text-gray-400">
+            <span>Base Price ({selectedPkg?.name || 'Paket'})</span>
+            <span>Rp {basePrice.toLocaleString('id-ID')}</span>
           </div>
-          <div className="flex flex-col items-center md:items-end w-full md:w-auto gap-3">
-            {errorMsg && (
-              <p className="text-red-500 text-sm font-bold text-center md:text-right w-full">{errorMsg}</p>
-            )}
-            <button 
-              disabled={loading || items.some(i => i.price === 0) || submitted}
-              type="submit"
-              className={`w-full md:w-auto px-10 py-4 font-black uppercase tracking-widest text-xs rounded-xl transition-all flex items-center justify-center shadow-lg group ${isPublic ? 'bg-gradient-secondary text-background hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed'}`}
-            >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              ) : submitted ? (
-                <CheckCircle className="w-5 h-5 mr-3" />
-              ) : (
-                <Save className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" />
-              )}
-              {submitted ? 'Berhasil Terkirim!' : isPublic ? 'Kirim Penawaran' : 'Simpan Pesanan'}
+          {addonItems.length > 0 && (
+            <div className="flex justify-between text-sm text-gray-400">
+              <span>Addon ({addonItems.length} item)</span>
+              <span>Rp {addonTotal.toLocaleString('id-ID')}</span>
+            </div>
+          )}
+          <div className="border-t border-gray-700 pt-4 flex justify-between items-center">
+            <div>
+              <h3 className="text-xs uppercase text-gray-400">Estimasi Total</h3>
+              <p className="text-2xl font-bold">Rp {grandTotal.toLocaleString('id-ID')}</p>
+            </div>
+            <button type="submit" disabled={loading || !client.package_type} className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold transition-colors">
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Kirim Penawaran'}
             </button>
           </div>
+          {isPublic && (
+            <div className="mt-2 px-4 py-3 rounded-lg bg-amber-500/15 border border-amber-500/30 text-center">
+              <p className="text-xs text-amber-300 leading-relaxed">
+                Dengan mengirim penawaran, Anda <span className="text-amber-200 font-bold">belum melakukan pemesanan</span>. Tim kami akan menghubungi Anda untuk konsultasi lebih lanjut, dan harga di atas masih dapat dinegosiasikan.
+              </p>
+            </div>
+          )}
+          {errorMsg && <p className="text-red-400 text-sm">{errorMsg}</p>}
         </div>
       </form>
 
-      {/* Invoice Preview Modal */}
-      {(!isPublic && showPreview) && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 lg:p-8 animate-in fade-in duration-300">
-          <div 
-            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
-            onClick={() => setShowPreview(false)}
-          />
-          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl animate-in zoom-in-95 duration-300 custom-scrollbar">
-            <button 
-              onClick={() => setShowPreview(false)}
-              className="absolute right-4 top-4 z-10 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-all active:scale-95"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <div className="p-0">
-              <InvoicePreview 
-                client={client}
-                items={items}
-                total={totalPrice}
-                status="DRAFT"
-              />
-            </div>
+      {showPreview && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowPreview(false)} />
+          <div className="relative bg-white p-6 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
+            <button onClick={() => setShowPreview(false)} className="absolute right-4 top-4"><X className="w-5 h-5" /></button>
+            <InvoicePreview client={client} items={allItemsForPreview} total={grandTotal} status="DRAFT" />
           </div>
         </div>
       )}
