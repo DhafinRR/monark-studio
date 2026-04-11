@@ -1,10 +1,13 @@
 model PricingPackage {
   id               String   @id
   name             String
+  tagline          String?
+  target           String?
+  price_note       String?
   floor_price      Decimal  @db.Decimal(12, 2)
   max_slots        Int
-  benefits         String[] 
-  default_features String[] 
+  benefits         String[]
+  default_features String[]
   is_popular       Boolean  @default(false)
   is_active        Boolean  @default(true)
   created_at       DateTime @default(now())

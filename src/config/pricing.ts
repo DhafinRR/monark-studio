@@ -1,5 +1,7 @@
+import type { PackageType } from '@/types'
+
 export interface PricingPackage {
-  id: string;
+  id: PackageType;
   name: string;
   tagline: string;
   price: string;

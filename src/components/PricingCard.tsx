@@ -1,9 +1,19 @@
 import { motion } from "framer-motion";
 import { Check, Sparkles, Crown } from "lucide-react";
-import { PricingPackage } from "@/types";
+
+interface DisplayPackage {
+  id: string
+  name: string
+  tagline: string
+  target: string
+  priceNote: string
+  price: string
+  highlighted?: boolean
+  features: { text: string }[]
+}
 
 interface PricingCardProps {
-  pkg: PricingPackage;
+  pkg: DisplayPackage;
   index: number;
 }
 

@@ -1,12 +1,59 @@
 "use client"
 
+import { useState, useEffect } from "react";
 import { PRICING_PACKAGES } from "@/config/pricing";
 import { motion } from "framer-motion";
 import PricingCard from "./PricingCard";
 import patternBg from "../../public/assets/pattern-bg.jpg"
 import { Highlighter } from "./magicui/text-highlighter";
 
+interface DBPackage {
+  id: string
+  name: string
+  tagline: string | null
+  target: string | null
+  price_note: string | null
+  floor_price: string
+  max_slots: number
+  benefits: string[]
+  default_features: string[]
+  is_popular: boolean
+}
+
 export default function PricingSection() {
+  const [packages, setPackages] = useState<DBPackage[]>([])
+
+  useEffect(() => {
+    fetch("/api/public/pricing-packages")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) setPackages(data)
+      })
+  }, [])
+
+  // Map DB packages to PricingCard format, fallback to static config
+  const displayPackages = packages.length > 0
+    ? packages.map(pkg => ({
+        id: pkg.id,
+        name: pkg.name,
+        tagline: pkg.tagline || "",
+        target: pkg.target || "",
+        priceNote: pkg.price_note || "Mulai dari",
+        price: Number(pkg.floor_price).toLocaleString("id-ID"),
+        highlighted: pkg.is_popular,
+        features: pkg.benefits.map(b => ({ text: b })),
+      }))
+    : PRICING_PACKAGES.map(pkg => ({
+        id: pkg.id,
+        name: pkg.name,
+        tagline: pkg.tagline,
+        target: pkg.target,
+        priceNote: pkg.priceNote,
+        price: pkg.price,
+        highlighted: pkg.highlighted,
+        features: pkg.features,
+      }))
+
   return (
     <section id="pricing" className="relative py-28 overflow-hidden">
       {/* Background image with heavy overlay */}
@@ -61,7 +108,7 @@ export default function PricingSection() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {PRICING_PACKAGES.map((pkg, i) => (
+          {displayPackages.map((pkg, i) => (
             <PricingCard key={pkg.id} pkg={pkg} index={i} />
           ))}
         </div>
