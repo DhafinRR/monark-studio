@@ -41,7 +41,8 @@ export default function PricingSection() {
         priceNote: pkg.price_note || "Mulai dari",
         price: Number(pkg.floor_price).toLocaleString("id-ID"),
         highlighted: pkg.is_popular,
-        features: pkg.benefits.map(b => ({ text: b })),
+        benefits: pkg.benefits,
+        features: pkg.default_features,
       }))
     : PRICING_PACKAGES.map(pkg => ({
         id: pkg.id,
@@ -51,7 +52,8 @@ export default function PricingSection() {
         priceNote: pkg.priceNote,
         price: pkg.price,
         highlighted: pkg.highlighted,
-        features: pkg.features,
+        benefits: pkg.features.map(f => f.text),
+        features: pkg.defaultFeatures,
       }))
 
   return (

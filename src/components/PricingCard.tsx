@@ -9,7 +9,8 @@ interface DisplayPackage {
   priceNote: string
   price: string
   highlighted?: boolean
-  features: { text: string }[]
+  benefits: string[]
+  features: string[]
 }
 
 interface PricingCardProps {
@@ -86,6 +87,31 @@ export default function PricingCard({ pkg, index }: PricingCardProps) {
           <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent mb-6" />
 
           <ul className="space-y-3 mb-8 flex-1">
+            {pkg.benefits.map((f, i) => (
+              <motion.li
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.05 + i * 0.04 }}
+                className="flex items-start gap-3 text-sm text-secondary-foreground"
+              >
+                <div className={`mt-0.5 shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
+                  pkg.highlighted
+                    ? "bg-gradient-secondary text-accent-foreground"
+                    : "bg-primary/10 text-primary"
+                }`}>
+                  <Check size={11} strokeWidth={3} />
+                </div>
+                {f}
+              </motion.li>
+            ))}
+          </ul>
+          <h3 className="text-xl font-display font-bold text-foreground mb-2">
+            Fitur Standar
+          </h3>
+          <h5 className="text-sm text-muted-foreground mb-6 leading-relaxed flex-grow-0">Fitur dapat di sesuaikan</h5>
+          <ul className="space-y-3 mb-8 flex-1">
             {pkg.features.map((f, i) => (
               <motion.li
                 key={i}
@@ -102,7 +128,7 @@ export default function PricingCard({ pkg, index }: PricingCardProps) {
                 }`}>
                   <Check size={11} strokeWidth={3} />
                 </div>
-                {f.text}
+                {f}
               </motion.li>
             ))}
           </ul>

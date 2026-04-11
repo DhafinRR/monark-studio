@@ -19,6 +19,7 @@ import {
   ShoppingBag,
   Briefcase,
   Cpu,
+  Package,
 } from 'lucide-react'
 
 export default function AdminLayout({
@@ -55,6 +56,7 @@ export default function AdminLayout({
     {
       title: 'Pricing Engine',
       items: [
+        { href: '/monolith-core/price-catalog/packages', label: 'Pricing Packages', icon: Package },
         { href: '/monolith-core/price-catalog/features', label: 'Feature Catalog', icon: FileText },
         { href: '/monolith-core/price-catalog/difficulties', label: 'Difficulty Matrix', icon: BarChart3 },
       ]

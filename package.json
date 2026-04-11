@@ -16,9 +16,6 @@
   "dependencies": {
     "@google-analytics/data": "^5.2.1",
     "@google/generative-ai": "^0.24.1",
-    "@heroui/alert": "^2.2.32",
-    "@heroui/theme": "^2.4.26",
-    "@heroui/toast": "^2.0.22",
     "@hookform/resolvers": "^3.10.0",
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-accordion": "^1.2.11",
