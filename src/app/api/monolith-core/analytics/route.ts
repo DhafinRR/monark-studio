@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { BetaAnalyticsDataClient } from '@google-analytics/data'
+import { adminLimiter, checkRateLimit, getClientIP } from '@/lib/rate-limit'
+import { tooManyRequests, internalError } from '@/lib/api-response'
 
 // Initialize GA4 Data API client
 function getAnalyticsClient() {
@@ -21,6 +23,12 @@ function getAnalyticsClient() {
 const propertyId = process.env.GA_PROPERTY_ID
 
 export async function GET(request: Request) {
+  const ip = getClientIP(request)
+  const rateCheck = await checkRateLimit(adminLimiter, ip)
+  if (!rateCheck.allowed) {
+    return tooManyRequests(rateCheck.retryAfter!)
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const startDate = searchParams.get('startDate') || '30daysAgo'
@@ -192,10 +200,7 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error('Analytics API error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch analytics data', details: String(error) },
-      { status: 500 }
-    )
+    return internalError('Failed to fetch analytics data')
   }
 }
 

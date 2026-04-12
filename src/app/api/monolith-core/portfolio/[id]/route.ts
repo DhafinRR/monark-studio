@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { adminLimiter, checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import { deleteFromStorage } from '@/lib/supabase'
+import { tooManyRequests, internalError, notFound } from '@/lib/api-response'
 
-/**
- * GET: Mengambil satu Portfolio Project berdasarkan ID
- */
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -19,24 +18,26 @@ export async function GET(
     })
 
     if (!project) {
-      return NextResponse.json({ error: 'Portfolio tidak ditemukan' }, { status: 404 })
+      return notFound('Portfolio tidak ditemukan')
     }
 
     return NextResponse.json(project)
   } catch (error) {
     console.error('[PORTFOLIO_GET_BY_ID]', error)
-    return NextResponse.json({ error: 'Gagal mengambil data Portfolio' }, { status: 500 })
+    return internalError('Gagal mengambil data Portfolio')
   }
 }
 
-/**
- * PATCH: Update sebagian data Portfolio Project
- * Stacks menggunakan `set` (replace relasi).
- */
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const ip = getClientIP(req)
+  const rateCheck = await checkRateLimit(adminLimiter, ip)
+  if (!rateCheck.allowed) {
+    return tooManyRequests(rateCheck.retryAfter!)
+  }
+
   try {
     const { id } = await params
     const body = await req.json()
@@ -91,23 +92,25 @@ export async function PATCH(
   } catch (error: any) {
     console.error('[PORTFOLIO_PATCH]', error)
     if (error.code === 'P2025') {
-      return NextResponse.json({ error: 'Portfolio tidak ditemukan' }, { status: 404 })
+      return notFound('Portfolio tidak ditemukan')
     }
-    return NextResponse.json({ error: 'Gagal mengupdate Portfolio' }, { status: 500 })
+    return internalError('Gagal mengupdate Portfolio')
   }
 }
 
-/**
- * DELETE: Menghapus Portfolio Project berdasarkan ID
- */
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const ip = getClientIP(req)
+  const rateCheck = await checkRateLimit(adminLimiter, ip)
+  if (!rateCheck.allowed) {
+    return tooManyRequests(rateCheck.retryAfter!)
+  }
+
   try {
     const { id } = await params
 
-    // Fetch record to get image URLs before deleting
     const project = await prisma.portfolioProject.findUnique({
       where: { id },
       select: { image_url: true, gallery: true },
@@ -117,7 +120,6 @@ export async function DELETE(
       where: { id },
     })
 
-    // Clean up storage (non-blocking, don't fail the request if storage delete fails)
     if (project) {
       const urlsToDelete = [project.image_url, ...project.gallery].filter(Boolean)
       deleteFromStorage(urlsToDelete).catch(err =>
@@ -129,8 +131,8 @@ export async function DELETE(
   } catch (error: any) {
     console.error('[PORTFOLIO_DELETE]', error)
     if (error.code === 'P2025') {
-      return NextResponse.json({ error: 'Portfolio tidak ditemukan' }, { status: 404 })
+      return notFound('Portfolio tidak ditemukan')
     }
-    return NextResponse.json({ error: 'Gagal menghapus Portfolio' }, { status: 500 })
+    return internalError('Gagal menghapus Portfolio')
   }
 }

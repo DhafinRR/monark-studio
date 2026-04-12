@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase, getBucket, deleteFromStorage } from '@/lib/supabase'
+import { adminLimiter, checkRateLimit, getClientIP } from '@/lib/rate-limit'
+import { tooManyRequests, badRequest, internalError } from '@/lib/api-response'
 import { randomUUID } from 'crypto'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']
@@ -47,31 +49,35 @@ async function uploadToStorage(file: File, path: string): Promise<string> {
  * Multiple files → `{ urls: string[] }`
  */
 export async function POST(req: Request) {
+  const ip = getClientIP(req)
+  const rateCheck = await checkRateLimit(adminLimiter, ip)
+  if (!rateCheck.allowed) {
+    return tooManyRequests(rateCheck.retryAfter!)
+  }
+
   try {
     const formData = await req.formData()
     const path = formData.get('path') as string | null
 
     if (!path) {
-      return NextResponse.json({ error: 'Path wajib diisi (table/id/name)' }, { status: 400 })
+      return badRequest('Path wajib diisi (table/id/name)')
     }
 
     const singleFile = formData.get('file') as File | null
     const multipleFiles = formData.getAll('files') as File[]
 
-    // Single file upload
     if (singleFile) {
       const err = validateFile(singleFile)
-      if (err) return NextResponse.json({ error: err }, { status: 400 })
+      if (err) return badRequest(err)
 
       const url = await uploadToStorage(singleFile, path)
       return NextResponse.json({ url })
     }
 
-    // Multiple files upload
     if (multipleFiles.length > 0) {
       for (const file of multipleFiles) {
         const err = validateFile(file)
-        if (err) return NextResponse.json({ error: err }, { status: 400 })
+        if (err) return badRequest(err)
       }
 
       const urls = await Promise.all(
@@ -80,10 +86,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ urls })
     }
 
-    return NextResponse.json({ error: 'Tidak ada file yang dikirim' }, { status: 400 })
+    return badRequest('Tidak ada file yang dikirim')
   } catch (error) {
     console.error('[UPLOAD_POST]', error)
-    return NextResponse.json({ error: 'Gagal mengupload file' }, { status: 500 })
+    return internalError('Gagal mengupload file')
   }
 }
 
@@ -96,19 +102,25 @@ export async function POST(req: Request) {
  * Returns: `{ success: true }`
  */
 export async function DELETE(req: Request) {
+  const ip = getClientIP(req)
+  const rateCheck = await checkRateLimit(adminLimiter, ip)
+  if (!rateCheck.allowed) {
+    return tooManyRequests(rateCheck.retryAfter!)
+  }
+
   try {
     const body = await req.json()
     const { url, urls } = body as { url?: string; urls?: string[] }
 
     const publicUrls = urls || (url ? [url] : [])
     if (publicUrls.length === 0) {
-      return NextResponse.json({ error: 'URL file wajib diisi' }, { status: 400 })
+      return badRequest('URL file wajib diisi')
     }
 
     await deleteFromStorage(publicUrls)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('[UPLOAD_DELETE]', error)
-    return NextResponse.json({ error: 'Gagal menghapus file' }, { status: 500 })
+    return internalError('Gagal menghapus file')
   }
 }

@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { adminLimiter, checkRateLimit, getClientIP } from '@/lib/rate-limit'
+import { createPortfolioSchema } from '@/lib/validations'
+import { badRequest, tooManyRequests, internalError } from '@/lib/api-response'
 
-/**
- * GET: Mengambil semua Portfolio Project
- * Include relasi stacks, diurutkan berdasarkan created_at desc.
- */
 export async function GET() {
   try {
     const projects = await prisma.portfolioProject.findMany({
@@ -16,17 +15,25 @@ export async function GET() {
     return NextResponse.json(projects)
   } catch (error) {
     console.error('[PORTFOLIO_GET]', error)
-    return NextResponse.json({ error: 'Gagal mengambil data Portfolio' }, { status: 500 })
+    return internalError('Gagal mengambil data Portfolio')
   }
 }
 
-/**
- * POST: Membuat Portfolio Project baru
- * Body: { title, description, full_description?, type?, image_url, gallery?, stacks? (string[]), features?, client_name?, project_url? }
- */
 export async function POST(req: Request) {
+  const ip = getClientIP(req)
+  const rateCheck = await checkRateLimit(adminLimiter, ip)
+  if (!rateCheck.allowed) {
+    return tooManyRequests(rateCheck.retryAfter!)
+  }
+
   try {
     const body = await req.json()
+
+    const parseResult = createPortfolioSchema.safeParse(body)
+    if (!parseResult.success) {
+      return badRequest(`Validation failed: ${parseResult.error.issues.map(i => i.message).join(', ')}`)
+    }
+
     const {
       title,
       description,
@@ -43,16 +50,6 @@ export async function POST(req: Request) {
       start_date,
       end_date,
     } = body
-
-    if (!title || typeof title !== 'string' || !title.trim()) {
-      return NextResponse.json({ error: 'Judul portfolio wajib diisi' }, { status: 400 })
-    }
-    if (!description || typeof description !== 'string' || !description.trim()) {
-      return NextResponse.json({ error: 'Deskripsi portfolio wajib diisi' }, { status: 400 })
-    }
-    if (!image_url || typeof image_url !== 'string' || !image_url.trim()) {
-      return NextResponse.json({ error: 'URL gambar wajib diisi' }, { status: 400 })
-    }
 
     const project = await prisma.portfolioProject.create({
       data: {
@@ -81,6 +78,6 @@ export async function POST(req: Request) {
     return NextResponse.json(project, { status: 201 })
   } catch (error) {
     console.error('[PORTFOLIO_POST]', error)
-    return NextResponse.json({ error: 'Gagal membuat Portfolio' }, { status: 500 })
+    return internalError('Gagal membuat Portfolio')
   }
 }

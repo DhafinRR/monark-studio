@@ -1,10 +1,24 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { publicApiLimiter, checkRateLimit, getClientIP } from '@/lib/rate-limit'
+import { createOrderSchema } from '@/lib/validations'
+import { badRequest, tooManyRequests, internalError } from '@/lib/api-response'
 
 export async function POST(req: Request) {
+  const ip = getClientIP(req)
+  const rateCheck = await checkRateLimit(publicApiLimiter, ip)
+  if (!rateCheck.allowed) {
+    return tooManyRequests(rateCheck.retryAfter!)
+  }
+
   try {
     const body = await req.json()
-    
+
+    const parseResult = createOrderSchema.safeParse(body)
+    if (!parseResult.success) {
+      return badRequest(`Validation failed: ${parseResult.error.issues.map(i => i.message).join(', ')}`)
+    }
+
     const order = await prisma.$transaction(async (tx) => {
       // 1. Fetch package for snapshot & floor_price
       const pkg = body.package_id
@@ -54,6 +68,6 @@ export async function POST(req: Request) {
     return NextResponse.json(order)
   } catch (error) {
     console.error("Order Creation Error:", error)
-    return NextResponse.json({ error: 'Gagal membuat pesanan' }, { status: 500 })
+    return internalError('Gagal membuat pesanan')
   }
 }

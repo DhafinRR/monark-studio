@@ -1,6 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
+import { aiRateLimiter, checkRateLimit, getClientIP } from "@/lib/rate-limit"
+import { aiRequestSchema } from "@/lib/validations"
+import { badRequest, tooManyRequests, internalError } from "@/lib/api-response"
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "")
 
@@ -150,11 +153,22 @@ async function generateContentWithModelChain(prompt: string): Promise<any> {
 }
 
 export async function POST(req: Request) {
+  const ip = getClientIP(req)
+  const rateCheck = await checkRateLimit(aiRateLimiter, ip)
+  if (!rateCheck.allowed) {
+    return tooManyRequests(rateCheck.retryAfter!)
+  }
+
   let requestBody: any
   try {
     requestBody = await req.json()
   } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
+    return badRequest("Invalid request body")
+  }
+
+  const parseResult = aiRequestSchema.safeParse(requestBody)
+  if (!parseResult.success) {
+    return badRequest(`Invalid request: ${parseResult.error.issues.map(i => i.message).join(', ')}`)
   }
 
   const { story, action, package_id, platform, description } = requestBody

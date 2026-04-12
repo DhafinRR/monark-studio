@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { adminLimiter, checkRateLimit, getClientIP } from '@/lib/rate-limit'
+import { createOrderSchema } from '@/lib/validations'
+import { badRequest, tooManyRequests, internalError } from '@/lib/api-response'
 
 export async function GET() {
   try {
@@ -14,25 +17,33 @@ export async function GET() {
     })
     return NextResponse.json(orders)
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
+    return internalError('Failed to fetch orders')
   }
 }
 
 export async function POST(req: Request) {
+  const ip = getClientIP(req)
+  const rateCheck = await checkRateLimit(adminLimiter, ip)
+  if (!rateCheck.allowed) {
+    return tooManyRequests(rateCheck.retryAfter!)
+  }
+
   try {
     const body = await req.json()
-    
+
+    const parseResult = createOrderSchema.safeParse(body)
+    if (!parseResult.success) {
+      return badRequest(`Validation failed: ${parseResult.error.issues.map(i => i.message).join(', ')}`)
+    }
+
     const order = await prisma.$transaction(async (tx) => {
-      // 1. Fetch package for snapshot & floor_price
       const pkg = body.package_id
         ? await tx.pricingPackage.findUnique({ where: { id: body.package_id } })
         : null
 
-      // 2. Grand total = floor_price + sum(item prices)
       const itemsTotal = body.items.reduce((sum: number, item: any) => sum + parseFloat(item.price), 0)
       const totalPrice = (pkg ? Number(pkg.floor_price) : 0) + itemsTotal
 
-      // 3. Buat Order
       return await tx.order.create({
         data: {
           project_title: body.project_title || null,
@@ -71,6 +82,6 @@ export async function POST(req: Request) {
     return NextResponse.json(order)
   } catch (error) {
     console.error("Order Creation Error:", error)
-    return NextResponse.json({ error: 'Gagal membuat pesanan' }, { status: 500 })
+    return internalError('Gagal membuat pesanan')
   }
 }
