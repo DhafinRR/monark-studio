@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import '@/index.css'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
+import { Toaster } from 'sonner'
 
 export const metadata: Metadata = {
     title: 'Monark Studio',
@@ -17,6 +18,7 @@ export default function RootLayout({
             <body suppressHydrationWarning>
                 <GoogleAnalytics />
                 {children}
+                <Toaster position="top-center" richColors closeButton />
             </body>
         </html>
     )

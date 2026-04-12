@@ -109,8 +109,50 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
   const [errorMsg, setErrorMsg] = useState('')
   const [dbPackages, setDbPackages] = useState<DBPackage[]>([])
   const [benefits, setBenefits] = useState<string[]>(initialBenefits || [])
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const apiPath = isPublic ? '/api/public' : '/api/monolith-core';
+
+  const validateField = (name: string, value: string): string => {
+    switch (name) {
+      case 'project_title':
+        return value.trim() ? '' : 'Judul proyek wajib diisi'
+      case 'name':
+        return value.trim() ? '' : 'Nama wajib diisi'
+      case 'whatsapp':
+        return value.trim() ? '' : 'WhatsApp wajib diisi'
+      case 'email':
+        if (!value.trim()) return 'Email wajib diisi'
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format email tidak valid'
+        return ''
+      case 'package_id':
+        return value ? '' : 'Pilih paket terlebih dahulu'
+      default:
+        return ''
+    }
+  }
+
+  const handleFieldChange = (name: keyof ClientData, value: string) => {
+    setClient(prev => ({ ...prev, [name]: value }))
+    if (touched[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: validateField(name, value) }))
+    }
+  }
+
+  const handleFieldBlur = (name: string) => {
+    setTouched(prev => ({ ...prev, [name]: true }))
+    const value = client[name as keyof ClientData] as string
+    setFieldErrors(prev => ({ ...prev, [name]: validateField(name as keyof ClientData, value) }))
+  }
+
+  const getInputClass = (name: keyof ClientData) => {
+    const base = 'w-full px-4 py-3 rounded-xl border text-sm'
+    if (touched[name] && fieldErrors[name]) {
+      return `${base} border-red-400 bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400`
+    }
+    return `${base} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400`
+  }
 
   // Fetch catalog, complexity prices, and packages
   useEffect(() => {
@@ -327,16 +369,29 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
     e.preventDefault()
     setErrorMsg('')
 
-    // Validate client identity
-    const missing: string[] = []
-    if (!client.project_title.trim()) missing.push('Judul Proyek')
-    if (!client.name.trim()) missing.push('Nama')
-    if (!client.whatsapp.trim()) missing.push('WhatsApp')
-    if (!client.email.trim()) missing.push('Email')
-    if (!client.package_id) missing.push('Paket')
+    const fields: (keyof ClientData)[] = ['project_title', 'name', 'whatsapp', 'email', 'package_id']
+    
+    const newTouched: Record<string, boolean> = {}
+    const newErrors: Record<string, string> = {}
+    
+    fields.forEach(field => {
+      newTouched[field] = true
+      const value = client[field] as string
+      newErrors[field] = validateField(field, value)
+    })
+    
+    setTouched(newTouched)
+    setFieldErrors(newErrors)
 
+    const missing = fields.filter(f => !client[f] || !(client[f] as string).trim())
     if (missing.length > 0) {
-      toast.error(`Mohon lengkapi data berikut: ${missing.join(', ')}`)
+      const missingLabels = missing.map(f => {
+        const labels: Record<string, string> = { project_title: 'Judul Proyek', name: 'Nama', whatsapp: 'WhatsApp', email: 'Email', package_id: 'Paket' }
+        return labels[f] || f
+      })
+      toast.error(`Form tidak lengkap!`, {
+        description: `${missingLabels.join(', ')} wajib diisi. Scroll ke atas untuk melihat field yang perlu diisi.`,
+      })
       return
     }
 
@@ -433,18 +488,73 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
             <h2 className="font-bold uppercase tracking-widest text-sm">Informasi Klien</h2>
           </div>
           <div className="space-y-6">
-            <input className="w-full px-4 py-3 rounded-xl border" placeholder="Judul Proyek, misal: Website Portfolio" value={client.project_title} onChange={e => setClient({...client, project_title: e.target.value})} />
+            <div className="space-y-1.5">
+              <input
+                className={getInputClass('project_title')}
+                placeholder="Judul Proyek, misal: Website Portfolio"
+                value={client.project_title}
+                onChange={e => handleFieldChange('project_title', e.target.value)}
+                onBlur={() => handleFieldBlur('project_title')}
+              />
+              {touched.project_title && fieldErrors.project_title && (
+                <p className="text-xs text-red-500 ml-1">{fieldErrors.project_title}</p>
+              )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <input className="w-full px-4 py-3 rounded-xl border" placeholder="Nama" value={client.name} onChange={e => setClient({...client, name: e.target.value})} />
-              <input className="w-full px-4 py-3 rounded-xl border" placeholder="WhatsApp" value={client.whatsapp} onChange={e => setClient({...client, whatsapp: e.target.value})} />
-              <input className="w-full px-4 py-3 rounded-xl border" placeholder="Email" value={client.email} onChange={e => setClient({...client, email: e.target.value})} />
-              <select className="w-full px-4 py-3 rounded-xl border" value={client.package_id} onChange={e => setClient({...client, package_id: e.target.value})}>
-              <option value="">-- Pilih Paket --</option>
-              {dbPackages.length > 0
-                ? dbPackages.map(pkg => <option key={pkg.id} value={pkg.id}>{pkg.name}</option>)
-                : PRICING_PACKAGES.map(pkg => <option key={pkg.id} value={pkg.id}>{pkg.name}</option>)
-              }
-            </select>
+              <div className="space-y-1.5">
+                <input
+                  className={getInputClass('name')}
+                  placeholder="Nama"
+                  value={client.name}
+                  onChange={e => handleFieldChange('name', e.target.value)}
+                  onBlur={() => handleFieldBlur('name')}
+                />
+                {touched.name && fieldErrors.name && (
+                  <p className="text-xs text-red-500 ml-1">{fieldErrors.name}</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <input
+                  className={getInputClass('whatsapp')}
+                  placeholder="WhatsApp"
+                  value={client.whatsapp}
+                  onChange={e => handleFieldChange('whatsapp', e.target.value)}
+                  onBlur={() => handleFieldBlur('whatsapp')}
+                />
+                {touched.whatsapp && fieldErrors.whatsapp && (
+                  <p className="text-xs text-red-500 ml-1">{fieldErrors.whatsapp}</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <input
+                  className={getInputClass('email')}
+                  placeholder="Email"
+                  type="email"
+                  value={client.email}
+                  onChange={e => handleFieldChange('email', e.target.value)}
+                  onBlur={() => handleFieldBlur('email')}
+                />
+                {touched.email && fieldErrors.email && (
+                  <p className="text-xs text-red-500 ml-1">{fieldErrors.email}</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <select
+                  className={getInputClass('package_id')}
+                  value={client.package_id}
+                  onChange={e => handleFieldChange('package_id', e.target.value)}
+                  onBlur={() => handleFieldBlur('package_id')}
+                >
+                  <option value="">-- Pilih Paket --</option>
+                  {dbPackages.length > 0
+                    ? dbPackages.map(pkg => <option key={pkg.id} value={pkg.id}>{pkg.name}</option>)
+                    : PRICING_PACKAGES.map(pkg => <option key={pkg.id} value={pkg.id}>{pkg.name}</option>)
+                  }
+                </select>
+                {touched.package_id && fieldErrors.package_id && (
+                  <p className="text-xs text-red-500 ml-1">{fieldErrors.package_id}</p>
+                )}
+              </div>
             </div>
           </div>
           {!isEditMode && client.details && (

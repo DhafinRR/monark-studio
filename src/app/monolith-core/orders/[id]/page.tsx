@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft, User, MessageCircle, AlertCircle, FileText } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import OrderDetailClient from '@/components/monolith-core/OrderDetailClient'
+import ClientLink from '@/components/monolith-core/ClientLink'
 import { Decimal } from '@prisma/client/runtime/library'
 
 function serializeOrder(order: any) {
@@ -99,6 +100,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
         {/* Right Sidebar */}
         <div className="space-y-8">
+          {/* Client Link Card */}
+          <ClientLink orderId={order.id} />
+
           {/* Client Card */}
           <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
             <h2 className="text-sm font-black uppercase tracking-widest text-[#B8926A] flex items-center gap-2">
