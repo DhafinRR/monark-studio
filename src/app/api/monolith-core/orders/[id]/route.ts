@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { adminLimiter, checkRateLimit, getClientIP } from '@/lib/rate-limit'
-import { tooManyRequests, internalError, notFound } from '@/lib/api-response'
+import { tooManyRequests, internalError, notFound, badRequest } from '@/lib/api-response'
+import { createHistoryEntry, addHistoryEntry, getOrderSnapshot, OrderHistoryEntry } from '@/lib/order-history'
 
 export async function GET(
     req: Request,
@@ -14,7 +15,10 @@ export async function GET(
             include: {
                 items: true,
                 invoice: true,
-                pricing_package: true
+                pricing_package: true,
+                payments: {
+                    orderBy: { created_at: 'desc' }
+                }
             }
         })
 
@@ -23,8 +27,9 @@ export async function GET(
         }
 
         return NextResponse.json(order)
-    } catch (error) {
-        return internalError('Failed to fetch order')
+    } catch (error: any) {
+        console.error('[ORDER_GET]', error)
+        return internalError(`Failed to fetch order: ${error.message}`)
     }
 }
 
@@ -42,13 +47,35 @@ export async function PATCH(
         const { id } = await params
         const body = await req.json()
 
+        const currentOrder = await prisma.order.findUnique({
+            where: { id },
+            include: { items: true }
+        })
+
+        if (!currentOrder) {
+            return notFound('Order not found')
+        }
+
+        const previousSnapshot = getOrderSnapshot({
+            name: currentOrder.name,
+            whatsapp: currentOrder.whatsapp,
+            email: currentOrder.email,
+            details: currentOrder.details,
+            status: currentOrder.status,
+            total_price: currentOrder.total_price,
+            items: currentOrder.items
+        })
+
         const order = await prisma.$transaction(async (tx) => {
             let totalPrice = undefined
+            let historyAction: 'updated_items' | 'updated_status' | 'updated_details' = 'updated_details'
+            
             if (body.items) {
+                historyAction = 'updated_items'
                 const itemsTotal = body.items.reduce((sum: number, item: any) => sum + parseFloat(item.price), 0)
 
-                const currentOrder = await tx.order.findUnique({ where: { id }, select: { package_id: true } })
-                const pkgId = body.package_id ?? currentOrder?.package_id
+                const currentOrderData = await tx.order.findUnique({ where: { id }, select: { package_id: true } })
+                const pkgId = body.package_id ?? currentOrderData?.package_id
                 const pkg = pkgId ? await tx.pricingPackage.findUnique({ where: { id: pkgId }, select: { floor_price: true } }) : null
                 totalPrice = (pkg ? Number(pkg.floor_price) : 0) + itemsTotal
 
@@ -57,7 +84,11 @@ export async function PATCH(
                 })
             }
 
-            return await tx.order.update({
+            if (body.status && body.status !== currentOrder.status) {
+                historyAction = 'updated_status'
+            }
+
+            const updatedOrder = await tx.order.update({
                 where: { id },
                 data: {
                     name: body.name,
@@ -88,6 +119,34 @@ export async function PATCH(
                 },
                 include: { items: true }
             })
+
+            const newSnapshot = getOrderSnapshot({
+                name: updatedOrder.name,
+                whatsapp: updatedOrder.whatsapp,
+                email: updatedOrder.email,
+                details: updatedOrder.details,
+                status: updatedOrder.status,
+                total_price: updatedOrder.total_price,
+                items: updatedOrder.items
+            })
+            const historyEntry = createHistoryEntry(
+                historyAction,
+                `Order ${historyAction === 'updated_items' ? 'items' : historyAction === 'updated_status' ? 'status' : 'details'} updated`,
+                previousSnapshot,
+                newSnapshot
+            )
+
+            const currentHistory = (currentOrder.history as unknown as OrderHistoryEntry[]) || []
+            const newHistory = addHistoryEntry(currentHistory, historyEntry)
+
+            await tx.order.update({
+                where: { id },
+                data: {
+                    history: newHistory as any
+                }
+            })
+
+            return updatedOrder
         })
 
         return NextResponse.json(order)

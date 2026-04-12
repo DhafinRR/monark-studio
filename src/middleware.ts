@@ -2,8 +2,22 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyToken } from './lib/auth'
 
+const PUBLIC_PATHS = [
+  '/monolith-core/orders',
+  '/monolith-core/orders/:id/print',
+  '/monolith-core/orders/:id/print/:path*',
+]
+
+function isPublicPath(pathname: string): boolean {
+  if (pathname.startsWith('/monolith-core/orders/') && pathname.includes('/print/')) {
+    return true
+  }
+  return false
+}
+
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next()
+  const pathname = request.nextUrl.pathname
 
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options', 'DENY')
@@ -11,9 +25,13 @@ export async function middleware(request: NextRequest) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
 
+  if (isPublicPath(pathname)) {
+    return response
+  }
+
   const token = request.cookies.get('admin_token')?.value
 
-  if (request.nextUrl.pathname.startsWith('/monolith-core')) {
+  if (pathname.startsWith('/monolith-core')) {
     if (!token) {
       return NextResponse.redirect(new URL('/gatekeeper', request.url))
     }
@@ -23,7 +41,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (request.nextUrl.pathname.startsWith('/api/monolith-core')) {
+  if (pathname.startsWith('/api/monolith-core')) {
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

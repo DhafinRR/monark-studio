@@ -3,6 +3,100 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
+  console.log("Seeding Pricing Packages...");
+
+  const pricingPackages = [
+    {
+      id: "basic_web",
+      name: "Basic Web",
+      tagline: "Landing page profesional untuk memulai kehadiran online Anda.",
+      target: "UMKM / Personal",
+      price_note: "Start from",
+      floor_price: 600000,
+      max_slots: 3,
+      benefits: [
+        "1 Minggu Pengerjaan",
+        "Free Hosting Lifetime",
+        "Desain Responsif",
+        "Tombol WhatsApp",
+        "3x Revisi",
+        "Garansi Bug",
+        "Video Panduan"
+      ],
+      default_features: [
+        "Halaman Home Statis",
+        "Pilihan Halaman About/Layanan",
+        "Integrasi Tombol WhatsApp"
+      ],
+      is_popular: false,
+      is_active: true,
+    },
+    {
+      id: "web_app_cms",
+      name: "Web App / CMS",
+      tagline: "Website lengkap dengan sistem manajemen konten untuk bisnis Anda.",
+      target: "Perusahaan / Toko",
+      price_note: "Start from",
+      floor_price: 5000000,
+      max_slots: 10,
+      benefits: [
+        "Free Domain 1 Tahun",
+        "Free Hosting",
+        "Email Bisnis",
+        "Google Analytics",
+        "Fast Loading",
+        "Dashboard Admin (CMS)",
+        "3x Revisi",
+        "Garansi Bug"
+      ],
+      default_features: [
+        "Dashboard Admin",
+        "Sistem Login/Auth",
+        "Manajemen Konten (CRUD)",
+        "Search & Filter",
+        "Halaman Dinamis"
+      ],
+      is_popular: true,
+      is_active: true,
+    },
+    {
+      id: "mobile_app",
+      name: "Mobile App",
+      tagline: "Aplikasi mobile custom dengan fitur lengkap dan performa tinggi.",
+      target: "Startup / Sistem Booking",
+      price_note: "Start from (1 Platform)",
+      floor_price: 15000000,
+      max_slots: 12,
+      benefits: [
+        "Full Custom System",
+        "Free CMS",
+        "Database & Login",
+        "Web Admin Panel",
+        "Push Notifications",
+        "UI/UX Premium",
+        "Priority Support",
+        "Garansi Bug"
+      ],
+      default_features: [
+        "Splash Screen & Icon",
+        "Login & Profile User",
+        "Navbar/Menu Navigasi",
+        "Web Admin Backend",
+        "Push Notifications"
+      ],
+      is_popular: false,
+      is_active: true,
+    },
+  ];
+
+  for (const pkg of pricingPackages) {
+    await prisma.pricingPackage.upsert({
+      where: { id: pkg.id },
+      update: pkg,
+      create: pkg,
+    });
+  }
+
   console.log("Seeding TechStacks...");
 
   const techStacks = [

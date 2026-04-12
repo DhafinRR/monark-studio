@@ -16,5 +16,9 @@ model PortfolioProject {
   status           String?     @default("Live")
   stacks           TechStack[] @relation("PortfolioProjectToTechStack")
 
+  // Order reference (Order can become Portfolio)
+  order            Order?     @relation(fields: [order_id], references: [id])
+  order_id         String?    @unique
+
   @@map("portfolio_project")
 }

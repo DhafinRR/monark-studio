@@ -1,42 +1,30 @@
-'use client'
-
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, Search, Calendar, User, MessageCircle, Mail, FileText, ChevronRight } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Plus, MessageCircle, Mail, FileText, ChevronRight } from 'lucide-react'
+import prisma from '@/lib/prisma'
+import { redirect } from 'next/navigation'
 
-interface Order {
-  id: string
-  name: string
-  whatsapp: string
-  email: string | null
-  status: string
-  total_price: string | null
-  created_at: string
-  pricing_package?: { id: string; name: string } | null
-  _count?: {
-    items: number
-  }
+async function getOrders() {
+  const orders = await prisma.order.findMany({
+    include: {
+      pricing_package: { select: { id: true, name: true } },
+      _count: { select: { items: true } }
+    },
+    orderBy: { created_at: 'desc' }
+  })
+  return orders
 }
 
-export default function OrdersPage() {
-  const router = useRouter()
-  const [orders, setOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
+const statusStyles: Record<string, string> = {
+  DRAFT: 'bg-gray-50 text-gray-500 border-gray-100',
+  PENDING: 'bg-yellow-50 text-yellow-600 border-yellow-100',
+  ACTIVE: 'bg-blue-50 text-blue-600 border-blue-100',
+  ON_PROGRESS: 'bg-purple-50 text-purple-600 border-purple-100',
+  DONE: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+  CANCELLED: 'bg-red-50 text-red-600 border-red-100',
+}
 
-  useEffect(() => {
-    fetch('/api/monolith-core/orders')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setOrders(data)
-        } else {
-          console.error("Failed to load orders:", data)
-          setOrders([])
-        }
-        setLoading(false)
-      })
-  }, [])
+export default async function OrdersPage() {
+  const orders = await getOrders()
 
   return (
     <div className="space-y-6">
@@ -69,11 +57,7 @@ export default function OrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-gray-500">Memuat pesanan...</td>
-                </tr>
-              ) : orders.length === 0 ? (
+              {orders.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-10 text-center text-gray-500">Belum ada pesanan masuk.</td>
                 </tr>
@@ -82,17 +66,18 @@ export default function OrdersPage() {
                   <tr 
                     key={order.id} 
                     className="hover:bg-blue-50/30 transition-colors cursor-pointer group"
-                    onClick={() => router.push(`/monolith-core/orders/${order.id}`)}
                   >
                     <td className="px-6 py-4">
-                      <div className="font-bold text-gray-900">{order.name}</div>
-                      <div className="text-xs text-gray-500 flex items-center mt-1">
-                        <FileText className="w-3 h-3 mr-1" />
-                        {order._count?.items || 0} Item Pekerjaan
-                      </div>
+                      <Link href={`/monolith-core/orders/${order.id}`} className="block">
+                        <div className="font-bold text-gray-900">{order.name}</div>
+                        <div className="text-xs text-gray-500 flex items-center mt-1">
+                          <FileText className="w-3 h-3 mr-1" />
+                          {order._count.items} Item Pekerjaan
+                        </div>
+                      </Link>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gray-50 border border-gray-200 text-gray-600">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gray-50 border text-gray-600">
                         {order.pricing_package?.name || 'Custom Project'}
                       </span>
                     </td>
@@ -111,11 +96,7 @@ export default function OrdersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        order.status === 'ACTIVE' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                        order.status === 'DONE' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                        'bg-gray-50 text-gray-500 border border-gray-100'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusStyles[order.status] || statusStyles.DRAFT}`}>
                         {order.status}
                       </span>
                     </td>
@@ -128,7 +109,6 @@ export default function OrdersPage() {
                     <td className="px-6 py-4 text-right">
                       <Link 
                         href={`/monolith-core/orders/${order.id}`}
-                        onClick={(e) => e.stopPropagation()}
                         className="p-2 text-gray-400 group-hover:text-blue-600 transition-colors"
                       >
                         <ChevronRight className="w-5 h-5 flex-shrink-0" />

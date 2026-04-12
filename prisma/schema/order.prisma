@@ -1,11 +1,11 @@
 model Order {
-  id            String      @id @default(uuid())
-  project_title String?
-  queue_number  Int?
-  name          String
-  email        String?
-  whatsapp     String
-  story        String?
+  id               String      @id @default(uuid())
+  project_title    String?
+  queue_number     Int?
+  name             String
+  email            String?
+  whatsapp         String
+  story            String?
   package_id       String?
   package_snapshot Json?
   details          String?
@@ -15,9 +15,18 @@ model Order {
   preview_link     String?
   created_at       DateTime    @default(now())
   updated_at       DateTime    @updatedAt
-  invoice          Invoice?
+  
+  // History/Revision tracking (auto-snapshot on edit)
+  history          Json?       @default("[]")
+  
+  // Relations
   items            OrderItem[]
   pricing_package  PricingPackage? @relation(fields: [package_id], references: [id])
+  payments         Payment[]
+  invoice          Invoice?
+  
+  // Portfolio reference (Order can become Portfolio)
+  portfolio        PortfolioProject?
 
   @@map("order")
 }
