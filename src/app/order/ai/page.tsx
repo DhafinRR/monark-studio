@@ -57,7 +57,7 @@ export default function AIOrderPage() {
           name: "",
           email: "",
           whatsapp: "",
-          package_type: selectedPkg?.id || "",
+          package_id: selectedPkg?.id || "",
           details: parsed.analysis_summary || ""
         });
 

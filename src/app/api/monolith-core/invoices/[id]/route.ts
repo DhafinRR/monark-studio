@@ -15,7 +15,8 @@ export async function GET(
             include: {
                 order: {
                     include: {
-                        items: true
+                        items: true,
+                        pricing_package: { select: { name: true, floor_price: true, benefits: true } }
                     }
                 }
             }

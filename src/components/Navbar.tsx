@@ -9,7 +9,7 @@ import logoImg from "../../public/assets/logo.jpg";
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "Portfolio", href: "/portfolio" },
-  { label: "Order", href: "/#order" },
+  { label: "Order", href: "/order" },
 ];
 
 export default function Navbar() {

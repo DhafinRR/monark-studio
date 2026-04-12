@@ -6,7 +6,6 @@ model Order {
   email        String?
   whatsapp     String
   story        String?
-  package_type     String
   package_id       String?
   package_snapshot Json?
   details          String?

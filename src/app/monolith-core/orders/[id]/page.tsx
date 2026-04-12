@@ -25,6 +25,7 @@ interface OrderItem {
   id: string
   description: string
   price: number
+  classification: 'STANDARD' | 'ADDON'
   level?: string
   sub_level?: string
   reason?: string
@@ -35,7 +36,15 @@ interface Order {
   name: string
   whatsapp: string
   email?: string
-  package_type: string
+  package_id: string | null
+  pricing_package?: {
+    id: string
+    name: string
+    floor_price: string
+    max_slots: number
+    benefits: string[]
+    default_features: string[]
+  } | null
   details?: string
   status: 'DRAFT' | 'ACTIVE' | 'DONE' | 'CANCELLED'
   total_price: number
@@ -215,7 +224,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900">{order.package_type}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{order.pricing_package?.name || 'Custom Project'}</h1>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${statusColors[order.status]}`}>
                 {order.status}
               </span>
@@ -310,41 +319,115 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             </div>
           </section>
 
-          {/* Items Section */}
-          <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
-            <h2 className="text-sm font-black uppercase tracking-widest text-[#B8926A] flex items-center gap-2">
-               <ShoppingBag className="w-4 h-4" /> Scope of Work
-            </h2>
-            <div className="space-y-4">
-               {order.items.map((item, idx) => (
-                 <div key={item.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-start gap-4 group">
-                    <span className="text-xs font-black text-gray-300 mt-1">{String(idx + 1).padStart(2, '0')}</span>
-                    <div className="flex-1">
-                       <p className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{item.description}</p>
-                       <div className="flex flex-wrap gap-2 mt-2">
-                          {item.level && (
-                            <span className="px-2 py-0.5 bg-white border border-gray-200 rounded-full text-[9px] font-black uppercase text-gray-500">
-                               {item.level} — {item.sub_level}
-                            </span>
-                          )}
-                          {item.reason && (
-                             <p className="text-[10px] italic text-gray-400 flex items-center gap-1">
-                               AI: {item.reason}
-                             </p>
-                          )}
-                       </div>
+          {/* Package Inclusion Section */}
+          {order.pricing_package && (
+            <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+              <h2 className="text-sm font-black uppercase tracking-widest text-[#B8926A] flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4" /> {order.pricing_package.name} — Paket Termasuk
+              </h2>
+
+              {/* Benefits */}
+              {order.pricing_package.benefits.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Benefits</h3>
+                  <div className="space-y-2">
+                    {order.pricing_package.benefits.map((benefit, idx) => (
+                      <div key={idx} className="flex items-center gap-3 px-4 py-2.5 bg-blue-50/50 rounded-lg border border-blue-100/50">
+                        <CheckCircle2 className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                        <span className="text-sm font-medium text-gray-700">{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Default Features */}
+              {order.pricing_package.default_features.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Fitur Default ({order.pricing_package.default_features.length}/{order.pricing_package.max_slots} slot)</h3>
+                  <div className="space-y-2">
+                    {order.pricing_package.default_features.map((feature, idx) => (
+                      <div key={idx} className="flex items-center gap-3 px-4 py-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                        <span className="text-sm font-medium text-gray-700">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Floor Price Subtotal */}
+              <div className="pt-4 border-t border-gray-100 flex justify-between items-center px-4">
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Harga Paket (Floor Price)</span>
+                <span className="text-lg font-black text-gray-900">Rp {Number(order.pricing_package.floor_price).toLocaleString('id-ID')}</span>
+              </div>
+            </section>
+          )}
+
+          {/* Addon Features Section */}
+          {(() => {
+            const addonItems = order.items.filter(i => i.classification === 'ADDON')
+            const addonTotal = addonItems.reduce((sum, i) => sum + Number(i.price), 0)
+            const floorPrice = order.pricing_package ? Number(order.pricing_package.floor_price) : 0
+
+            return (
+              <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+                <h2 className="text-sm font-black uppercase tracking-widest text-[#B8926A] flex items-center gap-2">
+                  <Plus className="w-4 h-4" /> Fitur Tambahan (Addon)
+                </h2>
+
+                {addonItems.length === 0 ? (
+                  <p className="text-sm text-gray-400 italic px-4">Tidak ada fitur tambahan.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {addonItems.map((item, idx) => (
+                      <div key={item.id} className="p-4 bg-amber-50/50 rounded-xl border border-amber-100/50 flex items-start gap-4 group">
+                        <span className="text-xs font-black text-amber-300 mt-1">{String(idx + 1).padStart(2, '0')}</span>
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-900 group-hover:text-amber-700 transition-colors">{item.description}</p>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {item.level && (
+                              <span className="px-2 py-0.5 bg-white border border-amber-200 rounded-full text-[9px] font-black uppercase text-amber-600">
+                                {item.level} — {item.sub_level}
+                              </span>
+                            )}
+                            {item.reason && (
+                              <p className="text-[10px] italic text-gray-400 flex items-center gap-1">
+                                AI: {item.reason}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-sm font-black text-amber-700">
+                          Rp {Number(item.price).toLocaleString('id-ID')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Pricing Summary */}
+                <div className="pt-4 border-t border-gray-100 space-y-3 px-4">
+                  {order.pricing_package && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-gray-400">Harga Paket</span>
+                      <span className="text-sm font-bold text-gray-500">Rp {floorPrice.toLocaleString('id-ID')}</span>
                     </div>
-                    <div className="text-sm font-black text-gray-900">
-                       Rp {Number(item.price).toLocaleString('id-ID')}
+                  )}
+                  {addonItems.length > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-gray-400">Total Fitur Tambahan</span>
+                      <span className="text-sm font-bold text-amber-600">+ Rp {addonTotal.toLocaleString('id-ID')}</span>
                     </div>
-                 </div>
-               ))}
-               <div className="pt-6 border-t border-gray-100 flex justify-between items-center px-4">
-                  <span className="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Grand Total</span>
-                  <span className="text-xl font-black text-gray-900 tracking-tighter">Rp {Number(order.total_price).toLocaleString('id-ID')}</span>
-               </div>
-            </div>
-          </section>
+                  )}
+                  <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
+                    <span className="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Grand Total</span>
+                    <span className="text-xl font-black text-gray-900 tracking-tighter">Rp {Number(order.total_price).toLocaleString('id-ID')}</span>
+                  </div>
+                </div>
+              </section>
+            )
+          })()}
         </div>
 
         {/* Right Side: Client Information & Internal Notes */}

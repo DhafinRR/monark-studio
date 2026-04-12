@@ -14,7 +14,8 @@ export async function GET(
             where: { id },
             include: {
                 items: true,
-                invoice: true
+                invoice: true,
+                pricing_package: true
             }
         })
 
@@ -40,8 +41,14 @@ export async function PATCH(
             // 1. Hitung total price jika items disertakan
             let totalPrice = undefined
             if (body.items) {
-                totalPrice = body.items.reduce((sum: number, item: any) => sum + parseFloat(item.price), 0)
-                
+                const itemsTotal = body.items.reduce((sum: number, item: any) => sum + parseFloat(item.price), 0)
+
+                // Fetch package floor_price for grand total
+                const currentOrder = await tx.order.findUnique({ where: { id }, select: { package_id: true } })
+                const pkgId = body.package_id ?? currentOrder?.package_id
+                const pkg = pkgId ? await tx.pricingPackage.findUnique({ where: { id: pkgId }, select: { floor_price: true } }) : null
+                totalPrice = (pkg ? Number(pkg.floor_price) : 0) + itemsTotal
+
                 // 2. Sync Items: Delete lama, Create baru
                 await tx.orderItem.deleteMany({
                     where: { order_id: id }
@@ -55,7 +62,7 @@ export async function PATCH(
                     name: body.name,
                     whatsapp: body.whatsapp,
                     email: body.email,
-                    package_type: body.package_type,
+                    package_id: body.package_id,
                     status: body.status,
                     asset_link: body.asset_link,
                     preview_link: body.preview_link,
@@ -66,11 +73,13 @@ export async function PATCH(
                         items: {
                             create: body.items.map((item: any) => ({
                                 type: item.type,
+                                classification: item.classification,
                                 description: item.description,
                                 price: item.price,
                                 level: item.level,
                                 sub_level: item.sub_level,
                                 reason: item.reason,
+                                custom_note: item.custom_note,
                                 feature_id: item.feature_id
                             }))
                         }

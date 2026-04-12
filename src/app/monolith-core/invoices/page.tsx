@@ -23,7 +23,7 @@ interface Invoice {
   issued_at: string
   order?: {
     name: string
-    package_type: string
+    pricing_package?: { name: string } | null
   }
 }
 
@@ -108,7 +108,7 @@ export default function InvoicesPage() {
                     </td>
                     <td className="px-6 py-4">
                        <div className="font-bold text-gray-800 text-sm">{inv.order?.name || 'Unknown Client'}</div>
-                       <div className="text-[10px] text-gray-500 font-medium truncate max-w-[200px]">{inv.order?.package_type}</div>
+                       <div className="text-[10px] text-gray-500 font-medium truncate max-w-[200px]">{inv.order?.pricing_package?.name || 'Custom Project'}</div>
                     </td>
                     <td className="px-6 py-4">
                        <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${statusColors[inv.status]}`}>

@@ -20,6 +20,8 @@ interface OrderItem {
   description: string
   price: number
   type: string
+  classification?: string
+  custom_note?: string
   level?: string
   sub_level?: string
 }
@@ -34,7 +36,7 @@ interface Invoice {
     name: string
     whatsapp: string
     email?: string
-    package_type: string
+    pricing_package?: { name: string; floor_price: string; benefits: string[] } | null
     items: OrderItem[]
   }
 }
@@ -68,7 +70,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
 
   const handleWhatsApp = () => {
     if (!invoice) return
-    const text = `Halo ${invoice.order.name}, berikut adalah invoice resmi untuk proyek ${invoice.order.package_type}: ${window.location.origin}/public/invoices/${invoice.id}`
+    const text = `Halo ${invoice.order.name}, berikut adalah invoice resmi untuk proyek ${invoice.order.pricing_package?.name || 'Custom Project'}: ${window.location.origin}/public/invoices/${invoice.id}`
     window.open(`https://wa.me/${invoice.order.whatsapp}?text=${encodeURIComponent(text)}`, '_blank')
   }
 
@@ -140,15 +142,17 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Actual Invoice Rendering */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden print:shadow-none print:border-none print:rounded-none print:w-[210mm] print:mx-auto print:block print:min-h-0">
-         <InvoicePreview 
+         <InvoicePreview
            client={{
              name: invoice.order.name,
              whatsapp: invoice.order.whatsapp,
              email: invoice.order.email,
-             package_type: invoice.order.package_type
+             package_name: invoice.order.pricing_package?.name || 'Custom Project'
            }}
            items={invoice.order.items}
            total={Number(invoice.amount)}
+           floorPrice={Number(invoice.order.pricing_package?.floor_price) || 0}
+           benefits={invoice.order.pricing_package?.benefits || []}
            status={invoice.status}
          />
       </div>

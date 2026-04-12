@@ -13,6 +13,7 @@ interface Order {
   status: string
   total_price: string | null
   created_at: string
+  pricing_package?: { id: string; name: string } | null
   _count?: {
     items: number
   }
@@ -58,7 +59,8 @@ export default function OrdersPage() {
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Klien & Proyek</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Klien</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Paket</th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Kontak</th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Status</th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Total</th>
@@ -69,11 +71,11 @@ export default function OrdersPage() {
             <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-gray-500">Memuat pesanan...</td>
+                  <td colSpan={7} className="px-6 py-10 text-center text-gray-500">Memuat pesanan...</td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-gray-500">Belum ada pesanan masuk.</td>
+                  <td colSpan={7} className="px-6 py-10 text-center text-gray-500">Belum ada pesanan masuk.</td>
                 </tr>
               ) : (
                 orders.map((order) => (
@@ -88,6 +90,11 @@ export default function OrdersPage() {
                         <FileText className="w-3 h-3 mr-1" />
                         {order._count?.items || 0} Item Pekerjaan
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gray-50 border border-gray-200 text-gray-600">
+                        {order.pricing_package?.name || 'Custom Project'}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">

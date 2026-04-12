@@ -8,7 +8,7 @@ export async function GET() {
         order: {
           select: {
             name: true,
-            package_type: true
+            pricing_package: { select: { name: true } }
           }
         }
       },

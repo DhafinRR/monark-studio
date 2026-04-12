@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
-import heroBg from "../../../../public/assets/hero-bg.jpg"; // Adjust path if needed
+import heroBg from "../../../public/assets/hero-bg.jpg"; // Adjust path if needed
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ParticleField from "@/components/ParticleField";

@@ -6,7 +6,7 @@ interface InvoicePreviewProps {
     name: string
     whatsapp: string
     email?: string
-    package_type: string
+    package_name: string
   }
   items: Array<{
     id: string
@@ -19,6 +19,8 @@ interface InvoicePreviewProps {
     sub_level?: string
   }>
   total: number
+  floorPrice?: number
+  benefits?: string[]
   status?: string
 }
 
@@ -26,7 +28,10 @@ interface InvoicePreviewProps {
  * Professional Minimalist Invoice Design for Monark Studio
  * Colors: Deep Navy (#1A2B3C), Warm Gold (#C9A66B), Pure White (#FFFFFF), Light Gray (#F5F5F5)
  */
-export default function InvoicePreview({ client, items, total, status }: InvoicePreviewProps) {
+export default function InvoicePreview({ client, items, total, floorPrice = 0, benefits = [], status }: InvoicePreviewProps) {
+  const standardItems = items.filter(i => i.classification === 'STANDARD')
+  const addonItems = items.filter(i => i.classification === 'ADDON')
+  const addonTotal = addonItems.reduce((sum, i) => sum + Number(i.price), 0)
   const today = new Date().toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
@@ -100,63 +105,131 @@ export default function InvoicePreview({ client, items, total, status }: Invoice
           </div>
           <div className="space-y-3 print:space-y-1">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider print:text-[10px]">Project</h3>
-            <p className="text-lg font-medium text-gray-900 print:text-base italic">{client.package_type || 'Development'}</p>
+            <p className="text-lg font-medium text-gray-900 print:text-base italic">{client.package_name || 'Development'}</p>
           </div>
         </div>
       </div>
 
       {/* Items Table */}
-      <div className="px-16 py-12 flex-1 print:px-10 print:py-6">
-        {/* Table Header */}
-        <div className="grid grid-cols-12 gap-4 pb-4 mb-6 border-b-2 border-gray-900 print:mb-3 print:pb-2">
-          <div className="col-span-1 text-xs font-bold text-gray-900 uppercase tracking-widest">No</div>
-          <div className="col-span-8 text-xs font-bold text-gray-900 uppercase tracking-widest">Description</div>
-          <div className="col-span-3 text-xs font-bold text-gray-900 uppercase tracking-widest text-right">Amount (IDR)</div>
-        </div>
+      <div className="px-16 py-12 flex-1 print:px-10 print:py-6 space-y-10 print:space-y-4">
 
-        {/* Table Body */}
-        <div className="space-y-6 mb-12 print:space-y-2 print:mb-6">
-          {items.map((item, idx) => (
-            <div key={item.id} className="grid grid-cols-12 gap-4 py-3 border-b border-gray-100 print:py-2 print:border-gray-50">
-              <div className="col-span-1 text-sm text-gray-400 font-medium print:text-[10px]">
-                {String(idx + 1).padStart(2, '0')}
-              </div>
-              <div className="col-span-8 space-y-1">
-                <p className="text-sm font-medium text-gray-900 print:text-xs">{item.description}</p>
-                {item.custom_note && (
-                  <p className="text-[10px] text-gray-500 italic print:text-[8px] leading-relaxed">
-                    Note: {item.custom_note}
-                  </p>
-                )}
-                {item.level && (
-                  <div className="flex gap-2 items-center opacity-70">
-                    <span className="inline-flex px-1.5 py-0.5 bg-gray-100 text-[10px] text-gray-600 font-bold rounded print:text-[8px]">
-                      {item.level}
-                    </span>
-                    <span className="text-[11px] text-gray-500 print:text-[9px]">
-                      {item.sub_level}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className="col-span-3 text-sm font-bold text-gray-900 text-right print:text-xs italic">
-                {item.price > 0 
-                  ? `Rp ${Number(item.price).toLocaleString('id-ID')}` 
-                  : item.classification === 'STANDARD' ? 'INCLUDED' : '–'}
-              </div>
+        {/* Benefits Section */}
+        {benefits.length > 0 && (
+          <div>
+            <div className="pb-3 mb-4 border-b-2 border-gray-900 print:mb-2 print:pb-1.5">
+              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest">Package Benefits</h3>
             </div>
-          ))}
-        </div>
+            <div className="space-y-2 print:space-y-1">
+              {benefits.map((benefit, idx) => (
+                <div key={idx} className="flex items-center gap-3 py-2 border-b border-gray-50 print:py-1">
+                  <span className="text-xs text-emerald-600 font-bold print:text-[10px]">✓</span>
+                  <span className="text-sm text-gray-700 print:text-xs">{benefit}</span>
+                  <span className="ml-auto text-[10px] text-gray-400 font-medium italic print:text-[8px]">INCLUDED</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Standard Features Section */}
+        {standardItems.length > 0 && (
+          <div>
+            <div className="pb-3 mb-4 border-b-2 border-gray-900 print:mb-2 print:pb-1.5">
+              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest">Standard Features</h3>
+            </div>
+            <div className="space-y-3 print:space-y-1">
+              {standardItems.map((item, idx) => (
+                <div key={item.id} className="grid grid-cols-12 gap-4 py-2 border-b border-gray-100 print:py-1 print:border-gray-50">
+                  <div className="col-span-1 text-sm text-gray-400 font-medium print:text-[10px]">
+                    {String(idx + 1).padStart(2, '0')}
+                  </div>
+                  <div className="col-span-8 space-y-1">
+                    <p className="text-sm font-medium text-gray-900 print:text-xs">{item.description}</p>
+                    {item.custom_note && (
+                      <p className="text-[10px] text-gray-500 italic print:text-[8px] leading-relaxed">
+                        Note: {item.custom_note}
+                      </p>
+                    )}
+                  </div>
+                  <div className="col-span-3 text-[10px] font-medium text-gray-400 text-right italic print:text-[8px]">
+                    INCLUDED
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Floor Price Subtotal */}
+            {floorPrice > 0 && (
+              <div className="flex justify-end mt-4 print:mt-2">
+                <div className="w-96 print:w-72">
+                  <div className="flex justify-between py-3 border-t border-gray-200 print:py-1.5">
+                    <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">Package Price</span>
+                    <span className="text-sm font-bold text-gray-900">Rp {floorPrice.toLocaleString('id-ID')}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Addon Features Section */}
+        {addonItems.length > 0 && (
+          <div>
+            <div className="grid grid-cols-12 gap-4 pb-3 mb-4 border-b-2 border-gray-900 print:mb-2 print:pb-1.5">
+              <div className="col-span-1 text-xs font-bold text-gray-900 uppercase tracking-widest">No</div>
+              <div className="col-span-8 text-xs font-bold text-gray-900 uppercase tracking-widest">Additional Features</div>
+              <div className="col-span-3 text-xs font-bold text-gray-900 uppercase tracking-widest text-right">Amount (IDR)</div>
+            </div>
+            <div className="space-y-3 print:space-y-1">
+              {addonItems.map((item, idx) => (
+                <div key={item.id} className="grid grid-cols-12 gap-4 py-3 border-b border-gray-100 print:py-2 print:border-gray-50">
+                  <div className="col-span-1 text-sm text-gray-400 font-medium print:text-[10px]">
+                    {String(idx + 1).padStart(2, '0')}
+                  </div>
+                  <div className="col-span-8 space-y-1">
+                    <p className="text-sm font-medium text-gray-900 print:text-xs">{item.description}</p>
+                    {item.custom_note && (
+                      <p className="text-[10px] text-gray-500 italic print:text-[8px] leading-relaxed">
+                        Note: {item.custom_note}
+                      </p>
+                    )}
+                    {item.level && (
+                      <div className="flex gap-2 items-center opacity-70">
+                        <span className="inline-flex px-1.5 py-0.5 bg-gray-100 text-[10px] text-gray-600 font-bold rounded print:text-[8px]">
+                          {item.level}
+                        </span>
+                        <span className="text-[11px] text-gray-500 print:text-[9px]">
+                          {item.sub_level}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-span-3 text-sm font-bold text-gray-900 text-right print:text-xs">
+                    Rp {Number(item.price).toLocaleString('id-ID')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Totals Section */}
       <div className="px-16 pb-12 print:px-10 print:pb-4 break-inside-avoid">
         <div className="flex justify-end">
           <div className="w-96 space-y-4 print:w-72 print:space-y-1">
-            <div className="flex justify-between py-3 border-b border-gray-100 print:py-1.5">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-widest">Subtotal</span>
-              <span className="text-sm font-bold text-gray-900 tracking-tight">Rp {total.toLocaleString('id-ID')}</span>
-            </div>
+            {floorPrice > 0 && (
+              <div className="flex justify-between py-3 border-b border-gray-100 print:py-1.5">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-widest">Package Price</span>
+                <span className="text-sm font-bold text-gray-900 tracking-tight">Rp {floorPrice.toLocaleString('id-ID')}</span>
+              </div>
+            )}
+            {addonItems.length > 0 && (
+              <div className="flex justify-between py-3 border-b border-gray-100 print:py-1.5">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-widest">Addon ({addonItems.length} item)</span>
+                <span className="text-sm font-bold text-gray-900 tracking-tight">Rp {addonTotal.toLocaleString('id-ID')}</span>
+              </div>
+            )}
             <div className="flex justify-between py-3 border-b border-gray-100 print:py-1.5">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-widest">Tax (0%)</span>
               <span className="text-sm font-bold text-gray-900 tracking-tight">Rp 0</span>

@@ -14,7 +14,8 @@ const statusStyles: Record<string, string> = {
 export default async function RecentOrders() {
     const orders = await prisma.order.findMany({
         take: 5,
-        orderBy: { created_at: 'desc' }
+        orderBy: { created_at: 'desc' },
+        include: { pricing_package: { select: { name: true } } }
     })
 
     return (
@@ -54,7 +55,7 @@ export default async function RecentOrders() {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-700 font-medium">{order.name}</td>
-                                <td className="px-6 py-4 text-sm text-gray-600">{order.package_type || 'Custom Item'}</td>
+                                <td className="px-6 py-4 text-sm text-gray-600">{order.pricing_package?.name || 'Custom Project'}</td>
                                 <td className="px-6 py-4">
                                     <span className={`px-2.5 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider ${statusStyles[order.status] || 'bg-gray-100 text-gray-600'}`}>
                                         {order.status}
