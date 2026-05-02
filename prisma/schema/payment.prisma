@@ -3,8 +3,18 @@ model Payment {
   order_id        String
   amount          Decimal       @db.Decimal(12, 2)
   payment_method  String?
+  label           String?       // "DP 50%", "Pelunasan", "Lunas"
   notes           String?
   status          PaymentStatus @default(PENDING)
+
+  // Duitku integration fields
+  duitku_reference    String?   @unique  // Duitku reference ID
+  duitku_payment_url  String?            // Payment URL for client
+  duitku_va_number    String?            // Virtual Account number
+  duitku_payment_code String?            // Payment method code (VA, BT, etc.)
+  duitku_expiry       DateTime?          // Payment expiry time
+  merchant_order_id   String?   @unique  // Our unique ID sent to Duitku
+
   paid_at         DateTime?
   created_at      DateTime      @default(now())
   updated_at      DateTime      @updatedAt
@@ -18,4 +28,5 @@ enum PaymentStatus {
   PENDING
   CONFIRMED
   CANCELLED
+  EXPIRED
 }
