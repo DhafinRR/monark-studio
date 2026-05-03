@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, FileText, Check, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Check, Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import ClientHeader from './ClientHeader'
@@ -43,13 +43,16 @@ interface OrderData {
     created_at: string
     payment_method?: string
     account_number?: string
+    duitku_payment_url?: string
+    duitku_va_number?: string
+    duitku_expiry?: string
   }>
   pricing_package?: {
     name: string
   } | null
 }
 
-type Phase = 'select' | 'pending' | 'success'
+type Phase = 'select' | 'pending' | 'processing' | 'success'
 type Method = 'va' | 'qris' | 'ewallet'
 
 export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
@@ -65,12 +68,14 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
   const [selectedMethod, setSelectedMethod] = useState<Method | null>(null)
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   
-  // Modal
+  // Modal & processing
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [processing, setProcessing] = useState(false)
   
-  // VA Info (simulated - no actual gateway)
+  // VA Info from Duitku
   const [vaNumber, setVaNumber] = useState<string>('')
-  const [expiryTime] = useState(() => {
+  const [paymentUrl, setPaymentUrl] = useState<string>('')
+  const [expiryTime, setExpiryTime] = useState<string>(() => {
     const date = new Date()
     date.setHours(date.getHours() + 24)
     return date.toISOString()
@@ -87,8 +92,14 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
         // Find the payment
         const payment = data.payments?.find((p: any) => p.id === paymentId)
         if (payment) {
-          if (payment.status === 'SUCCEEDED') {
+          if (payment.status === 'CONFIRMED' || payment.status === 'SUCCEEDED') {
             setPhase('success')
+          } else if (payment.duitku_payment_url) {
+            // Payment already has Duitku transaction, show pending
+            setPaymentUrl(payment.duitku_payment_url)
+            if (payment.duitku_va_number) setVaNumber(payment.duitku_va_number)
+            if (payment.duitku_expiry) setExpiryTime(payment.duitku_expiry)
+            setPhase('pending')
           } else if (payment.account_number) {
             setVaNumber(payment.account_number)
             setPhase('pending')
@@ -109,18 +120,53 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
     setSelectedBank(bankCode || null)
   }
 
-  const handleConfirmMethod = () => {
+  const handleConfirmMethod = async () => {
     if (!selectedMethod) return
-
-    // Simulate VA number generation (UI only - no actual gateway)
-    if (selectedMethod === 'va') {
-      const bankPrefix = selectedBank === 'BCA' ? '8800' : '8850'
-      const randomNum = Math.floor(Math.random() * 1000000000).toString().padStart(10, '0')
-      setVaNumber(`${bankPrefix}${randomNum}`)
-    }
-
-    setPhase('pending')
+    
+    setProcessing(true)
     setShowConfirmModal(false)
+
+    try {
+      // Call Duitku API to create transaction
+      const res = await fetch(`/api/order/${orderId}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentId,
+          method: selectedMethod,
+          bankCode: selectedBank,
+        })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal memproses pembayaran')
+      }
+
+      // If Duitku returns a payment URL, redirect to it
+      if (data.paymentUrl) {
+        setPaymentUrl(data.paymentUrl)
+        
+        if (data.vaNumber) {
+          setVaNumber(data.vaNumber)
+        }
+        if (data.expiryDate) {
+          setExpiryTime(data.expiryDate)
+        }
+
+        // For VA: show VA info page, for others: redirect to Duitku payment page
+        if (selectedMethod === 'va' && data.vaNumber) {
+          setPhase('pending')
+        } else {
+          // Redirect to Duitku payment page (QRIS, e-wallet, etc.)
+          window.location.href = data.paymentUrl
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || 'Terjadi kesalahan')
+      setProcessing(false)
+    }
   }
 
   const handleChangeMethod = () => {
@@ -128,11 +174,17 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
     setSelectedMethod(null)
     setSelectedBank(null)
     setVaNumber('')
+    setPaymentUrl('')
+    setProcessing(false)
   }
 
   const handleConfirmPayment = () => {
-    // For now, just show success (in real app, this would verify with payment gateway)
-    setPhase('success')
+    // For VA payments, redirect to Duitku payment page for verification
+    if (paymentUrl) {
+      window.location.href = paymentUrl
+    } else {
+      setPhase('success')
+    }
   }
 
   if (loading) {
@@ -149,7 +201,7 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center text-center px-4">
         <h1 className="text-4xl font-display font-bold text-foreground/20 mb-4">Monark Studio</h1>
         <p className="text-lg text-muted-foreground/60">
-          Data pembayaran tidak ditemukan.
+          {error || 'Data pembayaran tidak ditemukan.'}
         </p>
         <Link href="/" className="mt-8 text-sm font-bold text-accent hover:underline">
           Kembali ke Beranda
@@ -162,12 +214,12 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
   const currentPayment = order.payments?.find(p => p.id === paymentId)
   const totalAmount = Number(order.total_price) || 0
   const totalPaid = order.payments
-    ?.filter(p => p.status === 'SUCCEEDED')
+    ?.filter(p => p.status === 'CONFIRMED' || p.status === 'SUCCEEDED')
     .reduce((acc, p) => acc + Number(p.amount), 0) || 0
   const remainingBalance = Math.max(0, totalAmount - totalPaid)
   const currentAmount = currentPayment ? Number(currentPayment.amount) : remainingBalance
   const invoiceNumber = `INV-${new Date(order.created_at).getFullYear()}-${order.id.slice(0, 4).toUpperCase()}`
-  const isSuccess = phase === 'success' || currentPayment?.status === 'SUCCEEDED'
+  const isSuccess = phase === 'success' || currentPayment?.status === 'CONFIRMED' || currentPayment?.status === 'SUCCEEDED'
 
   return (
     <div className="min-h-screen bg-background">
@@ -235,7 +287,7 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
 
             {/* Payment Content (Dynamic based on phase) */}
             <section>
-              {phase === 'select' && (
+              {phase === 'select' && !processing && (
                 <PaymentMethod
                   onSelect={handleSelectMethod}
                   onConfirm={() => setShowConfirmModal(true)}
@@ -244,7 +296,15 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
                 />
               )}
 
-              {phase === 'pending' && (
+              {processing && (
+                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                  <Loader2 className="w-10 h-10 animate-spin text-accent" />
+                  <p className="text-sm text-muted-foreground font-medium">Memproses pembayaran...</p>
+                  <p className="text-xs text-muted-foreground/50">Mohon tunggu, Anda akan diarahkan ke halaman pembayaran</p>
+                </div>
+              )}
+
+              {phase === 'pending' && !processing && (
                 <PaymentVAInfo
                   bankCode={selectedBank || 'BCA'}
                   accountNumber={vaNumber}

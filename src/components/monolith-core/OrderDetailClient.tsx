@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   Save, 
@@ -14,11 +14,6 @@ import {
   CheckCircle2,
   Eye,
   Trash2,
-  Copy,
-  MessageCircle,
-  RefreshCw,
-  Clock,
-  CreditCard,
   Banknote
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -35,13 +30,6 @@ interface OrderItem {
   custom_note?: string
 }
 
-interface DuitkuMethod {
-  paymentMethod: string
-  paymentName: string
-  paymentImage: string
-  totalFee: string
-}
-
 interface Payment {
   id: string
   amount: number
@@ -49,12 +37,6 @@ interface Payment {
   label?: string
   notes?: string
   status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'EXPIRED'
-  duitku_reference?: string
-  duitku_payment_url?: string
-  duitku_va_number?: string
-  duitku_payment_code?: string
-  duitku_expiry?: string
-  merchant_order_id?: string
   paid_at?: string
   created_at: string
 }
@@ -104,17 +86,10 @@ export default function OrderDetailClient({ order: initialOrder }: OrderDetailCl
   const [creatingPortfolio, setCreatingPortfolio] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [showPaymentForm, setShowPaymentForm] = useState(false)
-  const [paymentMethods, setPaymentMethods] = useState<DuitkuMethod[]>([])
-  const [loadingMethods, setLoadingMethods] = useState(false)
-  const [creatingPayment, setCreatingPayment] = useState(false)
-  const [checkingPayment, setCheckingPayment] = useState<string | null>(null)
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
-    label: 'DP 50%',
     payment_method: '',
     notes: '',
-    duitku_payment_code: '',
-    use_duitku: true,
     status: 'PENDING' as const
   })
   const [formData, setFormData] = useState({
@@ -145,36 +120,6 @@ export default function OrderDetailClient({ order: initialOrder }: OrderDetailCl
     CONFIRMED: 'bg-green-50 text-green-600 border-green-100',
     CANCELLED: 'bg-red-50 text-red-600 border-red-100',
     EXPIRED: 'bg-gray-50 text-gray-500 border-gray-200'
-  }
-
-  const fetchPaymentMethods = async (amount: number) => {
-    if (amount < 10000) return
-    setLoadingMethods(true)
-    try {
-      const res = await fetch(`/api/payment/methods?amount=${amount}`)
-      if (res.ok) {
-        const data = await res.json()
-        setPaymentMethods(data.methods || [])
-      }
-    } catch { /* ignore */ } finally {
-      setLoadingMethods(false)
-    }
-  }
-
-  const handleCheckPayment = async (paymentId: string) => {
-    setCheckingPayment(paymentId)
-    try {
-      const res = await fetch(`/api/payment/${paymentId}/check`, { method: 'POST' })
-      const data = await res.json()
-      if (res.ok) {
-        toast.success(data.message || 'Status checked')
-        const refreshRes = await fetch(`/api/monolith-core/orders/${order.id}`)
-        if (refreshRes.ok) setOrder(await refreshRes.json())
-      } else {
-        toast.error(data.error || 'Failed to check')
-      }
-    } catch { toast.error('Error checking payment') }
-    finally { setCheckingPayment(null) }
   }
 
   const totalPaid = (order.payments || [])
@@ -280,7 +225,6 @@ export default function OrderDetailClient({ order: initialOrder }: OrderDetailCl
   }
 
   const handleAddPayment = async () => {
-    setCreatingPayment(true)
     try {
       const res = await fetch(`/api/monolith-core/orders/${order.id}/payments`, {
         method: 'POST',
@@ -288,31 +232,22 @@ export default function OrderDetailClient({ order: initialOrder }: OrderDetailCl
         body: JSON.stringify({
           amount: parseFloat(paymentForm.amount),
           payment_method: paymentForm.payment_method,
-          label: paymentForm.label,
           notes: paymentForm.notes,
-          duitku_payment_code: paymentForm.duitku_payment_code,
-          use_duitku: paymentForm.use_duitku && !!paymentForm.duitku_payment_code,
-          status: paymentForm.use_duitku ? 'PENDING' : paymentForm.status
+          status: paymentForm.status
         })
       })
       if (res.ok) {
-        const data = await res.json()
-        toast.success('Payment termin berhasil dibuat!')
-        // Auto-open WhatsApp if available
-        if (data.whatsapp_url) {
-          window.open(data.whatsapp_url, '_blank')
-        }
+        toast.success('Payment berhasil ditambahkan!')
         setShowPaymentForm(false)
-        setPaymentForm({ amount: '', label: 'DP 50%', payment_method: '', notes: '', duitku_payment_code: '', use_duitku: true, status: 'PENDING' })
-        setPaymentMethods([])
+        setPaymentForm({ amount: '', payment_method: '', notes: '', status: 'PENDING' })
         const refreshRes = await fetch(`/api/monolith-core/orders/${order.id}`)
         if (refreshRes.ok) setOrder(await refreshRes.json())
       } else {
-        const errData = await res.json().catch(() => ({}))
-        toast.error(errData.error || 'Gagal menambahkan payment.')
+        toast.error('Gagal menambahkan payment.')
       }
-    } catch { toast.error('Terjadi kesalahan.') }
-    finally { setCreatingPayment(false) }
+    } catch {
+      toast.error('Terjadi kesalahan.')
+    }
   }
 
   const handleUpdatePayment = async (paymentId: string, status: string) => {
@@ -583,10 +518,9 @@ export default function OrderDetailClient({ order: initialOrder }: OrderDetailCl
       {/* Payments Section */}
       <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
         <h2 className="text-sm font-black uppercase tracking-widest text-[#B8926A] flex items-center gap-2">
-          <Banknote className="w-4 h-4" /> Payment Termin
+          <Banknote className="w-4 h-4" /> Payments
         </h2>
 
-        {/* Summary + Progress */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-xs text-gray-500">Total Order</span>
@@ -602,269 +536,63 @@ export default function OrderDetailClient({ order: initialOrder }: OrderDetailCl
               Rp {remaining.toLocaleString('id-ID')}
             </span>
           </div>
-          {/* Progress Bar */}
           <div className="pt-1">
             <div className="flex justify-between items-center mb-1">
               <span className="text-[10px] font-bold text-gray-400 uppercase">Progress</span>
               <span className="text-[10px] font-bold text-gray-500">{paymentProgress}%</span>
             </div>
             <div className="w-full bg-gray-100 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full transition-all duration-500 ${paymentProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
-                style={{ width: `${paymentProgress}%` }}
-              />
+              <div className={`h-2 rounded-full transition-all duration-500 ${paymentProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${paymentProgress}%` }} />
             </div>
           </div>
         </div>
 
-        {/* Payment List */}
         <div className="space-y-3">
-          {(order.payments || []).map((payment) => {
-            const isExpired = payment.duitku_expiry && new Date(payment.duitku_expiry) < new Date() && payment.status === 'PENDING'
-            return (
-            <div key={payment.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-2">
+          {(order.payments || []).map((payment) => (
+            <div key={payment.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <div className="flex items-center gap-2 mb-1">
                     {payment.label && (
-                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[9px] font-black uppercase border border-blue-100">
-                        {payment.label}
-                      </span>
+                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[9px] font-black uppercase border border-blue-100">{payment.label}</span>
                     )}
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${paymentStatusColors[isExpired ? 'EXPIRED' : payment.status]}`}>
-                      {isExpired ? 'EXPIRED' : payment.status}
-                    </span>
-                    <span className="text-[10px] text-gray-400">
-                      {new Date(payment.created_at).toLocaleDateString('id-ID')}
-                    </span>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${paymentStatusColors[payment.status]}`}>{payment.status}</span>
+                    <span className="text-[10px] text-gray-400">{new Date(payment.created_at).toLocaleDateString('id-ID')}</span>
                   </div>
-                  <p className="text-sm font-bold text-gray-900">
-                    Rp {Number(payment.amount).toLocaleString('id-ID')}
-                  </p>
-                  {payment.payment_method && (
-                    <p className="text-[10px] text-gray-500">{payment.payment_method}</p>
-                  )}
-                  {payment.duitku_va_number && (
-                    <p className="text-[10px] text-gray-500 mt-1">VA: <span className="font-mono font-bold">{payment.duitku_va_number}</span></p>
-                  )}
-                  {payment.duitku_expiry && payment.status === 'PENDING' && !isExpired && (
-                    <p className="text-[10px] text-amber-600 flex items-center gap-1 mt-1">
-                      <Clock className="w-3 h-3" />
-                      Exp: {new Date(payment.duitku_expiry).toLocaleString('id-ID')}
-                    </p>
-                  )}
+                  <p className="text-sm font-bold text-gray-900">Rp {Number(payment.amount).toLocaleString('id-ID')}</p>
+                  {payment.payment_method && <p className="text-[10px] text-gray-500">{payment.payment_method}</p>}
                 </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {/* Copy Payment Link */}
-                  {payment.duitku_payment_url && payment.status === 'PENDING' && !isExpired && (
-                    <button
-                      onClick={() => { navigator.clipboard.writeText(payment.duitku_payment_url!); toast.success('Link copied!') }}
-                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                      title="Copy Payment Link"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  {/* Send WhatsApp */}
-                  {payment.duitku_payment_url && payment.status === 'PENDING' && !isExpired && (
-                    <a
-                      href={`https://wa.me/${order.whatsapp.replace(/[^0-9]/g, '').replace(/^0/, '62')}?text=${encodeURIComponent(`Halo ${order.name}! Silakan lakukan pembayaran ${payment.label || 'termin'} sebesar Rp ${Number(payment.amount).toLocaleString('id-ID')} melalui link berikut:\n${payment.duitku_payment_url}`)}`}
-                      target="_blank"
-                      className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
-                      title="Send via WhatsApp"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" />
-                    </a>
-                  )}
-                  {/* Check Status */}
-                  {payment.merchant_order_id && payment.status === 'PENDING' && (
-                    <button
-                      onClick={() => handleCheckPayment(payment.id)}
-                      disabled={checkingPayment === payment.id}
-                      className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors disabled:opacity-50"
-                      title="Check Status"
-                    >
-                      {checkingPayment === payment.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                    </button>
-                  )}
-                  <a
-                    href={`/monolith-core/orders/${order.id}/payments/${payment.id}/print/kwitansi`}
-                    target="_blank"
-                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                    title="Print Kwitansi"
-                  >
+                <div className="flex items-center gap-1">
+                  <a href={`/monolith-core/orders/${order.id}/payments/${payment.id}/print/kwitansi`} target="_blank" className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Print Kwitansi">
                     <Eye className="w-3.5 h-3.5" />
                   </a>
-                  {payment.status === 'PENDING' && !payment.merchant_order_id && (
-                    <button
-                      onClick={() => handleUpdatePayment(payment.id, 'CONFIRMED')}
-                      className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
-                      title="Confirm Manual"
-                    >
+                  {payment.status === 'PENDING' && (
+                    <button onClick={() => handleUpdatePayment(payment.id, 'CONFIRMED')} className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors" title="Confirm">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                     </button>
                   )}
-                  <button
-                    onClick={() => handleDeletePayment(payment.id)}
-                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                    title="Delete"
-                  >
+                  <button onClick={() => handleDeletePayment(payment.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
             </div>
-          )})}
+          ))}
         </div>
 
-        {/* Add Payment Form */}
         {!showPaymentForm ? (
-          <button
-            onClick={() => {
-              setShowPaymentForm(true)
-              // Pre-fill DP 50%
-              const dp = Math.round(Number(order.total_price || 0) * 0.5)
-              setPaymentForm(f => ({ ...f, amount: dp > 0 ? String(dp) : '', label: totalPaid === 0 ? 'DP 50%' : 'Pelunasan' }))
-              if (dp >= 10000) fetchPaymentMethods(dp)
-            }}
-            className="w-full py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2 text-sm"
-          >
-            <Plus className="w-4 h-4" /> Buat Payment Termin
+          <button onClick={() => setShowPaymentForm(true)} className="w-full py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2 text-sm">
+            <Plus className="w-4 h-4" /> Add Payment
           </button>
         ) : (
-          <div className="space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-            <h4 className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
-              <CreditCard className="w-3.5 h-3.5" /> Payment Termin Baru
-            </h4>
-
-            {/* Label */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">Label Termin</label>
-              <div className="flex gap-2 flex-wrap">
-                {['DP 50%', 'Pelunasan', 'Lunas 100%'].map(lbl => (
-                  <button
-                    key={lbl}
-                    onClick={() => {
-                      const pct = lbl === 'DP 50%' ? 0.5 : 1
-                      const amt = Math.round((Number(order.total_price || 0) * pct) - (lbl === 'Pelunasan' ? totalPaid : 0))
-                      setPaymentForm(f => ({ ...f, label: lbl, amount: String(Math.max(0, amt)) }))
-                      if (amt >= 10000) fetchPaymentMethods(amt)
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                      paymentForm.label === lbl ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
-                    }`}
-                  >
-                    {lbl}
-                  </button>
-                ))}
-                <input
-                  type="text"
-                  placeholder="Custom..."
-                  className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs w-24"
-                  value={!['DP 50%', 'Pelunasan', 'Lunas 100%'].includes(paymentForm.label) ? paymentForm.label : ''}
-                  onChange={e => setPaymentForm({...paymentForm, label: e.target.value})}
-                />
-              </div>
-            </div>
-
-            {/* Amount */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">Nominal (Rp)</label>
-              <input
-                type="number"
-                placeholder="Nominal pembayaran"
-                className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-bold"
-                value={paymentForm.amount}
-                onChange={e => {
-                  setPaymentForm({...paymentForm, amount: e.target.value})
-                  const amt = parseFloat(e.target.value)
-                  if (amt >= 10000) fetchPaymentMethods(amt)
-                }}
-              />
-            </div>
-
-            {/* Duitku toggle */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPaymentForm(f => ({...f, use_duitku: !f.use_duitku}))}
-                className={`w-10 h-5 rounded-full transition-colors relative ${paymentForm.use_duitku ? 'bg-green-500' : 'bg-gray-300'}`}
-              >
-                <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-transform ${paymentForm.use_duitku ? 'translate-x-5' : 'translate-x-0.5'}`} />
-              </button>
-              <span className="text-xs font-bold text-gray-600">Pakai Duitku Payment Gateway</span>
-            </div>
-
-            {/* Payment Methods from Duitku */}
-            {paymentForm.use_duitku && (
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Metode Pembayaran</label>
-                {loadingMethods ? (
-                  <div className="flex items-center gap-2 py-3 text-xs text-gray-400"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...</div>
-                ) : paymentMethods.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                    {paymentMethods.map(m => (
-                      <button
-                        key={m.paymentMethod}
-                        onClick={() => setPaymentForm(f => ({...f, duitku_payment_code: m.paymentMethod, payment_method: m.paymentName}))}
-                        className={`p-2 rounded-lg border text-left flex items-center gap-2 transition-all ${
-                          paymentForm.duitku_payment_code === m.paymentMethod
-                            ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
-                            : 'border-gray-200 bg-white hover:border-gray-400'
-                        }`}
-                      >
-                        <img src={m.paymentImage} alt={m.paymentName} className="w-8 h-6 object-contain" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-bold text-gray-700 truncate">{m.paymentName}</p>
-                          {Number(m.totalFee) > 0 && <p className="text-[9px] text-gray-400">Fee: Rp {Number(m.totalFee).toLocaleString('id-ID')}</p>}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-[10px] text-gray-400 italic py-2">Masukkan nominal minimal Rp 10.000 untuk melihat metode pembayaran</p>
-                )}
-              </div>
-            )}
-
-            {/* Manual method (when Duitku is off) */}
-            {!paymentForm.use_duitku && (
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Metode (Manual)</label>
-                <input
-                  type="text"
-                  placeholder="Transfer BCA, Cash, dll"
-                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm"
-                  value={paymentForm.payment_method}
-                  onChange={e => setPaymentForm({...paymentForm, payment_method: e.target.value})}
-                />
-              </div>
-            )}
-
-            {/* Notes */}
-            <textarea
-              placeholder="Notes (optional)"
-              rows={2}
-              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm"
-              value={paymentForm.notes}
-              onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})}
-            />
-
-            {/* Buttons */}
+          <div className="space-y-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+            <h4 className="text-xs font-bold text-gray-500 uppercase">New Payment</h4>
+            <input type="number" placeholder="Amount (Rp)" className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm" value={paymentForm.amount} onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} />
+            <input type="text" placeholder="Payment Method" className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm" value={paymentForm.payment_method} onChange={e => setPaymentForm({...paymentForm, payment_method: e.target.value})} />
+            <textarea placeholder="Notes (optional)" rows={2} className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm" value={paymentForm.notes} onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})} />
             <div className="flex gap-2">
-              <button
-                onClick={() => { setShowPaymentForm(false); setPaymentMethods([]) }}
-                className="flex-1 py-2.5 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-all text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddPayment}
-                disabled={creatingPayment || !paymentForm.amount || (paymentForm.use_duitku && !paymentForm.duitku_payment_code)}
-                className="flex-1 py-2.5 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-all text-sm disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {creatingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
-                {creatingPayment ? 'Creating...' : 'Buat & Kirim ke WA'}
-              </button>
+              <button onClick={() => setShowPaymentForm(false)} className="flex-1 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-all text-sm">Cancel</button>
+              <button onClick={handleAddPayment} className="flex-1 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-all text-sm">Save</button>
             </div>
           </div>
         )}
