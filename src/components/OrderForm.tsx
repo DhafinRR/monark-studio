@@ -31,13 +31,14 @@ export default function OrderForm() {
 
     setIsAiLoading(true);
     try {
+      const platform = platformOverride || selectedPlatform || undefined;
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           story: aiPrompt,
           action: "PARSE_ORDER",
-          platform: platformOverride || selectedPlatform
+          ...(platform ? { platform } : {}),
         }),
       });
 
