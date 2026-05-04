@@ -44,8 +44,8 @@ export const updatePortfolioSchema = createPortfolioSchema.partial()
 
 export const aiRequestSchema = z.object({
   action: z.enum(['PARSE_ORDER', 'ANALYZE_ITEM']),
-  story: z.string().max(5000).optional(),
-  package_id: z.string().optional(),
-  platform: z.string().optional(),
-  description: z.string().max(500).optional(),
+  story: z.string().max(5000).optional().nullable(),
+  package_id: z.string().optional().nullable(),
+  platform: z.string().optional().nullable(),
+  description: z.string().max(500).optional().nullable(),
 })
