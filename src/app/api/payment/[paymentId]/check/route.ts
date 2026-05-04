@@ -36,7 +36,7 @@ export async function POST(
 
     // Update status based on Duitku response
     // statusCode: "00" = SUCCESS, "01" = PROCESS, "02" = FAILED/EXPIRED
-    if (result.statusCode === '00' && payment.status !== 'CONFIRMED') {
+    if (result.statusCode === '00') {
       const updated = await prisma.payment.update({
         where: { id: paymentId },
         data: {
