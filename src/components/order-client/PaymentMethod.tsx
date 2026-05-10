@@ -14,8 +14,18 @@ interface PaymentMethodProps {
 }
 
 const vaBanks = [
-  { id: 'BCA', name: 'BCA', logo: '/assets/banks/bca.svg' },
-  { id: 'MANDIRI', name: 'Mandiri', logo: '/assets/banks/mandiri.svg' },
+  { id: 'BCA', name: 'BCA', color: '#003399' },
+  { id: 'BNI', name: 'BNI', color: '#F15A22' },
+  { id: 'BRI', name: 'BRI', color: '#00529C' },
+  { id: 'MANDIRI', name: 'Mandiri', color: '#003876' },
+]
+
+const ewallets = [
+  { id: 'SHOPEEPAY', name: 'ShopeePay', color: '#EE4D2D' },
+  { id: 'DANA', name: 'DANA', color: '#108EE9' },
+  { id: 'OVO', name: 'OVO', color: '#4C3494' },
+  { id: 'LINKAJA', name: 'LinkAja', color: '#E31E24' },
+  { id: 'JENIUSPAY', name: 'Jenius Pay', color: '#00A5DB' },
 ]
 
 export default function PaymentMethod({ onSelect, onConfirm, selectedMethod, selectedBank, isDisabled }: PaymentMethodProps) {
@@ -61,7 +71,7 @@ export default function PaymentMethod({ onSelect, onConfirm, selectedMethod, sel
                   Transfer Bank (Virtual Account)
                 </h3>
                 <p className="text-xs text-muted-foreground/60">
-                  BCA, Mandiri
+                  BCA, BNI, BRI, Mandiri
                 </p>
               </div>
             </div>
@@ -70,7 +80,7 @@ export default function PaymentMethod({ onSelect, onConfirm, selectedMethod, sel
 
           {expandedSection === 'va' && (
             <div className="px-6 pb-6 border-t border-border/50 pt-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {vaBanks.map((bank) => (
                   <div
                     key={bank.id}
@@ -84,8 +94,16 @@ export default function PaymentMethod({ onSelect, onConfirm, selectedMethod, sel
                         : 'border-border/50 hover:border-accent/50'
                     }`}
                   >
-                    <div className="w-12 h-12 bg-muted/50 rounded-lg flex items-center justify-center">
-                      <span className="text-xs font-black text-muted-foreground/60">{bank.name}</span>
+                    <div 
+                      className="w-12 h-12 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: `${bank.color}15` }}
+                    >
+                      <span 
+                        className="text-[10px] font-black"
+                        style={{ color: bank.color }}
+                      >
+                        {bank.id === 'MANDIRI' ? 'MDR' : bank.id}
+                      </span>
                     </div>
                     <span className="text-xs font-bold text-foreground">{bank.name}</span>
                     {selectedMethod === 'va' && selectedBank === bank.id && (
@@ -101,7 +119,7 @@ export default function PaymentMethod({ onSelect, onConfirm, selectedMethod, sel
         {/* QRIS */}
         <Card 
           className={`border-2 transition-all cursor-pointer ${
-            expandedSection === 'qris' 
+            selectedMethod === 'qris'
               ? 'border-accent bg-accent/5' 
               : 'border-border/50 hover:border-accent/50'
           }`}
@@ -120,11 +138,16 @@ export default function PaymentMethod({ onSelect, onConfirm, selectedMethod, sel
                   Pembayaran QR (QRIS)
                 </h3>
                 <p className="text-xs text-muted-foreground/60">
-                  GoPay, ShopeePay, DANA, OVO, dll
+                  Scan QR universal — semua e-wallet & mobile banking
                 </p>
               </div>
             </div>
-            <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${expandedSection === 'qris' ? 'rotate-180' : ''}`} />
+            <div className="flex items-center gap-2">
+              {selectedMethod === 'qris' && (
+                <Badge className="bg-accent text-white text-[8px]">Dipilih</Badge>
+              )}
+              <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${expandedSection === 'qris' ? 'rotate-180' : ''}`} />
+            </div>
           </div>
 
           {expandedSection === 'qris' && (
@@ -158,10 +181,10 @@ export default function PaymentMethod({ onSelect, onConfirm, selectedMethod, sel
               </div>
               <div>
                 <h3 className="font-display text-lg font-semibold text-foreground">
-                  Dompet Digital (Direct)
+                  Dompet Digital (E-Wallet)
                 </h3>
                 <p className="text-xs text-muted-foreground/60">
-                  OVO, DANA, ShopeePay
+                  ShopeePay, DANA, OVO, LinkAja, Jenius Pay
                 </p>
               </div>
             </div>
@@ -170,22 +193,33 @@ export default function PaymentMethod({ onSelect, onConfirm, selectedMethod, sel
 
           {expandedSection === 'ewallet' && (
             <div className="px-6 pb-6 border-t border-border/50 pt-4">
-              <div className="grid grid-cols-3 gap-4">
-                {['OVO', 'DANA', 'SHOPEEPAY'].map((ew) => (
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                {ewallets.map((ew) => (
                   <div
-                    key={ew}
+                    key={ew.id}
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleSelect('ewallet', ew)
+                      handleSelect('ewallet', ew.id)
                     }}
                     className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 cursor-pointer transition-all ${
-                      selectedMethod === 'ewallet' && selectedBank === ew
+                      selectedMethod === 'ewallet' && selectedBank === ew.id
                         ? 'border-accent bg-accent/10'
                         : 'border-border/50 hover:border-accent/50'
                     }`}
                   >
-                    <span className="text-xs font-black text-muted-foreground/60">{ew}</span>
-                    {selectedMethod === 'ewallet' && selectedBank === ew && (
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${ew.color}15` }}
+                    >
+                      <span 
+                        className="text-[8px] font-black"
+                        style={{ color: ew.color }}
+                      >
+                        {ew.id === 'SHOPEEPAY' ? 'SP' : ew.id === 'LINKAJA' ? 'LA' : ew.id === 'JENIUSPAY' ? 'JP' : ew.id.slice(0, 2)}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold text-foreground text-center leading-tight">{ew.name}</span>
+                    {selectedMethod === 'ewallet' && selectedBank === ew.id && (
                       <Check className="w-4 h-4 text-accent" />
                     )}
                   </div>
