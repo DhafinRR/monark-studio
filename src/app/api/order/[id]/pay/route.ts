@@ -6,20 +6,29 @@ import { createTransaction, generateMerchantOrderId } from '@/lib/duitku'
 const DUITKU_PAYMENT_CODES: Record<string, Record<string, string>> = {
   va: {
     BCA: 'BC',
-    MANDIRI: 'M1',
     BNI: 'I1',
     BRI: 'BR',
-    PERMATA: 'BT',
-    CIMB: 'B1',
+    MANDIRI: 'M2',
   },
   qris: {
-    DEFAULT: 'SP', // ShopeePay QRIS
+    DEFAULT: 'SP', // ShopeePay QRIS (universal)
   },
   ewallet: {
-    OVO: 'OV',
+    SHOPEEPAY: 'SA',
     DANA: 'DA',
-    SHOPEEPAY: 'SP',
+    OVO: 'OV',
+    LINKAJA: 'LA',
+    JENIUSPAY: 'JP',
   },
+}
+
+// Human-readable labels for payment methods
+const EWALLET_LABELS: Record<string, string> = {
+  SHOPEEPAY: 'ShopeePay',
+  DANA: 'DANA',
+  OVO: 'OVO',
+  LINKAJA: 'LinkAja',
+  JENIUSPAY: 'Jenius Pay',
 }
 
 /**
@@ -117,7 +126,7 @@ export async function POST(
         duitku_payment_code: duitkuPaymentCode,
         duitku_expiry: expiryDate,
         merchant_order_id: merchantOrderId,
-        payment_method: method === 'va' ? `VA ${bankCode}` : method === 'qris' ? 'QRIS' : bankCode || 'E-Wallet',
+        payment_method: method === 'va' ? `VA ${bankCode}` : method === 'qris' ? 'QRIS' : (bankCode ? EWALLET_LABELS[bankCode] || bankCode : 'E-Wallet'),
       }
     })
 
