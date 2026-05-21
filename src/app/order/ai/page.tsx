@@ -25,6 +25,8 @@ export default function AIOrderPage() {
   const [initialStandardItems, setInitialStandardItems] = useState<{ description: string }[]>([]);
   const [initialAddonItems, setInitialAddonItems] = useState<any[]>([]);
   const [benefits, setBenefits] = useState<string[]>([]);
+  const [platform, setPlatform] = useState<string | undefined>(undefined);
+  const [adjustedFloorPrice, setAdjustedFloorPrice] = useState<number | undefined>(undefined);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -60,6 +62,10 @@ export default function AIOrderPage() {
           package_id: selectedPkg?.id || "",
           details: parsed.analysis_summary || ""
         });
+
+        // Extract platform and adjusted floor_price from AI response
+        setPlatform(parsed.platform || undefined);
+        setAdjustedFloorPrice(parsed.floor_price ? Number(parsed.floor_price) : undefined);
 
         // Set benefits from DB (read-only)
         if (selectedPkg?.benefits) {
@@ -180,6 +186,8 @@ export default function AIOrderPage() {
                 initialStandardItems={initialStandardItems}
                 initialAddonItems={initialAddonItems}
                 initialBenefits={benefits}
+                platform={platform}
+                adjustedFloorPrice={adjustedFloorPrice}
               />
             ) : (
               <div className="flex items-center justify-center py-20">

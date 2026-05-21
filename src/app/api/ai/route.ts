@@ -263,7 +263,39 @@ async function handleParseOrder(
   catalog: any[],
   complexityPrices: any[]
 ) {
-  const selectedPkg = packages.find(p => p.id === package_id) || packages[0]
+  // Smart package detection when package_id is not provided
+  let selectedPkg = packages.find(p => p.id === package_id)
+
+  if (!selectedPkg) {
+    const storyLower = story.toLowerCase()
+
+    // Priority 1: Check if platform parameter indicates mobile
+    if (platform && ['ANDROID', 'IOS', 'BOTH'].includes(platform.toUpperCase())) {
+      selectedPkg = packages.find(p => p.id === 'mobile_app')
+    }
+
+    // Priority 2: Detect mobile keywords in story
+    if (!selectedPkg && storyLower.match(/mobile|aplikasi|android|ios|iphone|seluler|app store|play store|smartphone/i)) {
+      selectedPkg = packages.find(p => p.id === 'mobile_app')
+    }
+
+    // Priority 3: Detect web app/CMS keywords
+    if (!selectedPkg && storyLower.match(/cms|admin|dashboard|toko|ecommerce|e-commerce|manajemen konten|crud|login|database|sistem informasi/i)) {
+      selectedPkg = packages.find(p => p.id === 'web_app_cms')
+    }
+
+    // Default: basic_web for simple landing pages
+    if (!selectedPkg) {
+      selectedPkg = packages.find(p => p.id === 'basic_web') || packages[0]
+    }
+  }
+
+  // Calculate adjusted floor_price based on platform (for mobile_app package)
+  let adjustedFloorPrice = Number(selectedPkg.floor_price)
+  if (selectedPkg.id === 'mobile_app' && platform?.toUpperCase() === 'BOTH') {
+    // BOTH platform: base price × 2 × 0.9 (10% discount) = base price × 1.8
+    adjustedFloorPrice = Number(selectedPkg.floor_price) * 1.8
+  }
 
   // Build complexity price reference for prompt
   const priceRef = complexityPrices.map(p =>
@@ -343,6 +375,13 @@ async function handleParseOrder(
       }
     })
   }
+
+  // Add platform and adjusted floor_price to response
+  // For mobile_app: use provided platform (ANDROID/IOS/BOTH)
+  // For non-mobile packages: default to WEB
+  const finalPlatform = selectedPkg.id === 'mobile_app' ? platform : 'WEB'
+  orderData.platform = finalPlatform
+  orderData.floor_price = adjustedFloorPrice
 
   return NextResponse.json(orderData)
 }

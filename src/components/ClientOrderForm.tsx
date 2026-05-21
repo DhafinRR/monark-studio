@@ -58,6 +58,7 @@ interface ClientData {
   whatsapp: string
   email: string
   package_id: string
+  platform?: string
   details: string
   asset_link: string
   preview_link: string
@@ -80,9 +81,11 @@ interface ClientOrderFormProps {
   initialStandardItems?: { description: string }[]
   initialAddonItems?: OrderItem[]
   initialBenefits?: string[]
+  platform?: string
+  adjustedFloorPrice?: number
 }
 
-export default function ClientOrderForm({ isPublic = false, orderId, initialData, initialStandardItems, initialAddonItems, initialBenefits }: ClientOrderFormProps) {
+export default function ClientOrderForm({ isPublic = false, orderId, initialData, initialStandardItems, initialAddonItems, initialBenefits, platform, adjustedFloorPrice }: ClientOrderFormProps) {
   const isEditMode = !!orderId
   const router = useRouter()
   const [catalog, setCatalog] = useState<Feature[]>([])
@@ -93,6 +96,7 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
     whatsapp: initialData?.whatsapp || '',
     email: initialData?.email || '',
     package_id: initialData?.package_id || (isPublic ? '' : ''),
+    platform: initialData?.platform || platform || '',
     details: initialData?.details || '',
     asset_link: '',
     preview_link: ''
@@ -177,6 +181,7 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
           whatsapp: order.whatsapp,
           email: order.email || '',
           package_id: order.package_id || '',
+          platform: order.platform || '',
           details: order.details || '',
           asset_link: order.asset_link || '',
           preview_link: order.preview_link || ''
@@ -360,7 +365,24 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
 
   // Pricing
   const selectedPkg = dbPackages.find(p => p.id === client.package_id)
-  const basePrice = Number(selectedPkg?.floor_price) || 0
+
+  // Start with the floor price of the currently selected package
+  let basePrice = Number(selectedPkg?.floor_price) || 0
+
+  // Only use adjustedFloorPrice if the user hasn't changed the package from the AI's suggestion
+  if (adjustedFloorPrice && client.package_id === initialData?.package_id) {
+    basePrice = adjustedFloorPrice
+  }
+
+  // Priority: User selection in form overrides AI adjusted price
+  if (client.package_id === 'mobile_app') {
+    if (client.platform === 'BOTH') {
+      basePrice = 27000000
+    } else if (client.platform === 'ANDROID' || client.platform === 'IOS') {
+      basePrice = Number(selectedPkg?.floor_price) || 15000000
+    }
+  }
+
   const addonTotal = addonItems.reduce((sum, item) => sum + item.price, 0)
   const grandTotal = basePrice + addonTotal
 
@@ -395,6 +417,14 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
       return
     }
 
+    // Validate platform for mobile_app package
+    if (client.package_id === 'mobile_app' && !client.platform) {
+      toast.error('Platform wajib dipilih!', {
+        description: 'Pilih platform aplikasi (Android, iOS, atau Keduanya) untuk paket Mobile App.',
+      })
+      return
+    }
+
     setLoading(true)
 
     // Combine standard + addon items for submission
@@ -419,7 +449,7 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...client, items: allItems })
+        body: JSON.stringify({ ...client, platform: client.platform || platform, items: allItems })
       })
       if (res.ok) {
         if (isEditMode) {
@@ -556,6 +586,53 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
                 )}
               </div>
             </div>
+
+            {/* Platform Selection (Mobile App only) */}
+            {client.package_id === 'mobile_app' && (
+              <div className="pt-4 border-t">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">
+                  Platform Aplikasi *
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleFieldChange('platform', 'ANDROID')}
+                    className={`p-4 rounded-xl border-2 transition-all text-left ${
+                      client.platform === 'ANDROID'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-200 hover:border-primary/30'
+                    }`}
+                  >
+                    <div className="font-bold text-sm">Android</div>
+                    <div className="text-xs text-muted-foreground mt-1">Aplikasi untuk Play Store</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFieldChange('platform', 'IOS')}
+                    className={`p-4 rounded-xl border-2 transition-all text-left ${
+                      client.platform === 'IOS'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-200 hover:border-primary/30'
+                    }`}
+                  >
+                    <div className="font-bold text-sm">iOS</div>
+                    <div className="text-xs text-muted-foreground mt-1">Aplikasi untuk App Store</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFieldChange('platform', 'BOTH')}
+                    className={`p-4 rounded-xl border-2 transition-all text-left ${
+                      client.platform === 'BOTH'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-200 hover:border-primary/30'
+                    }`}
+                  >
+                    <div className="font-bold text-sm">Keduanya (Android & iOS)</div>
+                    <div className="text-xs text-muted-foreground mt-1">Harga: Rp 27.000.000</div>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           {!isEditMode && client.details && (
             <div className="pt-2">

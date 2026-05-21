@@ -244,35 +244,38 @@ export default function OrderForm() {
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              <button 
+              <button
                 onClick={() => handleSelectPlatform("ANDROID")}
-                className="flex items-center justify-between p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                disabled={isAiLoading}
+                className="flex items-center justify-between p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div>
                   <div className="font-bold text-lg">Android</div>
                   <div className="text-xs text-muted-foreground">Aplikasi untuk Play Store</div>
                 </div>
-                <ArrowRight size={20} className="text-primary group-hover:translate-x-1 transition-transform" />
+                {isAiLoading ? <Loader2 size={20} className="animate-spin text-primary" /> : <ArrowRight size={20} className="text-primary group-hover:translate-x-1 transition-transform" />}
               </button>
-              <button 
+              <button
                 onClick={() => handleSelectPlatform("IOS")}
-                className="flex items-center justify-between p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                disabled={isAiLoading}
+                className="flex items-center justify-between p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div>
                   <div className="font-bold text-lg">iOS</div>
                   <div className="text-xs text-muted-foreground">Aplikasi untuk App Store</div>
                 </div>
-                <ArrowRight size={20} className="text-primary group-hover:translate-x-1 transition-transform" />
+                {isAiLoading ? <Loader2 size={20} className="animate-spin text-primary" /> : <ArrowRight size={20} className="text-primary group-hover:translate-x-1 transition-transform" />}
               </button>
-              <button 
+              <button
                 onClick={() => handleSelectPlatform("BOTH")}
-                className="flex items-center justify-between p-4 rounded-xl border-2 border-primary/50 bg-primary/5 hover:bg-primary/10 transition-all text-left group"
+                disabled={isAiLoading}
+                className="flex items-center justify-between p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div>
-                  <div className="font-bold text-lg text-primary">Keduanya (Android & iOS)</div>
-                  <div className="text-xs text-primary/70">Dua platform sekaligus dengan harga khusus</div>
+                  <div className="font-bold text-lg">Keduanya (Android & iOS)</div>
+                  <div className="text-xs text-muted-foreground">Dua platform sekaligus dengan harga khusus</div>
                 </div>
-                <Sparkles size={20} className="text-primary group-hover:scale-110 transition-transform" />
+                {isAiLoading ? <Loader2 size={20} className="animate-spin text-primary" /> : <Sparkles size={20} className="text-primary group-hover:scale-110 transition-transform" />}
               </button>
             </div>
 
