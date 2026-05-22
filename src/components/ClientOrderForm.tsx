@@ -88,6 +88,8 @@ interface ClientOrderFormProps {
 export default function ClientOrderForm({ isPublic = false, orderId, initialData, initialStandardItems, initialAddonItems, initialBenefits, platform, adjustedFloorPrice }: ClientOrderFormProps) {
   const isEditMode = !!orderId
   const router = useRouter()
+  const apiPath = isPublic ? '/api/public' : '/api/monolith-core'
+
   const [catalog, setCatalog] = useState<Feature[]>([])
   const [complexityPrices, setComplexityPrices] = useState<any[]>([])
   const [client, setClient] = useState<ClientData>({
@@ -115,8 +117,7 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
   const [benefits, setBenefits] = useState<string[]>(initialBenefits || [])
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-
-  const apiPath = isPublic ? '/api/public' : '/api/monolith-core';
+  const [hasFetchedData, setHasFetchedData] = useState(false)
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
@@ -158,14 +159,17 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
     return `${base} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400`
   }
 
-  // Fetch catalog, complexity prices, and packages
+  // Fetch catalog, complexity prices, and packages (ONLY ONCE)
   useEffect(() => {
+    if (hasFetchedData) return
+    setHasFetchedData(true)
+
     fetch(`${apiPath}/features`).then(res => res.json()).then(data => setCatalog(Array.isArray(data) ? data : []))
     fetch(`${apiPath}/complexity-price`).then(res => res.json()).then(data => setComplexityPrices(Array.isArray(data) ? data : []))
     fetch('/api/public/pricing-packages').then(res => res.json()).then(data => {
       if (Array.isArray(data)) setDbPackages(data)
     })
-  }, [apiPath])
+  }, [])
 
   // Fetch existing order data for edit mode
   useEffect(() => {
@@ -377,9 +381,9 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
   // Priority: User selection in form overrides AI adjusted price
   if (client.package_id === 'mobile_app') {
     if (client.platform === 'BOTH') {
-      basePrice = 27000000
+      basePrice = Number(selectedPkg?.floor_price) * 1.8
     } else if (client.platform === 'ANDROID' || client.platform === 'IOS') {
-      basePrice = Number(selectedPkg?.floor_price) || 15000000
+      basePrice = Number(selectedPkg?.floor_price) || 0
     }
   }
 

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { Check, Sparkles, Crown } from "lucide-react";
+import { Check, Sparkles, Crown, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DisplayPackage {
   id: string
@@ -8,6 +9,7 @@ interface DisplayPackage {
   target: string
   priceNote: string
   price: string
+  floorPrice?: number
   highlighted?: boolean
   benefits: string[]
   features: string[]
@@ -79,9 +81,28 @@ export default function PricingCard({ pkg, index }: PricingCardProps) {
 
           <div className="mb-6">
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{pkg.priceNote}</span>
-            <div className="text-3xl font-display font-bold text-gradient-secondary mt-0.5">
-              Rp {pkg.price}
-            </div>
+            {pkg.id === 'mobile_app' && pkg.floorPrice ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="text-3xl font-display font-bold text-gradient-secondary mt-0.5 flex items-center gap-2 cursor-help">
+                      Rp {pkg.price}
+                      <Info size={16} className="text-muted-foreground" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">
+                      Harga untuk platform Android & iOS: <br />
+                      <span className="font-bold">Rp {(pkg.floorPrice * 1.8).toLocaleString('id-ID')}</span>
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <div className="text-3xl font-display font-bold text-gradient-secondary mt-0.5">
+                Rp {pkg.price}
+              </div>
+            )}
           </div>
 
           <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent mb-6" />
