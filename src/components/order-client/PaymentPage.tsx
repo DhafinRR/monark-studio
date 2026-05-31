@@ -179,6 +179,7 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
 
         // For VA: show VA info page, for others: redirect to Duitku payment page
         if (selectedMethod === 'va' && data.vaNumber) {
+          setProcessing(false)
           setPhase('pending')
         } else {
           // Redirect to Duitku payment page (QRIS, e-wallet, etc.)
