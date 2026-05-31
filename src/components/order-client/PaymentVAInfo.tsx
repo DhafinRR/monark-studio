@@ -144,6 +144,9 @@ export default function PaymentVAInfo({
           <li>Pastikan Nama Penagih adalah <strong>Monark Studio</strong>.</li>
           <li>Selesaikan transaksi. Halaman ini akan otomatis terupdate setelah verifikasi.</li>
         </ol>
+        <p className="text-[10px] text-muted-foreground/50 mt-3 italic">
+          ✨ Halaman ini otomatis memperbarui status pembayaran Anda setiap 10 detik.
+        </p>
       </div>
 
       {/* Actions */}
@@ -152,7 +155,7 @@ export default function PaymentVAInfo({
           onClick={onConfirm}
           className="w-full h-14 bg-accent text-white font-bold tracking-wider uppercase"
         >
-          Saya Sudah Bayar
+          Cek Status Pembayaran
           <ArrowRight className="w-5 h-5 ml-2" />
         </Button>
 
