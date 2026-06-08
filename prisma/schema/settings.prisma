@@ -1,6 +1,8 @@
 model WebSettings {
-  id         Int      @id @default(1)
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
   config     Json
+  created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@map("web_settings")

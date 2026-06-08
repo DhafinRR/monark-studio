@@ -208,8 +208,7 @@ export default function OrderForm() {
               </p>
               
               <Link 
-                href="/order/manual"
-                target="_blank"
+                href="/order"
                 className="mt-auto block w-full text-center py-3.5 rounded-xl border border-border bg-background hover:bg-muted font-semibold text-sm transition-colors"
               >
                 Isi Formulir

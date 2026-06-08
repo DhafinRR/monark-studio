@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "mcp__ide__getDiagnostics",
+      "Bash(npm install:*)",
+      "Bash(grep:*)",
+      "Bash(npm ls:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git diff:*)"
+    ]
+  }
+}
