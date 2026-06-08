@@ -52,7 +52,7 @@ interface OrderData {
   } | null
 }
 
-type Phase = 'select' | 'pending' | 'processing' | 'success'
+type Phase = 'select' | 'pending' | 'processing' | 'checking' | 'success'
 type Method = 'va' | 'qris' | 'ewallet'
 
 export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
@@ -80,6 +80,28 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
     date.setHours(date.getHours() + 24)
     return date.toISOString()
   })
+
+  // Poll for payment status updates (from Duitku webhook callback)
+  useEffect(() => {
+    if (phase !== 'pending' && phase !== 'checking') return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/order/${orderId}`)
+        if (!res.ok) return
+        const data = await res.json()
+        const payment = data.payments?.find((p: any) => p.id === paymentId)
+        if (payment && (payment.status === 'CONFIRMED' || payment.status === 'SUCCEEDED')) {
+          setOrder(data)
+          setPhase('success')
+        }
+      } catch {
+        // silently ignore polling errors
+      }
+    }, 10000) // poll every 10 seconds
+
+    return () => clearInterval(pollInterval)
+  }, [phase, orderId, paymentId])
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -157,6 +179,7 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
 
         // For VA: show VA info page, for others: redirect to Duitku payment page
         if (selectedMethod === 'va' && data.vaNumber) {
+          setProcessing(false)
           setPhase('pending')
         } else {
           // Redirect to Duitku payment page (QRIS, e-wallet, etc.)
@@ -178,12 +201,34 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
     setProcessing(false)
   }
 
-  const handleConfirmPayment = () => {
-    // For VA payments, redirect to Duitku payment page for verification
-    if (paymentUrl) {
-      window.location.href = paymentUrl
-    } else {
-      setPhase('success')
+  const handleConfirmPayment = async () => {
+    // Check payment status via Duitku API instead of redirecting
+    setPhase('checking')
+    
+    try {
+      const res = await fetch(`/api/payment/${paymentId}/check`, {
+        method: 'POST',
+      })
+      const data = await res.json()
+
+      if (data.status === 'CONFIRMED') {
+        // Payment confirmed! Refresh order data and show success
+        const orderRes = await fetch(`/api/order/${orderId}`)
+        if (orderRes.ok) {
+          const orderData = await orderRes.json()
+          setOrder(orderData)
+        }
+        setPhase('success')
+      } else if (data.status === 'EXPIRED') {
+        setError('Pembayaran telah expired. Silakan buat pembayaran baru.')
+        setPhase('select')
+      } else {
+        // Still pending — go back to pending view, auto-poll will keep checking
+        setPhase('pending')
+      }
+    } catch {
+      // If check fails, go back to pending and let polling handle it
+      setPhase('pending')
     }
   }
 
@@ -313,6 +358,14 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
                   onChangeMethod={handleChangeMethod}
                   onConfirm={handleConfirmPayment}
                 />
+              )}
+
+              {phase === 'checking' && (
+                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                  <Loader2 className="w-10 h-10 animate-spin text-accent" />
+                  <p className="text-sm text-muted-foreground font-medium">Memverifikasi pembayaran...</p>
+                  <p className="text-xs text-muted-foreground/50">Sedang mengecek status pembayaran Anda ke Duitku</p>
+                </div>
               )}
 
               {phase === 'success' && (
