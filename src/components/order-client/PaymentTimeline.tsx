@@ -41,7 +41,7 @@ export default function PaymentTimeline({ payments, orderId }: PaymentTimelinePr
     })
   }
 
-  const isPaid = (status: string) => status === 'SUCCEEDED'
+  const isPaid = (status: string) => status === 'CONFIRMED' || status === 'SUCCEEDED'
 
   if (!payments || payments.length === 0) {
     return (

@@ -93,7 +93,7 @@ export default function OrderClientPage({ orderId }: OrderClientPageProps) {
 
   const totalAmount = Number(order.total_price) || 0
   const totalPaid = order.payments
-    ?.filter(p => p.status === 'SUCCEEDED')
+    ?.filter(p => p.status === 'CONFIRMED' || p.status === 'SUCCEEDED')
     .reduce((acc, p) => acc + Number(p.amount), 0) || 0
   const remainingBalance = Math.max(0, totalAmount - totalPaid)
 
