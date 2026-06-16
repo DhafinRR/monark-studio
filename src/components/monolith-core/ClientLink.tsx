@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ExternalLink, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 
@@ -10,8 +10,13 @@ interface ClientLinkProps {
 
 export default function ClientLink({ orderId }: ClientLinkProps) {
   const [copied, setCopied] = useState(false)
+  const [origin, setOrigin] = useState('')
 
-  const clientUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/order/${orderId}`
+  useEffect(() => {
+    setOrigin(window.location.origin)
+  }, [])
+
+  const clientUrl = `${origin}/order/${orderId}`
 
   const handleCopy = async () => {
     try {
