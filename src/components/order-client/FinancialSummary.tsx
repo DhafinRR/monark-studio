@@ -70,7 +70,11 @@ export default function FinancialSummary({
             <Wallet className="text-white/40 h-[18px] w-[18px]" />
           </div>
           <div className="text-2xl lg:text-3xl font-display font-bold text-white">
-            {formatRupiah(remainingBalance)}
+            {remainingBalance <= 0 ? (
+              <span className="text-green-400 uppercase font-black">Lunas</span>
+            ) : (
+              <span>{formatRupiah(remainingBalance)}</span>
+            )}
           </div>
           <div className="mt-4 flex items-center gap-2">
             <div className={`w-1.5 h-1.5 rounded-full ${remainingBalance > 0 ? 'bg-orange-400 animate-pulse' : 'bg-green-400'}`} />

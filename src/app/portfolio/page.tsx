@@ -40,6 +40,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  alternates: {
+    canonical: 'https://monarkstudio.com/portfolio',
+  },
 }
 
 export default async function PortfolioPage() {

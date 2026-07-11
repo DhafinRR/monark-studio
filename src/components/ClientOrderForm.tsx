@@ -773,7 +773,12 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
           <div className="flex items-center justify-between border-b pb-4">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-500" />
-              <h2 className="font-bold text-sm uppercase tracking-widest">Fitur Tambahan (Addon)</h2>
+              <div>
+                <h2 className="font-bold text-sm uppercase tracking-widest">Fitur Tambahan (Addon)</h2>
+                <h3 className="text-xs text-muted-foreground">
+                  Tambahkan fitur tambahan sesuai kebutuhan proyek Anda.<span className='font-bold text-primary'> Harga akan muncul</span> setelah Anda memilih fitur atau mengisi deskripsi fitur custom <span className='font-bold text-primary'>secara otomatis</span>.
+                </h3>
+              </div>
             </div>
             <button type="button" onClick={addAddonItem} className="inline-flex items-center gap-1 text-blue-600 text-xs font-bold hover:text-blue-700 transition-colors">
               <Plus className="w-4 h-4" /> Tambah

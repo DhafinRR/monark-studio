@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 import PortfolioForm from '@/components/monolith-core/PortfolioForm'
 
-export default function EditPortfolioPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function EditPortfolioPage({ params }: { params: { id: string } }) {
+  const { id } = params
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

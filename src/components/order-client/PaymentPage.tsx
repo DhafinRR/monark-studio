@@ -85,9 +85,12 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
   useEffect(() => {
     if (phase !== 'pending' && phase !== 'checking') return
 
-    const pollInterval = setInterval(async () => {
+    const checkPaymentStatus = async () => {
       try {
-        const res = await fetch(`/api/order/${orderId}`)
+        const res = await fetch(`/api/order/${orderId}?_t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        })
         if (!res.ok) return
         const data = await res.json()
         const payment = data.payments?.find((p: any) => p.id === paymentId)
@@ -98,7 +101,13 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
       } catch {
         // silently ignore polling errors
       }
-    }, 10000) // poll every 10 seconds
+    }
+
+    // Immediate first check
+    checkPaymentStatus()
+
+    // Then poll every 8 seconds
+    const pollInterval = setInterval(checkPaymentStatus, 8000)
 
     return () => clearInterval(pollInterval)
   }, [phase, orderId, paymentId])
@@ -106,7 +115,10 @@ export default function PaymentPage({ orderId, paymentId }: PaymentPageProps) {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const res = await fetch(`/api/order/${orderId}`)
+        const res = await fetch(`/api/order/${orderId}?_t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        })
         if (!res.ok) throw new Error('Order not found')
         const data = await res.json()
         setOrder(data)

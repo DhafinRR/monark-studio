@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect } from 'react'
 import InvoicePrint from '@/components/monolith-core/InvoicePrint'
 
 interface OrderItem {
@@ -29,11 +29,11 @@ interface Order {
 }
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }
 
 export default function InvoicePrintPage({ params }: PageProps) {
-  const { id } = use(params)
+  const { id } = params
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
 

@@ -9,7 +9,7 @@ interface ProjectPageProps {
 }
 
 /**
- * Metadata dinamis untuk SEO
+ * Metadata dinamis untuk SEO dengan OpenGraph lengkap
  */
 export async function generateMetadata(
   { params }: ProjectPageProps
@@ -17,14 +17,57 @@ export async function generateMetadata(
   const { id } = await params
   const project = await prisma.portfolioProject.findUnique({
     where: { id },
-    select: { title: true, description: true }
+    select: {
+      title: true,
+      description: true,
+      image_url: true,
+      type: true,
+      project_url: true,
+    }
   })
 
   if (!project) return { title: "Project Not Found" }
 
+  const projectUrl = `https://monarkstudio.com/portfolio/${id}`
+
   return {
     title: `${project.title} | Monark Studio Portfolio`,
     description: project.description,
+    keywords: [
+      project.title,
+      `portfolio ${project.type.toLowerCase()}`,
+      'monark studio project',
+      project.type === 'WEB' ? 'web development' : 'mobile app development',
+    ],
+    openGraph: {
+      type: 'website',
+      locale: 'id_ID',
+      url: projectUrl,
+      siteName: 'Monark Studio',
+      title: `${project.title} | Monark Studio Portfolio`,
+      description: project.description,
+      images: [
+        {
+          url: project.image_url,
+          width: 1200,
+          height: 630,
+          alt: `${project.title} - Monark Studio Project`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${project.title} | Monark Studio Portfolio`,
+      description: project.description,
+      images: [project.image_url],
+    },
+    alternates: {
+      canonical: projectUrl,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
   }
 }
 

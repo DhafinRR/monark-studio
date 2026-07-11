@@ -52,13 +52,6 @@ export default function NotFound() {
              <Home className="w-4 h-4 group-hover:scale-110 transition-transform" />
              Return Home
           </Link>
-          <Link 
-             href="/admin" 
-             className="px-8 py-5 border border-[#0D2B22]/20 text-[#0D2B22] font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:bg-white transition-all flex items-center gap-3 group"
-          >
-             Go to Admin
-             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-[#B8926A]" />
-          </Link>
         </div>
       </div>
 

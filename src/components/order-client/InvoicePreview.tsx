@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Printer } from 'lucide-react'
 
 interface OrderItem {
   id: string
@@ -19,6 +20,7 @@ interface InvoicePreviewProps {
   totalAmount: number
   pricingPackageName?: string
   projectTitle?: string
+  isPaid?: boolean
 }
 
 export default function InvoicePreview({
@@ -29,7 +31,8 @@ export default function InvoicePreview({
   items,
   totalAmount,
   pricingPackageName,
-  projectTitle
+  projectTitle,
+  isPaid
 }: InvoicePreviewProps) {
   const standardItems = items.filter(i => i.classification === 'STANDARD')
   const addonItems = items.filter(i => i.classification === 'ADDON')
@@ -52,8 +55,13 @@ export default function InvoicePreview({
     })
   }
 
+  const handlePrint = () => {
+    window.print()
+  }
+
   return (
-    <Card className="bg-white border border-border/20 rounded-xl overflow-hidden shadow-sm">
+    <>
+    <Card className="bg-white border border-border/20 rounded-xl overflow-hidden shadow-sm" data-invoice>
       {/* Header */}
       <div className="px-8 pt-8 pb-6 border-b-2 border-foreground/10">
         <div className="flex justify-between items-start">
@@ -69,9 +77,17 @@ export default function InvoicePreview({
             <h3 className="text-3xl font-display font-bold text-foreground tracking-tight">
               INVOICE
             </h3>
-            <Badge variant="secondary" className="text-[9px] font-black uppercase tracking-widest mt-2 bg-amber-50 text-amber-700">
-              UNPAID
-            </Badge>
+            <div className="flex items-center justify-end gap-3">
+              {isPaid ? (
+                <Badge className="text-[9px] font-black uppercase tracking-widest mt-2 bg-green-100 text-green-700">
+                  PAID
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="text-[9px] font-black uppercase tracking-widest mt-2 bg-amber-50 text-amber-700">
+                  UNPAID
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -179,5 +195,17 @@ export default function InvoicePreview({
         </div>
       </div>
     </Card>
+
+    {/* Print Styles - only show invoice */}
+    <style jsx global>{`
+      @media print {
+        body * { visibility: hidden; }
+        [data-invoice], [data-invoice] * { visibility: visible; }
+        [data-invoice] { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 210mm; }
+        [data-invoice] button { display: none !important; }
+        @page { size: A4 portrait; margin: 0; }
+      }
+    `}</style>
+    </>
   )
 }

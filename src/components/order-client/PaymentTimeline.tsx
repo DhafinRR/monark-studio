@@ -41,7 +41,7 @@ export default function PaymentTimeline({ payments, orderId }: PaymentTimelinePr
     })
   }
 
-  const isPaid = (status: string) => status === 'SUCCEEDED'
+  const isPaid = (status: string) => status === 'CONFIRMED' || status === 'SUCCEEDED'
 
   if (!payments || payments.length === 0) {
     return (
@@ -76,11 +76,10 @@ export default function PaymentTimeline({ payments, orderId }: PaymentTimelinePr
         {payments.map((payment, idx) => (
           <Card
             key={payment.id}
-            className={`rounded-xl transition-all hover:-translate-y-1 ${
-              isPaid(payment.status)
+            className={`rounded-xl transition-all hover:-translate-y-1 ${isPaid(payment.status)
                 ? 'bg-white border border-border/20 shadow-sm'
                 : 'bg-white border-l-4 border-l-orange-500 shadow-sm'
-            }`}
+              }`}
           >
             <CardContent className="p-6 space-y-4">
               <div className="flex justify-between items-start">
@@ -125,6 +124,7 @@ export default function PaymentTimeline({ payments, orderId }: PaymentTimelinePr
                       variant="outline"
                       className="h-9 bg-accent text-white text-[9px] font-bold tracking-widest uppercase flex items-center gap-2 hover:bg-accent/90 hover:text-white"
                       onClick={() => {
+                        // route to the client-facing kwitansi page
                         router.push(`/order/${orderId}/payment/${payment.id}/kwitansi`)
                       }}
                     >

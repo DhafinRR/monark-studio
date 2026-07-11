@@ -93,7 +93,7 @@ export default function OrderClientPage({ orderId }: OrderClientPageProps) {
 
   const totalAmount = Number(order.total_price) || 0
   const totalPaid = order.payments
-    ?.filter(p => p.status === 'SUCCEEDED')
+    ?.filter(p => p.status === 'CONFIRMED' || p.status === 'SUCCEEDED')
     .reduce((acc, p) => acc + Number(p.amount), 0) || 0
   const remainingBalance = Math.max(0, totalAmount - totalPaid)
 
@@ -147,6 +147,15 @@ export default function OrderClientPage({ orderId }: OrderClientPageProps) {
               </div>
 
               <div className="p-6 overflow-x-auto">
+                <div className="flex justify-end mb-4">
+                  <button
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-foreground/5 rounded text-sm font-bold hover:bg-foreground/10 transition-colors"
+                  >
+                    Unduh Invoice
+                  </button>
+                </div>
+
                 <InvoicePreview
                   invoiceNumber={invoiceNumber}
                   date={order.created_at}
@@ -156,6 +165,7 @@ export default function OrderClientPage({ orderId }: OrderClientPageProps) {
                   totalAmount={totalAmount}
                   pricingPackageName={order.pricing_package?.name}
                   projectTitle={order.project_title}
+                  isPaid={remainingBalance <= 0}
                 />
               </div>
             </div>

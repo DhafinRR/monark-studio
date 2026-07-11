@@ -6,6 +6,7 @@ import OrderForm from "@/components/OrderForm";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import ParticleField from "@/components/ParticleField";
+import { MonarkStudioSchema } from "@/components/StructuredData";
 import prisma from "@/lib/prisma";
 import { Metadata } from "next";
 
@@ -54,6 +55,9 @@ export const metadata: Metadata = {
   verification: {
     google: 'your-google-verification-code', // Ganti dengan kode verifikasi Google Search Console
   },
+  alternates: {
+    canonical: 'https://monarkstudio.com',
+  },
 }
 
 export default async function Home() {
@@ -67,6 +71,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-background relative">
+      <MonarkStudioSchema />
       <div className="relative">
         <ParticleField />
       </div>

@@ -145,7 +145,7 @@ export default function PaymentVAInfo({
           <li>Selesaikan transaksi. Halaman ini akan otomatis terupdate setelah verifikasi.</li>
         </ol>
         <p className="text-[10px] text-muted-foreground/50 mt-3 italic">
-          ✨ Halaman ini otomatis memperbarui status pembayaran Anda setiap 10 detik.
+          ✨ Halaman ini otomatis memperbarui status pembayaran Anda setiap 8 detik.
         </p>
       </div>
 

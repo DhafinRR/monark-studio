@@ -71,13 +71,25 @@ export default function PaymentSummary({
 
         {/* Invoice Info */}
         <div className="space-y-4 pt-4 border-t border-white/10">
+          <div className="flex justify-between items-center text-[12px] font-bold">
+            <span>Sisa Kewajiban</span>
+            <span className="text-lg">
+              {remainingBalance <= 0 ? (
+                <span className="text-green-400 uppercase font-black">Lunas</span>
+              ) : (
+                <span>{formatRupiah(remainingBalance)}</span>
+              )}
+            </span>
+          </div>
+
+          <div className="h-px bg-white/10" />
           <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
             <span>Invoice Rekam #</span>
             <span>{invoiceNumber}</span>
           </div>
-          
+
           <div className="h-px bg-white/10" />
-          
+
           <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
             <span className="opacity-40 font-serif">Status Berkas</span>
             <Badge variant="outline" className="text-white border-white/30 text-[9px]">

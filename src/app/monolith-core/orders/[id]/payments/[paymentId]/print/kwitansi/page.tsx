@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect } from 'react'
 import KwitansiPrint from '@/components/monolith-core/KwitansiPrint'
 
 interface Payment {
@@ -22,12 +22,11 @@ interface Order {
 }
 
 interface PageProps {
-  params: Promise<{ id: string; paymentId: string }>
+  params: { id: string; paymentId: string }
 }
 
 export default function KwitansiPrintPage({ params }: PageProps) {
-  const resolvedParams = use(params)
-  const { id, paymentId } = resolvedParams
+  const { id, paymentId } = params
   const [payment, setPayment] = useState<Payment | null>(null)
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
@@ -40,12 +39,12 @@ export default function KwitansiPrintPage({ params }: PageProps) {
     try {
       const res = await fetch(`/api/monolith-core/orders/${id}`)
       const data = await res.json()
-      
+
       if (data.payments) {
         const foundPayment = data.payments.find((p: Payment) => p.id === paymentId)
         setPayment(foundPayment)
       }
-      
+
       setOrder({
         id: data.id,
         name: data.name,
