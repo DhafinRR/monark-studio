@@ -20,6 +20,11 @@ import {
   Briefcase,
   Cpu,
   Package,
+  BookOpen,
+  Shield,
+  ScrollText,
+  Clock,
+  Quote as QuoteIcon,
 } from 'lucide-react'
 
 export default function AdminLayout({
@@ -72,6 +77,17 @@ export default function AdminLayout({
       items: [
         { href: '/monolith-core/portfolio', label: 'Portfolio', icon: Briefcase },
         { href: '/monolith-core/tech-stacks', label: 'Tech Stacks', icon: Cpu },
+      ]
+    },
+    {
+      title: 'Website Content',
+      items: [
+        { href: '/monolith-core/about', label: 'About', icon: BookOpen },
+        { href: '/monolith-core/quote', label: 'Quote', icon: QuoteIcon },
+        { href: '/monolith-core/timeline', label: 'Timeline', icon: Clock },
+        { href: '/monolith-core/ketentuan', label: 'Ketentuan', icon: ScrollText },
+        { href: '/monolith-core/privacy-policy', label: 'Privacy & Policy', icon: Shield },
+        { href: '/monolith-core/terms-conditions', label: 'Terms & Conditions', icon: FileText },
       ]
     },
     {

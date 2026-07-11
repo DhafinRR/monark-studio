@@ -1,0 +1,12 @@
+// About Page Content - CMS editable about section
+model AboutContent {
+  id         String   @id @default(cuid())
+  title      String   @default("About Us") @db.VarChar(100)
+  subtitle   String?  @db.VarChar(200)
+  content    String   @db.Text // Rich text HTML content
+  logo_url   String?  @db.VarChar(255)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("about_contents")
+}

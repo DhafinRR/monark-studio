@@ -1,0 +1,11 @@
+// Privacy & Policy - CMS editable privacy policy (singleton document like About)
+model PrivacyPolicy {
+  id         String   @id @default("default")
+  title      String   @db.VarChar(100)
+  content    String   @db.Text // Rich text HTML (full policy document)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("privacy_policies")
+}

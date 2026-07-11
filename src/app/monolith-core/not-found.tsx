@@ -22,7 +22,7 @@ export default function AdminNotFound() {
 
       <div className="mt-12 flex items-center gap-4">
         <Link 
-          href="/admin" 
+          href="/monolith-core" 
           className="px-8 py-4 bg-gray-900 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-blue-600 transition-all shadow-xl hover:-translate-y-1 flex items-center gap-2 group"
         >
           <Home className="w-4 h-4 group-hover:scale-110 transition-transform" />
