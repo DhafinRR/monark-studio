@@ -5,8 +5,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import {
   LayoutDashboard,
-  Users,
-  Settings,
   FileText,
   BarChart3,
   Menu,
@@ -67,12 +65,6 @@ export default function AdminLayout({
       ]
     },
     {
-      title: 'Content',
-      items: [
-        { href: '/monolith-core/posts', label: 'Posts', icon: FileText },
-      ]
-    },
-    {
       title: 'Portfolios',
       items: [
         { href: '/monolith-core/portfolio', label: 'Portfolio', icon: Briefcase },
@@ -88,13 +80,6 @@ export default function AdminLayout({
         { href: '/monolith-core/ketentuan', label: 'Ketentuan', icon: ScrollText },
         { href: '/monolith-core/privacy-policy', label: 'Privacy & Policy', icon: Shield },
         { href: '/monolith-core/terms-conditions', label: 'Terms & Conditions', icon: FileText },
-      ]
-    },
-    {
-      title: 'System',
-      items: [
-        { href: '/monolith-core/users', label: 'Users', icon: Users },
-        { href: '/monolith-core/settings', label: 'Settings', icon: Settings },
       ]
     }
   ]
@@ -257,13 +242,6 @@ export default function AdminLayout({
                       >
                         <User className="w-4 h-4 mr-2" />
                         Profile
-                      </Link>
-                      <Link
-                        href="/monolith-core/settings"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <Settings className="w-4 h-4 mr-2" />
-                        Settings
                       </Link>
                       <hr className="my-1" />
                       <button 
