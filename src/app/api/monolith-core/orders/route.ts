@@ -42,7 +42,11 @@ export async function POST(req: Request) {
         : null
 
       const itemsTotal = body.items.reduce((sum: number, item: any) => sum + parseFloat(item.price), 0)
-      const totalPrice = (pkg ? Number(pkg.floor_price) : 0) + itemsTotal
+      let floorPrice = pkg ? Number(pkg.floor_price) : 0
+      if (pkg?.id === 'mobile_app' && body.platform === 'BOTH') {
+        floorPrice *= 1.8
+      }
+      const totalPrice = floorPrice + itemsTotal
 
       return await tx.order.create({
         data: {
@@ -51,6 +55,7 @@ export async function POST(req: Request) {
           whatsapp: body.whatsapp,
           email: body.email,
           package_id: body.package_id || null,
+          platform: body.platform || null,
           package_snapshot: pkg ? {
             id: pkg.id,
             name: pkg.name,

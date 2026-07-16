@@ -1,23 +1,29 @@
-import { GoogleGenerativeAI } from "@google/generative-ai"
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { aiRateLimiter, checkRateLimit, getClientIP } from "@/lib/rate-limit"
 import { aiRequestSchema } from "@/lib/validations"
 import { badRequest, tooManyRequests, internalError } from "@/lib/api-response"
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "")
+const PROVIDERS = [
+  {
+    name: 'groq',
+    baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
+    apiKey: () => process.env.GROQ_API_KEY,
+    model: 'openai/gpt-oss-120b',
+  },
+  {
+    name: 'cerebras',
+    baseUrl: 'https://api.cerebras.ai/v1/chat/completions',
+    apiKey: () => process.env.CEREBRAS_API_KEY,
+    model: 'gpt-oss-120b',
+  },
+]
 
-/**
- * Extract JSON from AI response that may contain extra text
- */
 function extractJSON(text: string): any {
-  // Remove markdown code blocks
   let cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim()
 
-  // Try direct parse first
   try { return JSON.parse(cleaned) } catch {}
 
-  // Find first { and last } to extract JSON object
   const start = cleaned.indexOf("{")
   const end = cleaned.lastIndexOf("}")
   if (start !== -1 && end !== -1 && end > start) {
@@ -30,9 +36,6 @@ function extractJSON(text: string): any {
 const DB_MAX_RETRIES = 3
 const DB_RETRY_DELAY_MS = 1000
 
-/**
- * Retry wrapper for Prisma queries (handles P1001 connection errors)
- */
 async function queryWithRetry<T>(fn: () => Promise<T>): Promise<T> {
   let lastError: any = null
   for (let attempt = 1; attempt <= DB_MAX_RETRIES; attempt++) {
@@ -50,16 +53,6 @@ async function queryWithRetry<T>(fn: () => Promise<T>): Promise<T> {
   throw lastError
 }
 
-// Model fallback chain (ordered by preference, all valid per Google docs April 2026)
-const MODEL_CHAIN = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
-]
-
-/**
- * Generate fallback order data when all AI models are unavailable
- */
 function generateFallbackOrder(story: string, packages: any[], package_id?: string) {
   const storyLower = story.toLowerCase()
   let detectedPackage = packages.find(p => p.id === package_id) || packages[0]
@@ -85,9 +78,6 @@ function generateFallbackOrder(story: string, packages: any[], package_id?: stri
   }
 }
 
-/**
- * Last-resort static fallback when both AI and DB are unavailable
- */
 function generateStaticFallback(story: string) {
   const storyLower = story.toLowerCase()
   let pkgId = "basic_web", pkgName = "Basic Web", floorPrice = 600000
@@ -111,25 +101,46 @@ function generateStaticFallback(story: string) {
   }
 }
 
-/**
- * Try generating content across the model fallback chain with exponential backoff + jitter.
- * Each model gets 2 attempts before moving to the next.
- */
-async function generateContentWithModelChain(prompt: string): Promise<any> {
+async function generateContent(prompt: string): Promise<string> {
   let lastError: any = null
 
-  for (const modelName of MODEL_CHAIN) {
-    const model = genAI.getGenerativeModel({ model: modelName })
+  for (const provider of PROVIDERS) {
+    const apiKey = provider.apiKey()
+    if (!apiKey) {
+      console.warn(`${provider.name}: API key not configured, skipping`)
+      continue
+    }
 
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        console.log(`Trying ${modelName} (attempt ${attempt}/2)...`)
-        const result = await model.generateContent(prompt)
-        return result
+        console.log(`Trying ${provider.name}/${provider.model} (attempt ${attempt}/2)...`)
+
+        const res = await fetch(provider.baseUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: provider.model,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.7,
+            max_completion_tokens: 4096,
+          }),
+        })
+
+        if (!res.ok) {
+          const errorBody = await res.text().catch(() => '')
+          throw Object.assign(new Error(`HTTP ${res.status}: ${errorBody}`), { status: res.status })
+        }
+
+        const data = await res.json()
+        return data.choices[0].message.content
       } catch (error: any) {
         lastError = error
 
-        const isRetryable = error.status === 503 || error.status === 429 ||
+        const status = error.status || 0
+        const isRetryable = status === 503 || status === 429 ||
           error.message?.includes('Service Unavailable') ||
           error.message?.includes('high demand') ||
           error.message?.includes('RESOURCE_EXHAUSTED') ||
@@ -137,16 +148,18 @@ async function generateContentWithModelChain(prompt: string): Promise<any> {
           error.message?.includes('ECONNRESET') ||
           error.cause?.code === 'UND_ERR_CONNECT_TIMEOUT'
 
-        if (!isRetryable) throw error
+        if (!isRetryable) {
+          console.warn(`${provider.name}: Non-retryable error, skipping provider:`, error.message)
+          break
+        }
 
-        // Exponential backoff with jitter: ~2s, ~4s
         const delay = (2 ** attempt) * 1000 + Math.random() * 1000
-        console.warn(`${modelName} returned ${error.status}. Waiting ${Math.round(delay)}ms before retry...`)
+        console.warn(`${provider.name} unavailable (${error.message}). Waiting ${Math.round(delay)}ms before retry...`)
         await new Promise(resolve => setTimeout(resolve, delay))
       }
     }
 
-    console.warn(`${modelName} failed after 2 attempts. Trying next model...`)
+    console.warn(`${provider.name} failed after 2 attempts. Trying next provider...`)
   }
 
   throw lastError
@@ -174,7 +187,7 @@ export async function POST(req: Request) {
   const { story, action, package_id, platform, description } = requestBody
 
   try {
-    if (!process.env.GOOGLE_API_KEY) {
+    if (!process.env.GROQ_API_KEY && !process.env.CEREBRAS_API_KEY) {
       const packages = await queryWithRetry(() => prisma.pricingPackage.findMany())
       if (action === "PARSE_ORDER") {
         return NextResponse.json(generateFallbackOrder(story || "", packages, package_id))
@@ -201,14 +214,12 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("AI Route Error:", error)
 
-    // All models exhausted - return fallback order for PARSE_ORDER
     if (action === "PARSE_ORDER") {
       try {
         const packages = await queryWithRetry(() => prisma.pricingPackage.findMany())
         return NextResponse.json(generateFallbackOrder(story || "", packages, package_id))
       } catch (dbError) {
         console.error("Database fallback error:", dbError)
-        // Last resort: use hardcoded static fallback
         return NextResponse.json(generateStaticFallback(story || ""))
       }
     }
@@ -241,8 +252,7 @@ async function handleAnalyzeItem(description: string, complexityPrices: any[]) {
     BALAS HANYA DENGAN JSON MURNI, tanpa teks lain:
     { "level": "MUDAH/SEDANG/SULIT/SANGAT_SULIT", "sub_level": "MINOR/MAJOR", "reason": "..." }
   `
-  const result = await generateContentWithModelChain(prompt)
-  const rawText = result.response.text()
+  const rawText = await generateContent(prompt)
   const analysis = extractJSON(rawText)
 
   const priceRef = complexityPrices.find(p => p.level === analysis.level?.toUpperCase() && p.sub_level === analysis.sub_level?.toUpperCase())
@@ -263,41 +273,33 @@ async function handleParseOrder(
   catalog: any[],
   complexityPrices: any[]
 ) {
-  // Smart package detection when package_id is not provided
   let selectedPkg = packages.find(p => p.id === package_id)
 
   if (!selectedPkg) {
     const storyLower = story.toLowerCase()
 
-    // Priority 1: Check if platform parameter indicates mobile
     if (platform && ['ANDROID', 'IOS', 'BOTH'].includes(platform.toUpperCase())) {
       selectedPkg = packages.find(p => p.id === 'mobile_app')
     }
 
-    // Priority 2: Detect mobile keywords in story
     if (!selectedPkg && storyLower.match(/mobile|aplikasi|android|ios|iphone|seluler|app store|play store|smartphone/i)) {
       selectedPkg = packages.find(p => p.id === 'mobile_app')
     }
 
-    // Priority 3: Detect web app/CMS keywords
     if (!selectedPkg && storyLower.match(/cms|admin|dashboard|toko|ecommerce|e-commerce|manajemen konten|crud|login|database|sistem informasi/i)) {
       selectedPkg = packages.find(p => p.id === 'web_app_cms')
     }
 
-    // Default: basic_web for simple landing pages
     if (!selectedPkg) {
       selectedPkg = packages.find(p => p.id === 'basic_web') || packages[0]
     }
   }
 
-  // Calculate adjusted floor_price based on platform (for mobile_app package)
   let adjustedFloorPrice = Number(selectedPkg.floor_price)
   if (selectedPkg.id === 'mobile_app' && platform?.toUpperCase() === 'BOTH') {
-    // BOTH platform: base price × 2 × 0.9 (10% discount) = base price × 1.8
     adjustedFloorPrice = Number(selectedPkg.floor_price) * 1.8
   }
 
-  // Build complexity price reference for prompt
   const priceRef = complexityPrices.map(p =>
     `${p.level}-${p.sub_level}: Rp ${Number(p.price).toLocaleString('id-ID')}`
   ).join(", ")
@@ -351,15 +353,13 @@ async function handleParseOrder(
     }
   `
 
-  const result = await generateContentWithModelChain(prompt)
-  const rawText = result.response.text()
+  const rawText = await generateContent(prompt)
   console.log("=== RAW AI RESPONSE ===")
   console.log(rawText)
   console.log("=== END RAW AI RESPONSE ===")
 
   const orderData = extractJSON(rawText)
 
-  // Batch resolve addon prices from complexity_price table
   if (orderData.addon_items && Array.isArray(orderData.addon_items)) {
     orderData.addon_items = orderData.addon_items.map((item: any) => {
       const level = item.level?.toUpperCase()
@@ -376,9 +376,6 @@ async function handleParseOrder(
     })
   }
 
-  // Add platform and adjusted floor_price to response
-  // For mobile_app: use provided platform (ANDROID/IOS/BOTH)
-  // For non-mobile packages: default to WEB
   const finalPlatform = selectedPkg.id === 'mobile_app' ? platform : 'WEB'
   orderData.platform = finalPlatform
   orderData.floor_price = adjustedFloorPrice

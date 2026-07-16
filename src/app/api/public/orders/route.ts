@@ -25,9 +25,13 @@ export async function POST(req: Request) {
         ? await tx.pricingPackage.findUnique({ where: { id: body.package_id } })
         : null
 
-      // 2. Grand total = floor_price + sum(item prices)
+      // 2. Grand total = floor_price (with BOTH adjustment) + sum(item prices)
       const itemsTotal = body.items.reduce((sum: number, item: any) => sum + parseFloat(item.price), 0)
-      const totalPrice = (pkg ? Number(pkg.floor_price) : 0) + itemsTotal
+      let floorPrice = pkg ? Number(pkg.floor_price) : 0
+      if (pkg?.id === 'mobile_app' && body.platform === 'BOTH') {
+        floorPrice *= 1.8
+      }
+      const totalPrice = floorPrice + itemsTotal
 
       // 3. Buat Order
       return await tx.order.create({
@@ -37,6 +41,7 @@ export async function POST(req: Request) {
           whatsapp: body.whatsapp,
           email: body.email,
           package_id: body.package_id || null,
+          platform: body.platform || null,
           package_snapshot: pkg ? {
             id: pkg.id,
             name: pkg.name,

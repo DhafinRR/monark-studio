@@ -18,6 +18,7 @@ export const createOrderSchema = z.object({
   whatsapp: z.string().min(10).max(20),
   email: z.string().email().optional().or(z.literal('')),
   package_id: z.string().optional(),
+  platform: z.string().optional(),
   details: z.string().max(2000).optional(),
   items: z.array(orderItemSchema).max(50),
 })

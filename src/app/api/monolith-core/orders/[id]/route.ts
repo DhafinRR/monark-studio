@@ -74,10 +74,15 @@ export async function PATCH(
                 historyAction = 'updated_items'
                 const itemsTotal = body.items.reduce((sum: number, item: any) => sum + parseFloat(item.price), 0)
 
-                const currentOrderData = await tx.order.findUnique({ where: { id }, select: { package_id: true } })
+                const currentOrderData = await tx.order.findUnique({ where: { id }, select: { package_id: true, platform: true } })
                 const pkgId = body.package_id ?? currentOrderData?.package_id
-                const pkg = pkgId ? await tx.pricingPackage.findUnique({ where: { id: pkgId }, select: { floor_price: true } }) : null
-                totalPrice = (pkg ? Number(pkg.floor_price) : 0) + itemsTotal
+                const pkg = pkgId ? await tx.pricingPackage.findUnique({ where: { id: pkgId }, select: { id: true, floor_price: true } }) : null
+                let floorPrice = pkg ? Number(pkg.floor_price) : 0
+                const platform = body.platform ?? currentOrderData?.platform
+                if (pkg?.id === 'mobile_app' && platform === 'BOTH') {
+                  floorPrice *= 1.8
+                }
+                totalPrice = floorPrice + itemsTotal
 
                 await tx.orderItem.deleteMany({
                     where: { order_id: id }
@@ -95,6 +100,7 @@ export async function PATCH(
                     whatsapp: body.whatsapp,
                     email: body.email,
                     package_id: body.package_id,
+                    platform: body.platform,
                     status: body.status,
                     asset_link: body.asset_link,
                     preview_link: body.preview_link,
