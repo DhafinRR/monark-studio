@@ -1,6 +1,6 @@
 import StatsCards from '@/components/monolith-core/StatsCards'
 import RecentOrders from '@/components/monolith-core/RecentOrders'
-import { Plus, Settings, Briefcase, Star } from 'lucide-react'
+import { Plus, Briefcase, Star } from 'lucide-react'
 import Link from 'next/link'
 
 export default function AdminDashboard() {
@@ -56,16 +56,6 @@ export default function AdminDashboard() {
                                     <Star size={20} />
                                 </div>
                                 <span className="font-medium text-gray-700 group-hover:text-blue-700">Layanan & Harga</span>
-                            </Link>
-
-                            <Link
-                                href="/monolith-core/settings"
-                                className="flex items-center gap-3 p-3 rounded-lg border border-gray-50 hover:border-blue-100 hover:bg-blue-50/50 transition-all group"
-                            >
-                                <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-blue-100 text-gray-600 group-hover:text-blue-600 transition-colors">
-                                    <Settings size={20} />
-                                </div>
-                                <span className="font-medium text-gray-700 group-hover:text-blue-700">Pengaturan Web</span>
                             </Link>
                         </div>
                     </div>

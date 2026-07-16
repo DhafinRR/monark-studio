@@ -78,9 +78,7 @@ export default function KetentuanList({ initialItems }: KetentuanListProps) {
 
   // Strip HTML tags for preview
   const stripHtml = (html: string) => {
-    const tmp = document.createElement('div')
-    tmp.innerHTML = html
-    return tmp.textContent || tmp.innerText || ''
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
   }
 
   if (items.length === 0) {
