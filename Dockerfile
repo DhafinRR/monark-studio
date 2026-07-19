@@ -66,6 +66,18 @@ ENV NODE_ENV=production
 
 RUN npx prisma generate
 RUN npx prisma db push --accept-data-loss
+
+# Debug: verify critical files exist before building
+RUN echo "=== DEBUG: Checking source files ===" && \
+    ls -la src/components/ClientOrderForm.tsx && \
+    ls -la src/components/RichTextEditor.tsx && \
+    ls -la src/components/monolith-core/InvoicePreview.tsx && \
+    ls -la src/components/monolith-core/KwitansiPrint.tsx && \
+    ls -la src/lib/storage-url.ts && \
+    echo "=== DEBUG: tsconfig.json ===" && \
+    cat tsconfig.json && \
+    echo "=== DEBUG: All files OK ==="
+
 RUN npm run build
 
 # ===================== STAGE 3: Runner =====================
