@@ -27,6 +27,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+RUN npx prisma db push --accept-data-loss
 RUN npx prisma generate
 RUN npm run build
 
