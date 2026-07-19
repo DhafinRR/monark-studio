@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import prisma from "@/lib/prisma"
 import ProjectDetailContent from "@/components/portfolio/ProjectDetailContent"
 import { Metadata } from "next"
+import { getStoragePublicUrl } from "@/lib/storage-url"
 
 export const dynamic = 'force-dynamic'
 interface ProjectPageProps {
@@ -29,6 +30,7 @@ export async function generateMetadata(
   if (!project) return { title: "Project Not Found" }
 
   const projectUrl = `https://monarkstudio.com/portfolio/${id}`
+  const imageUrl = getStoragePublicUrl(project.image_url)
 
   return {
     title: `${project.title} | Monark Studio Portfolio`,
@@ -48,7 +50,7 @@ export async function generateMetadata(
       description: project.description,
       images: [
         {
-          url: project.image_url,
+          url: imageUrl,
           width: 1200,
           height: 630,
           alt: `${project.title} - Monark Studio Project`,
@@ -59,7 +61,7 @@ export async function generateMetadata(
       card: 'summary_large_image',
       title: `${project.title} | Monark Studio Portfolio`,
       description: project.description,
-      images: [project.image_url],
+      images: [imageUrl],
     },
     alternates: {
       canonical: projectUrl,

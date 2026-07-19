@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { getStoragePublicUrl } from '@/lib/storage-url'
 
 interface KetentuanItem {
   id: string
@@ -61,17 +62,30 @@ export default function KetentuanCardsSection({ items }: KetentuanCardsSectionPr
                 {/* Icon & Title */}
                 <div className="flex items-start gap-4 mb-4">
                   {/* Icon */}
-                  {item.icon && (
+                  {item.icon && (item.icon.trimStart().startsWith('<svg') || item.icon.trimStart().startsWith('<?xml')) ? (
                     <div
-                      className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                      className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center p-2"
                       style={{
                         background: 'linear-gradient(135deg, #C69B2810, #E8C04015)',
                         border: '1px solid #C69B2820',
                       }}
                     >
-                      {item.icon}
+                      <div
+                        className="w-full h-full [&>svg]:w-full [&>svg]:h-full"
+                        dangerouslySetInnerHTML={{ __html: item.icon }}
+                      />
                     </div>
-                  )}
+                  ) : item.icon ? (
+                    <div
+                      className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center p-2"
+                      style={{
+                        background: 'linear-gradient(135deg, #C69B2810, #E8C04015)',
+                        border: '1px solid #C69B2820',
+                      }}
+                    >
+                      <img src={getStoragePublicUrl(item.icon)} alt="" className="w-full h-full object-contain" />
+                    </div>
+                  ) : null}
 
                   {/* Order number & Title */}
                   <div className="flex-1">

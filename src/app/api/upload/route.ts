@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
-import { supabase, getBucket, deleteFromStorage } from '@/lib/supabase'
+import { deleteFromStorage, uploadToStorage } from '@/lib/r2'
 import { adminLimiter, checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import { tooManyRequests, badRequest, internalError } from '@/lib/api-response'
-import { randomUUID } from 'crypto'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']
 const MAX_SIZE = 10 * 1024 * 1024 // 10MB
@@ -17,36 +16,18 @@ function validateFile(file: File) {
   return null
 }
 
-async function uploadToStorage(file: File, path: string): Promise<string> {
-  const bucket = getBucket()
-  const ext = file.name.split('.').pop() || 'jpg'
-  const filename = `${path}/${randomUUID()}.${ext}`
-  const buffer = Buffer.from(await file.arrayBuffer())
-
-  const { error } = await supabase.storage
-    .from(bucket)
-    .upload(filename, buffer, {
-      contentType: file.type,
-      upsert: false,
-    })
-
-  if (error) throw error
-
-  const { data } = supabase.storage.from(bucket).getPublicUrl(filename)
-  return data.publicUrl
-}
-
 /**
  * POST /api/upload
  * FormData params:
  *   - file (single) atau files (multiple)
- *   - path: `{table}/{id}/{name}` (e.g. `portfolio/abc-123/thumbnail`)
+ *   - path: `{table}/{id}/{kelompok-file}` (e.g. `portfolio/abc-123/thumbnail`)
  *
- * Bucket = mode (dev/stag/prod)
- * Final storage path: `{table}/{id}/{name}/{uuid}.{ext}`
+ * Bucket = R2 bucket (default: monark)
+ * Prefix diambil dari APP_ENV/NODE_ENV: production/prod -> prod, staging/stag -> stag, selain itu -> dev
+ * Final storage path: `{prefix}/{table}/{id}/{name}/{filename}.{ext}`
  *
- * Single file  → `{ url: string }`
- * Multiple files → `{ urls: string[] }`
+ * Single file  → `{ path: string }`
+ * Multiple files → `{ paths: string[] }`
  */
 export async function POST(req: Request) {
   const ip = getClientIP(req)
@@ -60,7 +41,7 @@ export async function POST(req: Request) {
     const path = formData.get('path') as string | null
 
     if (!path) {
-      return badRequest('Path wajib diisi (table/id/name)')
+      return badRequest('Path wajib diisi (table/id/kelompok-file)')
     }
 
     const singleFile = formData.get('file') as File | null
@@ -70,8 +51,8 @@ export async function POST(req: Request) {
       const err = validateFile(singleFile)
       if (err) return badRequest(err)
 
-      const url = await uploadToStorage(singleFile, path)
-      return NextResponse.json({ url })
+      const uploadedPath = await uploadToStorage(singleFile, path)
+      return NextResponse.json({ path: uploadedPath })
     }
 
     if (multipleFiles.length > 0) {
@@ -80,10 +61,10 @@ export async function POST(req: Request) {
         if (err) return badRequest(err)
       }
 
-      const urls = await Promise.all(
+      const paths = await Promise.all(
         multipleFiles.map(file => uploadToStorage(file, path))
       )
-      return NextResponse.json({ urls })
+      return NextResponse.json({ paths })
     }
 
     return badRequest('Tidak ada file yang dikirim')
@@ -96,8 +77,8 @@ export async function POST(req: Request) {
 /**
  * DELETE /api/upload
  * Body JSON:
- *   - url: string        → hapus 1 file
- *   - urls: string[]     → hapus banyak file
+ *   - url: string        → hapus 1 file dari path atau public URL
+ *   - urls: string[]     → hapus banyak file dari path atau public URL
  *
  * Returns: `{ success: true }`
  */

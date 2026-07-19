@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma'
 import { adminLimiter, checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import { createPortfolioSchema } from '@/lib/validations'
 import { badRequest, tooManyRequests, internalError } from '@/lib/api-response'
+import { getStoragePath, withStoragePublicUrls } from '@/lib/storage-url'
 
 export async function GET() {
   try {
@@ -12,7 +13,7 @@ export async function GET() {
         stacks: true,
       },
     })
-    return NextResponse.json(projects)
+    return NextResponse.json(projects.map(withStoragePublicUrls))
   } catch (error) {
     console.error('[PORTFOLIO_GET]', error)
     return internalError('Gagal mengambil data Portfolio')
@@ -31,7 +32,11 @@ export async function POST(req: Request) {
 
     const parseResult = createPortfolioSchema.safeParse(body)
     if (!parseResult.success) {
-      return badRequest(`Validation failed: ${parseResult.error.issues.map(i => i.message).join(', ')}`)
+      const errors = parseResult.error.issues.map(issue => {
+        const field = issue.path.join('.') || 'body'
+        return `${field}: ${issue.message}`
+      })
+      return badRequest(`Validation failed: ${errors.join(', ')}`)
     }
 
     const {
@@ -49,16 +54,16 @@ export async function POST(req: Request) {
       status,
       start_date,
       end_date,
-    } = body
+    } = parseResult.data
 
     const project = await prisma.portfolioProject.create({
       data: {
         title: title.trim(),
         description: description.trim(),
         full_description: full_description || null,
-        type: type || 'WEB',
-        image_url: image_url.trim(),
-        gallery: Array.isArray(gallery) ? gallery : [],
+        type,
+        image_url: getStoragePath(image_url.trim()),
+        gallery: Array.isArray(gallery) ? gallery.map(getStoragePath) : [],
         features: Array.isArray(features) ? features : [],
         client_name: client_name || null,
         project_url: project_url || null,
@@ -75,7 +80,7 @@ export async function POST(req: Request) {
       },
     })
 
-    return NextResponse.json(project, { status: 201 })
+    return NextResponse.json(withStoragePublicUrls(project), { status: 201 })
   } catch (error) {
     console.error('[PORTFOLIO_POST]', error)
     return internalError('Gagal membuat Portfolio')

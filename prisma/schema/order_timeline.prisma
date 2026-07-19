@@ -5,7 +5,7 @@ model OrderTimeline {
   title       String   @db.VarChar(100)
   description String   @db.VarChar(255)
   duration    String?  @db.VarChar(50) // e.g., "1-2 hari", "3-5 hari kerja"
-  icon        String?  @db.VarChar(50)  // emoji or icon name
+  icon        String?  @db.Text // inline SVG, icon URL, or storage path
   is_active   Boolean  @default(true)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { adminLimiter, checkRateLimit, getClientIP } from '@/lib/rate-limit'
-import { deleteFromStorage } from '@/lib/supabase'
+import { deleteFromStorage } from '@/lib/r2'
 import { tooManyRequests, internalError, notFound } from '@/lib/api-response'
+import { getStoragePath, withStoragePublicUrls } from '@/lib/storage-url'
 
 export async function GET(
   req: Request,
@@ -21,7 +22,7 @@ export async function GET(
       return notFound('Portfolio tidak ditemukan')
     }
 
-    return NextResponse.json(project)
+    return NextResponse.json(withStoragePublicUrls(project))
   } catch (error) {
     console.error('[PORTFOLIO_GET_BY_ID]', error)
     return internalError('Gagal mengambil data Portfolio')
@@ -63,8 +64,10 @@ export async function PATCH(
     if (description !== undefined) data.description = description.trim()
     if (full_description !== undefined) data.full_description = full_description || null
     if (type !== undefined) data.type = type
-    if (image_url !== undefined) data.image_url = image_url.trim()
-    if (gallery !== undefined) data.gallery = gallery
+    if (image_url !== undefined) data.image_url = getStoragePath(image_url.trim())
+    if (gallery !== undefined) {
+      data.gallery = Array.isArray(gallery) ? gallery.map(getStoragePath) : gallery
+    }
     if (features !== undefined) data.features = features
     if (client_name !== undefined) data.client_name = client_name || null
     if (project_url !== undefined) data.project_url = project_url || null
@@ -88,7 +91,7 @@ export async function PATCH(
       },
     })
 
-    return NextResponse.json(project)
+    return NextResponse.json(withStoragePublicUrls(project))
   } catch (error: any) {
     console.error('[PORTFOLIO_PATCH]', error)
     if (error.code === 'P2025') {

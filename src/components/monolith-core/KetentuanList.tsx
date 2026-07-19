@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Edit, Trash2, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Edit, Trash2, Eye, EyeOff, Loader2, Code } from 'lucide-react'
 import Link from 'next/link'
+import { getStoragePublicUrl } from '@/lib/storage-url'
 
 interface KetentuanItem {
   id: string
@@ -114,7 +115,13 @@ export default function KetentuanList({ initialItems }: KetentuanListProps) {
               <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    {item.icon && <span className="text-2xl">{item.icon}</span>}
+                    {item.icon && (item.icon.trimStart().startsWith('<svg') || item.icon.trimStart().startsWith('<?xml')) ? (
+                      <div className="w-8 h-8 [&>svg]:w-full [&>svg]:h-full" dangerouslySetInnerHTML={{ __html: item.icon }} />
+                    ) : item.icon ? (
+                      <img src={getStoragePublicUrl(item.icon)} alt="" className="w-8 h-8 object-contain" />
+                    ) : (
+                      <Code className="w-5 h-5 text-gray-300" />
+                    )}
                     <span className="text-sm font-bold text-gray-900">#{item.order_number}</span>
                   </div>
                 </td>

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useRef } from 'react'
+import { getStoragePublicUrl } from '@/lib/storage-url'
 
 interface TimelineStep {
   id: string
@@ -87,9 +88,13 @@ export default function TimelineHorizontalSection({ steps }: TimelineHorizontalS
                   <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 shadow-lg hover:shadow-xl transition-shadow h-full">
                     {/* Step number with icon */}
                     <div className="flex items-center gap-4 mb-4">
-                      {step.icon && (
-                        <div className="text-4xl">{step.icon}</div>
-                      )}
+                      {step.icon && (step.icon.trimStart().startsWith('<svg') || step.icon.trimStart().startsWith('<?xml')) ? (
+                        <div className="w-12 h-12 [&>svg]:w-full [&>svg]:h-full">
+                          <div dangerouslySetInnerHTML={{ __html: step.icon }} />
+                        </div>
+                      ) : step.icon ? (
+                        <img src={getStoragePublicUrl(step.icon)} alt="" className="w-12 h-12 object-contain" />
+                      ) : null}
                       <div className="flex-1">
                         <div
                           className="inline-block px-3 py-1 rounded-full text-xs font-bold"

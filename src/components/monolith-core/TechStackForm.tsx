@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Loader2, Code, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { getStoragePublicUrl } from '@/lib/storage-url'
 
 interface TechStack {
   id: string
@@ -191,7 +192,7 @@ export default function TechStackForm({ initialData, id }: TechStackFormProps) {
                     <Code className="w-6 h-6 text-red-300" />
                   ) : (
                     <img
-                      src={iconUrl}
+                      src={getStoragePublicUrl(iconUrl)}
                       alt="Preview"
                       className="w-full h-full object-contain"
                       onError={() => setIconError(true)}
@@ -201,7 +202,7 @@ export default function TechStackForm({ initialData, id }: TechStackFormProps) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="text-xs text-gray-500">
-                    {isSvgContent(iconUrl) ? 'Inline SVG' : iconError ? 'URL tidak valid' : 'External URL'}
+                    {isSvgContent(iconUrl) ? 'Inline SVG' : iconError ? 'URL tidak valid' : 'URL / Storage Path'}
                   </span>
                 </div>
                 <button

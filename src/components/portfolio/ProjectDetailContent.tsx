@@ -8,6 +8,7 @@ import { Highlighter } from "@/components/magicui/text-highlighter"
 import { BlurFade } from "@/components/magicui/blur-fade"
 import { BorderBeam } from "@/components/magicui/border-beam"
 import { Backlight } from "../magicui/backlight"
+import { getStoragePublicUrl } from "@/lib/storage-url"
 
 interface TechStack {
   id: string
@@ -114,7 +115,7 @@ export default function ProjectDetailContent({ project, nextProject }: ProjectDe
                 <Backlight blur={20} className="w-full h-full">
                   <div className="relative rounded-3xl aspect-[4/2] overflow-hidden">
                     <img
-                      src={project.image_url}
+                      src={getStoragePublicUrl(project.image_url)}
                       alt={project.title}
                       className="w-full h-full object-cover rounded-2xl"
                     />
@@ -161,7 +162,7 @@ export default function ProjectDetailContent({ project, nextProject }: ProjectDe
                         <Backlight blur={20} className="w-full">
                           <div key={i} className={`relative rounded-2xl overflow-hidden ${i === 0 ? 'md:col-span-2' : ''}`}>
                             <img
-                              src={img}
+                              src={getStoragePublicUrl(img)}
                               alt={`${project.title} screenshot ${i + 1}`}
                               className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                             />
@@ -232,8 +233,13 @@ export default function ProjectDetailContent({ project, nextProject }: ProjectDe
                           className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center p-2.5 hover:border-accent/60 hover:bg-white/10 cursor-help transition-colors"
                           style={{ borderColor: stack.color_hex ? `${stack.color_hex}40` : undefined }}
                         >
-                          {stack.icon_url ? (
-                            <img src={stack.icon_url} alt={stack.name} className="w-full h-full object-contain" />
+                          {stack.icon_url && (stack.icon_url.trimStart().startsWith('<svg') || stack.icon_url.trimStart().startsWith('<?xml')) ? (
+                            <div
+                              className="w-full h-full [&>svg]:w-full [&>svg]:h-full"
+                              dangerouslySetInnerHTML={{ __html: stack.icon_url }}
+                            />
+                          ) : stack.icon_url ? (
+                            <img src={getStoragePublicUrl(stack.icon_url)} alt={stack.name} className="w-full h-full object-contain" />
                           ) : (
                             <div className="w-full h-full rounded-full bg-accent/20" />
                           )}
@@ -254,7 +260,7 @@ export default function ProjectDetailContent({ project, nextProject }: ProjectDe
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent block mb-8 text-center">Eksplorasi Lebih Lanjut</span>
                 <Link href={`/portfolio/${nextProject.id}`} className="group relative block w-full aspect-[21/9] md:aspect-[32/10] rounded-3xl overflow-hidden border border-white/10">
                   <img
-                    src={nextProject.image_url}
+                    src={getStoragePublicUrl(nextProject.image_url)}
                     alt={nextProject.title}
                     className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000"
                   />

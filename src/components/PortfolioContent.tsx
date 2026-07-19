@@ -9,6 +9,7 @@ import { MagicCard } from '@/components/magicui/magic-card'
 import { NumberTicker } from '@/components/magicui/number-ticker'
 import { BorderBeam } from '@/components/magicui/border-beam'
 import { Highlighter } from '@/components/magicui/text-highlighter'
+import { getStoragePublicUrl } from '@/lib/storage-url'
 
 interface TechStack {
   id: string
@@ -205,7 +206,7 @@ export default function PortfolioContent({ initialProjects }: PortfolioContentPr
                       {/* Image */}
                       <div className={`relative overflow-hidden ${span === 'full' ? 'aspect-[21/9]' : 'aspect-video'}`}>
                         <motion.img
-                          src={project.image_url}
+                          src={getStoragePublicUrl(project.image_url)}
                           alt={project.title}
                           className="w-full h-full object-cover"
                           loading="lazy"

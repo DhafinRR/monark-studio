@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Search, ChevronUp, ChevronDown, ArrowUpDown, Code, Trash2, Edit } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { getStoragePublicUrl } from '@/lib/storage-url'
 
 interface TechStack {
   id: string
@@ -163,7 +164,7 @@ export default function TechStacksClient({ initialTechStacks }: TechStacksClient
                             dangerouslySetInnerHTML={{ __html: stack.icon_url }}
                           />
                         ) : stack.icon_url ? (
-                          <img src={stack.icon_url} alt={stack.name} className="w-full h-full object-contain" />
+                          <img src={getStoragePublicUrl(stack.icon_url)} alt={stack.name} className="w-full h-full object-contain" />
                         ) : (
                           <Code className="w-5 h-5 text-gray-300" />
                         )}

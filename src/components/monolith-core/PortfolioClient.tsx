@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Search, ChevronUp, ChevronDown, ArrowUpDown, Briefcase, Trash2, Edit } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { getStoragePublicUrl } from '@/lib/storage-url'
 
 interface TechStack {
   id: string
@@ -185,7 +186,7 @@ export default function PortfolioClient({ initialProjects }: PortfolioClientProp
                     <td className="px-6 py-4 pl-8">
                       <div className="w-12 h-12 rounded-xl bg-gray-100 border border-gray-100 overflow-hidden shadow-sm group-hover:scale-110 transition-transform">
                         <img
-                          src={project.image_url}
+                          src={getStoragePublicUrl(project.image_url)}
                           alt={project.title}
                           className="w-full h-full object-cover"
                         />

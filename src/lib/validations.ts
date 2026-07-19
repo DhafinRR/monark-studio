@@ -33,12 +33,20 @@ export const createFeatureSchema = z.object({
 export const updateFeatureSchema = createFeatureSchema.partial()
 
 export const createPortfolioSchema = z.object({
-  name: z.string().min(1).max(200),
-  description: z.string().max(2000).optional(),
-  thumbnail_url: z.string().url().optional().or(z.literal('')),
-  project_url: z.string().url().optional().or(z.literal('')),
-  tech_stack_ids: z.array(z.string()).optional(),
-  is_featured: z.boolean().default(false),
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().min(1).max(2000),
+  full_description: z.string().max(10000).optional().nullable(),
+  type: z.enum(['WEB', 'MOBILE']).default('WEB'),
+  image_url: z.string().trim().min(1).max(1000),
+  gallery: z.array(z.string().max(1000)).optional(),
+  stacks: z.array(z.string()).optional(),
+  features: z.array(z.string().max(500)).optional(),
+  client_name: z.string().max(200).optional().nullable(),
+  project_url: z.string().url().optional().nullable().or(z.literal('')),
+  role: z.string().max(200).optional().nullable(),
+  status: z.string().max(100).optional().nullable(),
+  start_date: z.string().optional().nullable(),
+  end_date: z.string().optional().nullable(),
 })
 
 export const updatePortfolioSchema = createPortfolioSchema.partial()

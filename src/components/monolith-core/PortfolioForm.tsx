@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { getStoragePublicUrl } from '@/lib/storage-url'
 
 interface TechStack {
   id: string
@@ -67,7 +68,7 @@ async function uploadFile(file: File, path: string): Promise<string> {
     throw new Error(data.error || 'Upload gagal')
   }
   const data = await res.json()
-  return data.url
+  return data.path
 }
 
 async function uploadFiles(files: File[], path: string): Promise<string[]> {
@@ -81,7 +82,7 @@ async function uploadFiles(files: File[], path: string): Promise<string[]> {
     throw new Error(data.error || 'Upload gagal')
   }
   const data = await res.json()
-  return data.urls
+  return data.paths
 }
 
 async function deleteFile(url: string): Promise<void> {
@@ -223,7 +224,7 @@ export default function PortfolioForm({ initialData, id }: PortfolioFormProps) {
   }
 
   const getImageSrc = (item: ImageItem) =>
-    item.type === 'url' ? item.value : item.preview
+    item.type === 'url' ? getStoragePublicUrl(item.value) : item.preview
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -329,7 +330,8 @@ export default function PortfolioForm({ initialData, id }: PortfolioFormProps) {
 
       if (patchRes.ok) {
         toast.success(isEdit ? 'Portfolio berhasil diperbarui!' : 'Portfolio baru berhasil dibuat!')
-        router.push('/monolith-core/portfolio')
+        router.replace('/monolith-core/portfolio')
+        router.refresh()
       } else {
         const data = await patchRes.json()
         toast.error(data.error || 'Terjadi kesalahan')

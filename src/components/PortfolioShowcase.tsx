@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { Highlighter } from "./magicui/text-highlighter";
 import { Backlight } from "./magicui/backlight";
+import { getStoragePublicUrl } from "@/lib/storage-url";
 
 interface TechStack {
   id: string
@@ -86,7 +87,7 @@ export default function PortfolioShowcase({ projects }: PortfolioShowcaseProps) 
                       }`}>
                       <div className="aspect-video">
                         <img
-                          src={project.image_url}
+                          src={getStoragePublicUrl(project.image_url)}
                           alt={project.title}
                           className="w-full h-full object-cover"
                           loading="lazy"

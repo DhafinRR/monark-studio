@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Edit, Trash2, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Edit, Trash2, Eye, EyeOff, Loader2, Code } from 'lucide-react'
 import Link from 'next/link'
+import { getStoragePublicUrl } from '@/lib/storage-url'
 
 interface TimelineStep {
   id: string
@@ -113,7 +114,13 @@ export default function TimelineList({ initialSteps }: TimelineListProps) {
               <tr key={step.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    {step.icon && <span className="text-2xl">{step.icon}</span>}
+                    {step.icon && (step.icon.trimStart().startsWith('<svg') || step.icon.trimStart().startsWith('<?xml')) ? (
+                      <div className="w-8 h-8 [&>svg]:w-full [&>svg]:h-full" dangerouslySetInnerHTML={{ __html: step.icon }} />
+                    ) : step.icon ? (
+                      <img src={getStoragePublicUrl(step.icon)} alt="" className="w-8 h-8 object-contain" />
+                    ) : (
+                      <Code className="w-5 h-5 text-gray-300" />
+                    )}
                     <span className="text-sm font-bold text-gray-900">#{step.step_number}</span>
                   </div>
                 </td>

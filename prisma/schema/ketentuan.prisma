@@ -4,7 +4,7 @@ model Ketentuan {
   title        String   @db.VarChar(100)
   order_number Int      @unique
   content      String   @db.Text // Rich text HTML (description + lists)
-  icon         String?  @db.VarChar(50) // emoji or icon name
+  icon         String?  @db.Text // inline SVG, icon URL, or storage path
   is_active    Boolean  @default(true)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
