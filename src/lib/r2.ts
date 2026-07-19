@@ -148,7 +148,7 @@ async function r2Request(method: 'GET' | 'PUT' | 'DELETE', key: string, body?: B
   const response = await fetch(`${endpoint}${canonicalUri}`, {
     method,
     headers,
-    body: method === 'PUT' ? payload : undefined,
+    body: method === 'PUT' ? (payload as BodyInit) : undefined,
   })
 
   if (!response.ok) {
