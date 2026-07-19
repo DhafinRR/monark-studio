@@ -1,0 +1,21 @@
+{
+  "name": "Monark Studio",
+  "short_name": "Monark Studio",
+  "description": "Digital agency yang menyediakan jasa pembuatan website dan aplikasi mobile profesional untuk bisnis Anda.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFAFA",
+  "theme_color": "#0D2B22",
+  "icons": [
+    {
+      "src": "/assets/logo-circle.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/logo-circle.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
