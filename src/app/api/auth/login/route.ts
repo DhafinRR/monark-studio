@@ -14,13 +14,17 @@ export async function POST(req: Request) {
       // Create JWT token
       const token = await signToken({ user: 'admin', role: 'superadmin' })
       
+      // Detect if the original request was HTTPS (behind reverse proxy like Coolify/Traefik)
+      const forwardedProto = req.headers.get('x-forwarded-proto')
+      const isSecure = forwardedProto === 'https'
+      
       // Set the token inside an HTTP-only cookie using Next/Headers
       const cookieStore = await cookies()
       cookieStore.set({
         name: 'admin_token',
         value: token,
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isSecure,
         sameSite: 'lax',
         path: '/',
         maxAge: 60 * 60 * 24 // 24 hours
