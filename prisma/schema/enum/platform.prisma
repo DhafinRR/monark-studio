@@ -1,0 +1,6 @@
+enum Platform {
+  WEB
+  ANDROID
+  IOS
+  BOTH
+}

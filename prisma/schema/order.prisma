@@ -1,0 +1,33 @@
+model Order {
+  id               String      @id @default(uuid())
+  project_title    String?
+  queue_number     Int?
+  name             String
+  email            String?
+  whatsapp         String
+  story            String?
+  package_id       String?
+  platform         Platform?
+  package_snapshot Json?
+  details          String?
+  status           OrderStatus @default(DRAFT)
+  total_price      Decimal?    @db.Decimal(12, 2)
+  asset_link       String?
+  preview_link     String?
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
+  
+  // History/Revision tracking (auto-snapshot on edit)
+  history          Json?       @default("[]")
+  
+  // Relations
+  items            OrderItem[]
+  pricing_package  PricingPackage? @relation(fields: [package_id], references: [id])
+  payments         Payment[]
+  invoice          Invoice?
+  
+  // Portfolio reference (Order can become Portfolio)
+  portfolio        PortfolioProject?
+
+  @@map("order")
+}

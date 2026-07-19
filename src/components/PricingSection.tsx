@@ -1,14 +1,68 @@
+"use client"
+
+import { useState, useEffect } from "react";
 import { PRICING_PACKAGES } from "@/config/pricing";
 import { motion } from "framer-motion";
 import PricingCard from "./PricingCard";
-import patternBg from "@/assets/pattern-bg.jpg";
+import patternBg from "../../public/assets/pattern-bg.jpg"
+import { Highlighter } from "./magicui/text-highlighter";
+
+interface DBPackage {
+  id: string
+  name: string
+  tagline: string | null
+  target: string | null
+  price_note: string | null
+  floor_price: string
+  max_slots: number
+  benefits: string[]
+  default_features: string[]
+  is_popular: boolean
+}
 
 export default function PricingSection() {
+  const [packages, setPackages] = useState<DBPackage[]>([])
+
+  useEffect(() => {
+    fetch("/api/public/pricing-packages")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) setPackages(data)
+      })
+  }, [])
+
+  // Map DB packages to PricingCard format, fallback to static config
+  const displayPackages = packages.length > 0
+    ? packages.map(pkg => ({
+        id: pkg.id,
+        name: pkg.name,
+        tagline: pkg.tagline || "",
+        target: pkg.target || "",
+        priceNote: pkg.price_note || "Mulai dari",
+        price: Number(pkg.floor_price).toLocaleString("id-ID"),
+        floorPrice: Number(pkg.floor_price),
+        highlighted: pkg.is_popular,
+        benefits: pkg.benefits,
+        features: pkg.default_features,
+      }))
+    : PRICING_PACKAGES.map(pkg => ({
+        id: pkg.id,
+        name: pkg.name,
+        tagline: pkg.tagline,
+        target: pkg.target,
+        priceNote: pkg.priceNote,
+        price: pkg.price,
+        floorPrice: parseInt(pkg.price.replace(/\./g, "")),
+        highlighted: pkg.highlighted,
+        benefits: pkg.features.map(f => f.text),
+        features: pkg.defaultFeatures,
+      }))
+
   return (
     <section id="pricing" className="relative py-28 overflow-hidden">
       {/* Background image with heavy overlay */}
       <div className="absolute inset-0">
-        <img src={patternBg} alt="" className="w-full h-full object-cover opacity-[0.06]" loading="lazy" width={1920} height={800} />
+        <img src={patternBg.src} alt="" className="w-full h-full object-cover opacity-[0.06]" loading="lazy" width={1920} height={800} />
         <div className="absolute inset-0 bg-background/95" />
       </div>
 
@@ -41,16 +95,9 @@ export default function PricingSection() {
             className="text-3xl md:text-5xl font-display font-bold text-foreground mb-5"
           >
             Investasi untuk{" "}
-            <span className="relative">
-              <span className="text-gradient-secondary">Masa Depan</span>
-              <motion.span
-                className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-secondary rounded-full"
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.5, duration: 0.6 }}
-              />
-            </span>{" "}
+            <Highlighter action="highlight" iterations={3} color="#C69B28" isView={true}>
+              <span className="text-secondary">Masa Depan</span>
+            </Highlighter>{" "}
             Digital
           </motion.h2>
           <motion.p
@@ -65,7 +112,7 @@ export default function PricingSection() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {PRICING_PACKAGES.map((pkg, i) => (
+          {displayPackages.map((pkg, i) => (
             <PricingCard key={pkg.id} pkg={pkg} index={i} />
           ))}
         </div>

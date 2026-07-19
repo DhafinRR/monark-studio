@@ -1,9 +1,22 @@
 import { motion } from "framer-motion";
-import { Check, Sparkles, Crown } from "lucide-react";
-import { PricingPackage } from "@/types";
+import { Check, Sparkles, Crown, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+interface DisplayPackage {
+  id: string
+  name: string
+  tagline: string
+  target: string
+  priceNote: string
+  price: string
+  floorPrice?: number
+  highlighted?: boolean
+  benefits: string[]
+  features: string[]
+}
 
 interface PricingCardProps {
-  pkg: PricingPackage;
+  pkg: DisplayPackage;
   index: number;
 }
 
@@ -68,13 +81,57 @@ export default function PricingCard({ pkg, index }: PricingCardProps) {
 
           <div className="mb-6">
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{pkg.priceNote}</span>
-            <div className="text-3xl font-display font-bold text-gradient-secondary mt-0.5">
-              Rp {pkg.price}
-            </div>
+            {pkg.id === 'mobile_app' && pkg.floorPrice ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="text-3xl font-display font-bold text-gradient-secondary mt-0.5 flex items-center gap-2 cursor-help">
+                      Rp {pkg.price}
+                      <Info size={16} className="text-muted-foreground" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">
+                      Harga untuk platform Android & iOS: <br />
+                      <span className="font-bold">Rp {(pkg.floorPrice * 1.8).toLocaleString('id-ID')}</span>
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <div className="text-3xl font-display font-bold text-gradient-secondary mt-0.5">
+                Rp {pkg.price}
+              </div>
+            )}
           </div>
 
           <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent mb-6" />
 
+          <ul className="space-y-3 mb-8 flex-1">
+            {pkg.benefits.map((f, i) => (
+              <motion.li
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.05 + i * 0.04 }}
+                className="flex items-start gap-3 text-sm text-secondary-foreground"
+              >
+                <div className={`mt-0.5 shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
+                  pkg.highlighted
+                    ? "bg-gradient-secondary text-accent-foreground"
+                    : "bg-primary/10 text-primary"
+                }`}>
+                  <Check size={11} strokeWidth={3} />
+                </div>
+                {f}
+              </motion.li>
+            ))}
+          </ul>
+          <h3 className="text-xl font-display font-bold text-foreground mb-2">
+            Fitur Standar
+          </h3>
+          <h5 className="text-sm text-muted-foreground mb-6 leading-relaxed flex-grow-0">Fitur dapat di sesuaikan</h5>
           <ul className="space-y-3 mb-8 flex-1">
             {pkg.features.map((f, i) => (
               <motion.li
@@ -92,7 +149,7 @@ export default function PricingCard({ pkg, index }: PricingCardProps) {
                 }`}>
                   <Check size={11} strokeWidth={3} />
                 </div>
-                {f.text}
+                {f}
               </motion.li>
             ))}
           </ul>

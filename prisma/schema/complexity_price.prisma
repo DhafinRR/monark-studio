@@ -1,0 +1,8 @@
+model ComplexityPrice {
+  level     ComplexityLevel
+  sub_level ComplexitySubLevel
+  price     Decimal            @db.Decimal(12, 2)
+
+  @@id([level, sub_level])
+  @@map("complexity_price")
+}

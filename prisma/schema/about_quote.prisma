@@ -1,0 +1,11 @@
+// About Page Quote - Inspirational quote at bottom
+model AboutQuote {
+  id         String   @id @default(cuid())
+  text       String   @db.Text
+  author     String?  @db.VarChar(100)
+  position   String?  @db.VarChar(100) // e.g., "Founder & CEO"
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("about_quotes")
+}

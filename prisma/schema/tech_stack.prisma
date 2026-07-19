@@ -1,0 +1,9 @@
+model TechStack {
+  id        String             @id @default(uuid())
+  name      String             @unique
+  icon_url  String?
+  color_hex String?            @default("#3b82f6")
+  projects  PortfolioProject[] @relation("PortfolioProjectToTechStack")
+
+  @@map("tech_stack")
+}

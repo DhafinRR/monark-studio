@@ -1,0 +1,81 @@
+# ===================== STAGE 1: Deps =====================
+FROM node:20-alpine AS deps
+
+RUN apk add --no-cache libc6-compat openssl
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm install --ignore-scripts
+
+COPY prisma ./prisma
+RUN npx prisma generate
+
+# ===================== STAGE 2: Builder =====================
+FROM node:20-alpine AS builder
+
+RUN apk add --no-cache libc6-compat openssl
+
+WORKDIR /app
+
+# Declare build args for env vars needed at build time
+ARG DATABASE_URL
+ARG JWT_SECRET
+ARG ADMIN_USERNAME
+ARG ADMIN_PASSWORD
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_WHATSAPP_NUMBER
+ARG NEXT_PUBLIC_GA_ID
+ARG NEXT_PUBLIC_BASE_URL
+
+# Set them as env vars so prisma and next build can use them
+ENV DATABASE_URL=${DATABASE_URL}
+ENV JWT_SECRET=${JWT_SECRET}
+ENV ADMIN_USERNAME=${ADMIN_USERNAME}
+ENV ADMIN_PASSWORD=${ADMIN_PASSWORD}
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+ENV NEXT_PUBLIC_WHATSAPP_NUMBER=${NEXT_PUBLIC_WHATSAPP_NUMBER}
+ENV NEXT_PUBLIC_GA_ID=${NEXT_PUBLIC_GA_ID}
+ENV NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
+
+COPY package.json package-lock.json ./
+RUN npm install --ignore-scripts
+
+COPY --from=deps /app/node_modules/.prisma /app/node_modules/.prisma
+COPY . .
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+RUN npx prisma generate
+RUN npx prisma db push --accept-data-loss
+RUN npx tsx prisma/seed.ts
+RUN npm run build
+
+# ===================== STAGE 3: Runner =====================
+FROM node:20-alpine AS runner
+
+RUN apk add --no-cache libc6-compat openssl
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
+
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]

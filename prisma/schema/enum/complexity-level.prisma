@@ -1,0 +1,6 @@
+enum ComplexityLevel {
+  MUDAH
+  SEDANG
+  SULIT
+  SANGAT_SULIT
+}

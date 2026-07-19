@@ -1,0 +1,11 @@
+// Terms & Conditions - CMS editable terms and conditions (singleton document like About)
+model TermsCondition {
+  id         String   @id @default("default")
+  title      String   @db.VarChar(100)
+  content    String   @db.Text // Rich text HTML (full T&C document)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("terms_conditions")
+}

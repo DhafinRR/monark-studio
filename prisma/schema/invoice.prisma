@@ -1,0 +1,17 @@
+model Invoice {
+  id             String    @id @default(uuid())
+  invoice_number String    @unique
+  amount         Decimal   @db.Decimal(12, 2)
+  status         String    @default("unpaid")
+  payment_url    String?
+  external_id    String?   @unique
+  payment_method String?
+  order_id       String    @unique
+  issued_at      DateTime  @default(now())
+  due_date       DateTime?
+  paid_at        DateTime?
+  updated_at     DateTime  @updatedAt
+  order          Order     @relation(fields: [order_id], references: [id])
+
+  @@map("invoice")
+}

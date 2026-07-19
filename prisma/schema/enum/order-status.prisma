@@ -1,0 +1,8 @@
+enum OrderStatus {
+  DRAFT
+  PENDING
+  ACTIVE
+  ON_PROGRESS
+  DONE
+  CANCELLED
+}

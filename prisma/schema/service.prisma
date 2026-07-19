@@ -1,0 +1,11 @@
+model Service {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  icon_key    String?
+  price       Decimal  @db.Decimal(10, 2)
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+
+  @@map("service")
+}
