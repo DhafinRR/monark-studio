@@ -3,7 +3,7 @@
 import { Heart, ArrowUpRight } from "lucide-react";
 import Link from 'next/link';
 import { motion } from "framer-motion";
-import logoImg from "../../public/assets/logo.jpg";
+import logoImg from "../../public/assets/logo-circle.png";
 
 const footerLinks = [
   { label: "Layanan", href: "#pricing" },
@@ -54,12 +54,12 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="https://wa.me/6285846072435"
+                  href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-accent transition-colors"
                 >
-                  WhatsApp: 085846072435
+                  WhatsApp: {process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/^62/, '0')}
                 </a>
               </li>
             </ul>

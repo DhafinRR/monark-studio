@@ -21,7 +21,7 @@ export default function NotFound() {
         {/* Shimmering Logo Placeholder / Branding */}
         <div className="relative w-32 h-32 mb-4 animate-in fade-in duration-1000">
            <Image 
-             src="/assets/logo.jpg" 
+             src="/assets/logo-circle.png" 
              alt="Monark Studio Logo" 
              fill
              className="object-contain filter grayscale invert brightness-0"

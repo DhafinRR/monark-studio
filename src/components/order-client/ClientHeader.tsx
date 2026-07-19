@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ShieldCheck } from 'lucide-react'
-import logoImg from "@/../public/assets/logo.jpg"
+import logoImg from "@/../public/assets/logo-circle.png"
 
 export default function ClientHeader() {
   return (

@@ -50,7 +50,7 @@ export default function InvoicePreview({ client, items, total, floorPrice = 0, b
           <div className="space-y-4 print:space-y-2">
             <div className="relative w-32 h-32 print:w-20 print:h-20">
               <Image 
-                src="/assets/logo.jpg" 
+                src="/assets/logo-circle.png" 
                 alt="Monark Studio Logo" 
                 fill
                 className="object-contain"

@@ -74,7 +74,7 @@ export default function KwitansiPrint({ payment, order, kwitansiNumber }: Kwitan
           <div className="space-y-3 print:space-y-2">
             <div className="relative w-24 h-24 print:w-16 print:h-16">
               <Image 
-                src="/assets/logo.jpg" 
+                src="/assets/logo-circle.png" 
                 alt="Monark Studio Logo" 
                 fill
                 className="object-contain"

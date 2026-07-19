@@ -54,7 +54,7 @@ export default function InvoicePrint({ order, invoiceNumber, date }: InvoicePrin
           <div className="flex items-center gap-5">
             <div className="relative w-20 h-20">
               <Image 
-                src="/assets/logo.jpg" 
+                src="/assets/logo-circle.png" 
                 alt="Monark Studio Logo" 
                 fill
                 className="object-contain"

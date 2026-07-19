@@ -47,7 +47,7 @@ function PaymentStatusContent() {
         )}
         <div className="pt-4 space-y-3">
           <a
-            href={`https://wa.me/6285846072435`}
+            href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`}
             target="_blank"
             className="block w-full py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all text-sm"
           >
