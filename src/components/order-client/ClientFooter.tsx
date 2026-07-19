@@ -64,12 +64,12 @@ export default function ClientFooter() {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="https://wa.me/6281322639234"
+                  href="https://wa.me/6285846072435"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-accent transition-colors"
                 >
-                  WhatsApp: 081322639234
+                  WhatsApp: 085846072435
                 </a>
               </li>
             </ul>

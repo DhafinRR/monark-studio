@@ -16,7 +16,7 @@ export default function OrderForm() {
   const [showPlatformModal, setShowPlatformModal] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<"ANDROID" | "IOS" | "BOTH" | null>(null);
 
-  const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "6281322639234";
+  const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "6285846072435";
   const WA_LINK = `https://wa.me/${WA_NUMBER}?text=Halo%20tim%20Monark%20Studio,%20saya%20ingin%20berkonsultasi%20tentang%20pembuatan%20proyek%20digital.`;
 
   const handleAiSubmit = async (platformOverride?: string) => {
