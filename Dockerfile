@@ -64,8 +64,8 @@ ENV NODE_ENV=production
 RUN npx prisma generate
 RUN npx prisma db push --accept-data-loss
 
-# Remove stale incremental cache to ensure clean build
-RUN rm -f tsconfig.tsbuildinfo
+# Clean stale caches before build
+RUN rm -rf tsconfig.tsbuildinfo .next
 
 RUN npm run build
 
