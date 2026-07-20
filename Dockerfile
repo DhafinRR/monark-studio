@@ -6,7 +6,8 @@ RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm install --ignore-scripts
+ENV NODE_ENV=development
+RUN npm install --ignore-scripts --include=dev
 
 COPY prisma ./prisma
 RUN npx prisma generate
@@ -53,7 +54,8 @@ ENV GA_PRIVATE_KEY=${GA_PRIVATE_KEY}
 ENV DUITKU_API_KEY=${DUITKU_API_KEY}
 
 COPY package.json package-lock.json ./
-RUN npm install --ignore-scripts
+ENV NODE_ENV=development
+RUN npm install --ignore-scripts --include=dev
 
 COPY --from=deps /app/node_modules/.prisma /app/node_modules/.prisma
 COPY . .
