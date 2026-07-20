@@ -1,6 +1,5 @@
 import AboutEditor from '@/components/monolith-core/AboutEditor'
 import prisma from '@/lib/prisma'
-import { notFound } from 'next/navigation'
 
 async function getAboutContent() {
   const about = await prisma.aboutContent.findUnique({
@@ -12,8 +11,14 @@ async function getAboutContent() {
 export default async function AboutManagementPage() {
   const about = await getAboutContent()
 
-  if (!about) {
-    notFound()
+  const defaultData = about ?? {
+    id: 'default',
+    title: '',
+    subtitle: null as string | null,
+    content: '',
+    logo_url: null as string | null,
+    created_at: new Date(),
+    updated_at: new Date(),
   }
 
   return (
@@ -26,7 +31,7 @@ export default async function AboutManagementPage() {
         </div>
       </div>
 
-      <AboutEditor initialData={about} />
+      <AboutEditor initialData={defaultData} />
     </div>
   )
 }
