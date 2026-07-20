@@ -48,13 +48,20 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const about = await prisma.aboutContent.update({
+    const about = await prisma.aboutContent.upsert({
       where: { id: "default" },
-      data: {
+      update: {
         ...(title && { title }),
         ...(subtitle !== undefined && { subtitle }),
         ...(content && { content }),
         ...(logo_url !== undefined && { logo_url }),
+      },
+      create: {
+        id: "default",
+        title: title || "",
+        subtitle: subtitle || "",
+        content: content || "",
+        logo_url: logo_url || null,
       },
     });
 
