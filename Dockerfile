@@ -56,9 +56,6 @@ COPY package.json package-lock.json ./
 RUN npm install --ignore-scripts
 
 COPY --from=deps /app/node_modules/.prisma /app/node_modules/.prisma
-
-# Cache bust to ensure fresh source copy
-ARG CACHEBUST=1
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -67,16 +64,8 @@ ENV NODE_ENV=production
 RUN npx prisma generate
 RUN npx prisma db push --accept-data-loss
 
-# Debug: verify critical files exist before building
-RUN echo "=== DEBUG: Checking source files ===" && \
-    ls -la src/components/ClientOrderForm.tsx && \
-    ls -la src/components/RichTextEditor.tsx && \
-    ls -la src/components/monolith-core/InvoicePreview.tsx && \
-    ls -la src/components/monolith-core/KwitansiPrint.tsx && \
-    ls -la src/lib/storage-url.ts && \
-    echo "=== DEBUG: tsconfig.json ===" && \
-    cat tsconfig.json && \
-    echo "=== DEBUG: All files OK ==="
+# Remove stale incremental cache to ensure clean build
+RUN rm -f tsconfig.tsbuildinfo
 
 RUN npm run build
 
