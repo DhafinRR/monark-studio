@@ -1,6 +1,5 @@
 import QuoteEditor from '@/components/monolith-core/QuoteEditor'
 import prisma from '@/lib/prisma'
-import { notFound } from 'next/navigation'
 
 async function getQuote() {
   const quote = await prisma.aboutQuote.findUnique({
@@ -12,8 +11,13 @@ async function getQuote() {
 export default async function QuoteManagementPage() {
   const quote = await getQuote()
 
-  if (!quote) {
-    notFound()
+  const defaultData = quote ?? {
+    id: 'default',
+    text: '',
+    author: null as string | null,
+    position: null as string | null,
+    created_at: new Date(),
+    updated_at: new Date(),
   }
 
   return (
@@ -26,7 +30,7 @@ export default async function QuoteManagementPage() {
         </div>
       </div>
 
-      <QuoteEditor initialData={quote} />
+      <QuoteEditor initialData={defaultData} />
     </div>
   )
 }
