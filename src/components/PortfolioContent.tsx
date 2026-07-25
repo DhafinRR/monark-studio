@@ -10,6 +10,7 @@ import { NumberTicker } from '@/components/magicui/number-ticker'
 import { BorderBeam } from '@/components/magicui/border-beam'
 import { Highlighter } from '@/components/magicui/text-highlighter'
 import { getStoragePublicUrl } from '@/lib/storage-url'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface TechStack {
   id: string
@@ -36,6 +37,7 @@ interface PortfolioContentProps {
 }
 
 export default function PortfolioContent({ initialProjects }: PortfolioContentProps) {
+  const { t } = useLanguage()
   const [filter, setFilter] = useState<FilterType>('ALL')
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
@@ -70,15 +72,15 @@ export default function PortfolioContent({ initialProjects }: PortfolioContentPr
             <div className="flex items-center gap-3 mb-6">
               <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-[10px] font-semibold tracking-[0.2em] uppercase bg-accent/10 text-accent border border-accent/20">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                Portfolio
+                {t("portfolio.badge")}
               </span>
             </div>
           </BlurFade>
 
           <BlurFade delay={0.2} inView>
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold text-foreground leading-[0.9] mb-6">
-              Karya<br />
-              <Highlighter action='highlight' color='#C69B28'>Terbaik</Highlighter> Kami
+              {t("portfolio.title1")}<br />
+              <Highlighter action='highlight' color='#C69B28'>{t("portfolio.titleHighlight")}</Highlighter> {t("portfolio.title2")}
               <span className="text-accent">.</span>
             </h1>
           </BlurFade>
@@ -86,7 +88,7 @@ export default function PortfolioContent({ initialProjects }: PortfolioContentPr
           <BlurFade delay={0.3} inView>
             <div className="flex items-end justify-between gap-8 mt-10">
               <p className="text-muted-foreground max-w-lg text-lg leading-relaxed">
-                Setiap proyek adalah kolaborasi unik yang kami rancang dengan dedikasi penuh untuk klien dari berbagai industri.
+                {t("portfolio.subtitle")}
               </p>
 
               <div className="hidden md:flex items-center gap-6">
@@ -135,7 +137,7 @@ export default function PortfolioContent({ initialProjects }: PortfolioContentPr
                       : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                   }`}
                 >
-                  {f === 'ALL' ? 'Semua' : f === 'WEB' ? 'Website' : 'Mobile'}
+                  {f === 'ALL' ? t("portfolioPage.all") : f === 'WEB' ? 'Website' : 'Mobile'}
                 </button>
               ))}
             </div>
@@ -282,7 +284,7 @@ export default function PortfolioContent({ initialProjects }: PortfolioContentPr
           {/* Empty state */}
           {filtered.length === 0 && (
             <div className="text-center py-32">
-              <p className="text-muted-foreground text-lg">Belum ada portfolio untuk kategori ini.</p>
+              <p className="text-muted-foreground text-lg">{t("portfolio.empty")}</p>
             </div>
           )}
         </div>

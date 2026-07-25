@@ -20,7 +20,10 @@ interface DBPackage {
   is_popular: boolean
 }
 
+import { useLanguage } from "@/lib/LanguageContext";
+
 export default function PricingSection() {
+  const { t } = useLanguage();
   const [packages, setPackages] = useState<DBPackage[]>([])
 
   useEffect(() => {
@@ -85,7 +88,7 @@ export default function PricingSection() {
             className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-[10px] font-semibold tracking-[0.2em] uppercase bg-accent/10 text-accent border border-accent/20 mb-5"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            Paket Harga
+            {t("pricing.badge")}
           </motion.span>
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
@@ -94,11 +97,11 @@ export default function PricingSection() {
             transition={{ delay: 0.1 }}
             className="text-3xl md:text-5xl font-display font-bold text-foreground mb-5"
           >
-            Investasi untuk{" "}
+            {t("pricing.title1")}{" "}
             <Highlighter action="highlight" iterations={3} color="#C69B28" isView={true}>
-              <span className="text-secondary">Masa Depan</span>
+              <span className="text-secondary">{t("pricing.titleHighlight")}</span>
             </Highlighter>{" "}
-            Digital
+            {t("pricing.title2")}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
@@ -107,7 +110,7 @@ export default function PricingSection() {
             transition={{ delay: 0.2 }}
             className="text-muted-foreground max-w-md mx-auto text-base"
           >
-            Setiap paket dirancang untuk kebutuhan bisnis yang berbeda.
+            {t("pricing.subtitle")}
           </motion.p>
         </div>
 

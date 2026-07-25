@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Check, Sparkles, Crown, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useLanguage } from "@/lib/LanguageContext";
 
 interface DisplayPackage {
   id: string
@@ -21,6 +22,7 @@ interface PricingCardProps {
 }
 
 export default function PricingCard({ pkg, index }: PricingCardProps) {
+  const { t } = useLanguage();
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
@@ -55,7 +57,7 @@ export default function PricingCard({ pkg, index }: PricingCardProps) {
             >
               <span className="flex items-center gap-1.5 px-5 py-1.5 text-[10px] font-bold tracking-wider uppercase bg-gradient-secondary text-accent-foreground rounded-full shadow-lg whitespace-nowrap">
                 <Crown size={11} />
-                PALING POPULER
+                {t("pricingCard.popular")}
               </span>
             </motion.div>
           )}
@@ -92,7 +94,7 @@ export default function PricingCard({ pkg, index }: PricingCardProps) {
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs">
-                      Harga untuk platform Android & iOS: <br />
+                      {t("pricingCard.mobileTooltip")} <br />
                       <span className="font-bold">Rp {(pkg.floorPrice * 1.8).toLocaleString('id-ID')}</span>
                     </p>
                   </TooltipContent>
@@ -129,9 +131,9 @@ export default function PricingCard({ pkg, index }: PricingCardProps) {
             ))}
           </ul>
           <h3 className="text-xl font-display font-bold text-foreground mb-2">
-            Fitur Standar
+            {t("pricingCard.standardFeatures")}
           </h3>
-          <h5 className="text-sm text-muted-foreground mb-6 leading-relaxed flex-grow-0">Fitur dapat di sesuaikan</h5>
+          <h5 className="text-sm text-muted-foreground mb-6 leading-relaxed flex-grow-0">{t("pricingCard.customizable")}</h5>
           <ul className="space-y-3 mb-8 flex-1">
             {pkg.features.map((f, i) => (
               <motion.li
@@ -164,7 +166,7 @@ export default function PricingCard({ pkg, index }: PricingCardProps) {
                 : "border border-border text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary"
             }`}
           >
-            Pesan Sekarang
+            {t("pricingCard.orderNow")}
           </motion.a>
         </div>
       </div>
