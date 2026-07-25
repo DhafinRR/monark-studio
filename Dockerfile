@@ -69,6 +69,7 @@ RUN npx prisma db push --accept-data-loss
 # Clean stale caches before build
 RUN rm -rf tsconfig.tsbuildinfo .next
 
+ENV NODE_OPTIONS=--openssl-legacy-provider
 RUN npm run build
 
 # ===================== STAGE 3: Runner =====================
@@ -80,6 +81,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS=--openssl-legacy-provider
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 

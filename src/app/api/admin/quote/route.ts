@@ -48,12 +48,18 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const quote = await prisma.aboutQuote.update({
+    const quote = await prisma.aboutQuote.upsert({
       where: { id: "default" },
-      data: {
+      update: {
         ...(text && { text }),
         ...(author !== undefined && { author }),
         ...(position !== undefined && { position }),
+      },
+      create: {
+        id: "default",
+        text: text || "",
+        author: author || null,
+        position: position || null,
       },
     });
 
