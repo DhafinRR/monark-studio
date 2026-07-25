@@ -549,10 +549,14 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
               </div>
               <div className="space-y-1.5">
                 <input
+                  type="tel"
                   className={getInputClass('whatsapp')}
                   placeholder="WhatsApp"
                   value={client.whatsapp}
-                  onChange={e => handleFieldChange('whatsapp', e.target.value)}
+                  onChange={e => {
+                    const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                    handleFieldChange('whatsapp', numericValue);
+                  }}
                   onBlur={() => handleFieldBlur('whatsapp')}
                 />
                 {touched.whatsapp && fieldErrors.whatsapp && (
