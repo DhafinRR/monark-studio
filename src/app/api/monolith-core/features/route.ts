@@ -4,6 +4,8 @@ import { adminLimiter, checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import { createFeatureSchema } from '@/lib/validations'
 import { badRequest, tooManyRequests, internalError } from '@/lib/api-response'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const features = await prisma.featureCatalog.findMany({

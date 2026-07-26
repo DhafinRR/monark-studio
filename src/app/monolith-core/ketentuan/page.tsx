@@ -3,6 +3,8 @@ import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import KetentuanList from '@/components/monolith-core/KetentuanList'
 
+export const dynamic = 'force-dynamic'
+
 async function getKetentuanItems() {
   const items = await prisma.ketentuan.findMany({
     orderBy: { order_number: 'asc' },

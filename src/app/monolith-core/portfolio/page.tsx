@@ -3,6 +3,8 @@ import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import PortfolioClient from '@/components/monolith-core/PortfolioClient'
 
+export const dynamic = 'force-dynamic'
+
 async function getPortfolioProjects() {
   const projects = await prisma.portfolioProject.findMany({
     include: {

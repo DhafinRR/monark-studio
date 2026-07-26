@@ -3,6 +3,8 @@ import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import TechStacksClient from '@/components/monolith-core/TechStacksClient'
 
+export const dynamic = 'force-dynamic'
+
 async function getTechStacks() {
   const techStacks = await prisma.techStack.findMany({
     include: {
