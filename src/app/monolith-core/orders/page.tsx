@@ -4,6 +4,8 @@ import prisma from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import DeleteOrderButton from './DeleteOrderButton'
 
+export const dynamic = 'force-dynamic'
+
 async function getOrders() {
   const orders = await prisma.order.findMany({
     include: {

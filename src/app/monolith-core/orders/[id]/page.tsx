@@ -7,6 +7,8 @@ import { Decimal } from '@prisma/client/runtime/library'
 import DeleteOrderButton from '../DeleteOrderButton'
 import { Trash2 } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 function serializeOrder(order: any) {
   const serializeItem = (item: any) => ({
     ...item,

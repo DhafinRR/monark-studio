@@ -5,6 +5,8 @@ import { createPortfolioSchema } from '@/lib/validations'
 import { badRequest, tooManyRequests, internalError } from '@/lib/api-response'
 import { getStoragePath, withStoragePublicUrls } from '@/lib/storage-url'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const projects = await prisma.portfolioProject.findMany({
