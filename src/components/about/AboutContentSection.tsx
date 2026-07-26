@@ -12,10 +12,10 @@ interface AboutContentSectionProps {
 export default function AboutContentSection({ subtitle, content }: AboutContentSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(containerRef, { once: true, margin: '-10%' })
-  const { t, language } = useLanguage()
+  const { t, lang: language } = useLanguage()
 
-  const displaySubtitle = language === 'en' ? t('about.db_subtitle') : subtitle
-  const displayContent = language === 'en' ? t('about.db_content') : content
+  const displaySubtitle = language === 'EN' ? t('about.db_subtitle') : subtitle
+  const displayContent = language === 'EN' ? t('about.db_content') : content
 
   return (
     <section className="relative py-16 md:py-20 bg-white" ref={containerRef}>

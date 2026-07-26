@@ -11,10 +11,10 @@ interface HeroAboutSectionProps {
 }
 
 export default function HeroAboutSection({ title, subtitle, logoUrl }: HeroAboutSectionProps) {
-  const { t, language } = useLanguage()
+  const { t, lang: language } = useLanguage()
   
-  const displayTitle = language === 'en' ? t('about.db_title') : title
-  const displaySubtitle = language === 'en' ? t('about.db_subtitle') : subtitle
+  const displayTitle = language === 'EN' ? t('about.db_title') : title
+  const displaySubtitle = language === 'EN' ? t('about.db_subtitle') : subtitle
 
   return (
     <section className="relative py-20 md:py-28 overflow-hidden bg-[#FAFAFA]">

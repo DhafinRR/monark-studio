@@ -168,9 +168,9 @@ const translations: Record<string, Record<Lang, string>> = {
 
   // ─── Order Page ───
   "order.back": { ID: "Kembali", EN: "Back" },
-  "order.title1": { ID: "Formulir", EN: "Manual" },
-  "order.titleHighlight": { ID: "Manual", EN: "Form" },
-  "order.subtitle": { ID: "Silakan isi detail proyek Anda di bawah ini", EN: "Please fill in your project details below" },
+  "order.formTitle1": { ID: "Formulir", EN: "Manual" },
+  "order.formTitleHighlight": { ID: "Manual", EN: "Form" },
+  "order.formSubtitle": { ID: "Silakan isi detail proyek Anda di bawah ini", EN: "Please fill in your project details below" },
 
   // ─── Legal Pages ───
   "privacy.intro": {

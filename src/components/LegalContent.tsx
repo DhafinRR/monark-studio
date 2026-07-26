@@ -9,10 +9,10 @@ interface LegalContentProps {
 }
 
 export default function LegalContent({ type, dbTitle, dbContent }: LegalContentProps) {
-  const { t, language } = useLanguage()
+  const { t, lang: language } = useLanguage()
   
-  const displayTitle = language === 'en' ? t(`${type}.db_title`) : dbTitle
-  const displayContent = language === 'en' ? t(`${type}.db_content`) : dbContent
+  const displayTitle = language === 'EN' ? t(`${type}.db_title`) : dbTitle
+  const displayContent = language === 'EN' ? t(`${type}.db_content`) : dbContent
   
   return (
     <>

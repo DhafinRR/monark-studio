@@ -40,7 +40,7 @@ export default function ManualOrderPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-5"
               >
-                {t("order.title1")} <span className="text-gradient-secondary">{t("order.titleHighlight")}</span>
+                {t("order.formTitle1")} <span className="text-gradient-secondary">{t("order.formTitleHighlight")}</span>
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
@@ -48,7 +48,7 @@ export default function ManualOrderPage() {
                 transition={{ delay: 0.1 }}
                 className="text-muted-foreground text-base"
               >
-                {t("order.subtitle")}
+                {t("order.formSubtitle")}
               </motion.p>
             </div>
           </div>
