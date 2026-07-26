@@ -146,18 +146,18 @@ export default function PricingSection() {
             {/* Horizontal scroll container */}
             <div
               ref={scrollRef}
-              className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-8 pt-2 px-2 scroll-smooth no-scrollbar"
+              className="flex gap-6 overflow-x-auto snap-x snap-mandatory py-10 px-4 scroll-smooth no-scrollbar"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {displayPackages.map((pkg, i) => (
-                <div key={pkg.id} className="w-[310px] sm:w-[340px] md:w-[360px] shrink-0 snap-center flex flex-col">
+                <div key={pkg.id} className="w-[310px] sm:w-[340px] md:w-[360px] shrink-0 snap-center flex flex-col pt-4">
                   <PricingCard pkg={pkg} index={i} />
                 </div>
               ))}
             </div>
           </div>
         ) : (
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto pt-6">
             {displayPackages.map((pkg, i) => (
               <PricingCard key={pkg.id} pkg={pkg} index={i} />
             ))}
