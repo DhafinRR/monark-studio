@@ -22,6 +22,8 @@ function getAnalyticsClient() {
 
 const propertyId = process.env.GA_PROPERTY_ID
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   const ip = getClientIP(request)
   const rateCheck = await checkRateLimit(adminLimiter, ip)

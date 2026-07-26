@@ -5,6 +5,8 @@ import prisma from '@/lib/prisma'
  * GET: Mengambil semua daftar Technology Stack
  * Termasuk jumlah proyek yang menggunakan stack tersebut.
  */
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const techStacks = await prisma.techStack.findMany({

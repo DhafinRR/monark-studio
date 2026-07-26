@@ -3,6 +3,8 @@ import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import TimelineList from '@/components/monolith-core/TimelineList'
 
+export const dynamic = 'force-dynamic'
+
 async function getTimelineSteps() {
   const steps = await prisma.orderTimeline.findMany({
     orderBy: { step_number: 'asc' },
