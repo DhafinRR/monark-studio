@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PRICING_PACKAGES } from "@/config/pricing";
 import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import PricingCard from "./PricingCard";
 import patternBg from "../../public/assets/pattern-bg.jpg"
 import { Highlighter } from "./magicui/text-highlighter";
@@ -25,6 +26,14 @@ import { useLanguage } from "@/lib/LanguageContext";
 export default function PricingSection() {
   const { t } = useLanguage();
   const [packages, setPackages] = useState<DBPackage[]>([])
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const scrollAmount = direction === "left" ? -380 : 380;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     fetch("/api/public/pricing-packages")
@@ -114,11 +123,46 @@ export default function PricingSection() {
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {displayPackages.map((pkg, i) => (
-            <PricingCard key={pkg.id} pkg={pkg} index={i} />
-          ))}
-        </div>
+        {displayPackages.length > 3 ? (
+          <div className="relative max-w-7xl mx-auto">
+            {/* Scroll navigation arrows */}
+            <div className="flex justify-end items-center gap-3 mb-6 px-2">
+              <button
+                onClick={() => handleScroll("left")}
+                className="w-10 h-10 rounded-full border border-border/80 bg-card/80 backdrop-blur hover:bg-primary hover:text-primary-foreground hover:border-primary flex items-center justify-center transition-all shadow-md active:scale-95 text-foreground"
+                aria-label="Previous pricing plans"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                onClick={() => handleScroll("right")}
+                className="w-10 h-10 rounded-full border border-border/80 bg-card/80 backdrop-blur hover:bg-primary hover:text-primary-foreground hover:border-primary flex items-center justify-center transition-all shadow-md active:scale-95 text-foreground"
+                aria-label="Next pricing plans"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+
+            {/* Horizontal scroll container */}
+            <div
+              ref={scrollRef}
+              className="flex gap-6 overflow-x-auto snap-x snap-mandatory py-10 px-4 scroll-smooth no-scrollbar"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {displayPackages.map((pkg, i) => (
+                <div key={pkg.id} className="w-[310px] sm:w-[340px] md:w-[360px] shrink-0 snap-center flex flex-col pt-4">
+                  <PricingCard pkg={pkg} index={i} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto pt-6">
+            {displayPackages.map((pkg, i) => (
+              <PricingCard key={pkg.id} pkg={pkg} index={i} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

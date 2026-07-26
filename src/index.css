@@ -185,6 +185,14 @@ html {
   background: hsl(153 40% 18% / 0.5);
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @theme inline {
   @keyframes shimmer-slide {
   to {
