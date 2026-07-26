@@ -23,7 +23,7 @@ export function getBucket() {
 }
 
 export function getStoragePrefix() {
-  const env = process.env.APP_ENV || process.env.NODE_ENV || 'development'
+  const env = process.env.APP_ENV || process.env.NODE_ENV
   const normalized = env.replace(/^\/+|\/+$/g, '')
 
   if (normalized === 'production' || normalized === 'prod') return 'prod'

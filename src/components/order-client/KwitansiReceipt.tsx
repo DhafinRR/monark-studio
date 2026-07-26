@@ -168,7 +168,7 @@ export default function KwitansiReceipt({
           {/* Signature - PT Monark Only (Bilingual) */}
           <div className="flex flex-col items-center">
             <p className="text-[10px] text-gray-600 uppercase mb-2">
-              Jakarta, {formatDate(paidAt)}
+              Bandung, {formatDate(paidAt)}
             </p>
             
             <div className="w-36 text-center">
