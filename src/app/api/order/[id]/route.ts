@@ -60,3 +60,44 @@ export async function GET(
     )
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    const order = await prisma.order.findUnique({
+      where: { id }
+    })
+
+    if (!order) {
+      return NextResponse.json(
+        { error: 'Order not found' },
+        { status: 404 }
+      )
+    }
+
+    // Delete related records and the order in a transaction
+    await prisma.$transaction([
+      prisma.orderItem.deleteMany({ where: { order_id: id } }),
+      prisma.payment.deleteMany({ where: { order_id: id } }),
+      prisma.invoice.deleteMany({ where: { order_id: id } }),
+      // Also unlink from portfolio if exists (actually deleting the order might fail if portfolio has a strict foreign key, but order_id in portfolio is optional and unlinked, or we can just set it to null)
+      prisma.portfolioProject.updateMany({ 
+        where: { order_id: id }, 
+        data: { order_id: null } 
+      }),
+      prisma.order.delete({ where: { id } })
+    ])
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting order:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete order' },
+      { status: 500 }
+    )
+  }
+}

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Plus, MessageCircle, Mail, FileText, ChevronRight } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { redirect } from 'next/navigation'
+import DeleteOrderButton from './DeleteOrderButton'
 
 async function getOrders() {
   const orders = await prisma.order.findMany({
@@ -107,12 +108,15 @@ export default async function OrdersPage() {
                       {new Date(order.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Link 
-                        href={`/monolith-core/orders/${order.id}`}
-                        className="p-2 text-gray-400 group-hover:text-blue-600 transition-colors"
-                      >
-                        <ChevronRight className="w-5 h-5 flex-shrink-0" />
-                      </Link>
+                      <div className="flex items-center justify-end space-x-2">
+                        <DeleteOrderButton orderId={order.id} orderName={order.name} />
+                        <Link 
+                          href={`/monolith-core/orders/${order.id}`}
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        >
+                          <ChevronRight className="w-5 h-5 flex-shrink-0" />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))
