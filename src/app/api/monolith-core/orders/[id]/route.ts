@@ -4,6 +4,8 @@ import { adminLimiter, checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import { tooManyRequests, internalError, notFound, badRequest } from '@/lib/api-response'
 import { createHistoryEntry, addHistoryEntry, getOrderSnapshot, OrderHistoryEntry } from '@/lib/order-history'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(
     req: Request,
     { params }: { params: Promise<{ id: string }> }
