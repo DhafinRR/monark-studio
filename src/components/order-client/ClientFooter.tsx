@@ -17,7 +17,7 @@ const legalLinks = [
 
 export default function ClientFooter() {
   return (
-    <footer className="relative border-t border-border/30 bg-primary/[0.03] mt-20">
+    <footer className="relative border-t border-border/30 bg-primary/[0.03] mt-20 print:hidden">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
 
       <div className="container mx-auto px-4 py-12">

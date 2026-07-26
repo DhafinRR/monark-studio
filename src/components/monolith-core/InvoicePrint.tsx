@@ -63,8 +63,8 @@ export default function InvoicePrint({ order, invoiceNumber, date }: InvoicePrin
             </div>
             <div className="space-y-1 text-sm text-gray-600">
               <p className="font-bold text-gray-900 uppercase tracking-wider">MONARK STUDIO</p>
-              <p className="text-xs">Graha Monark, Jakarta Selatan</p>
-              <p className="text-xs">hello@monarkstudio.house</p>
+              <p className="text-xs">Bandung</p>
+              <p className="text-xs">hello@monarkstd.com</p>
             </div>
           </div>
           
@@ -184,20 +184,28 @@ export default function InvoicePrint({ order, invoiceNumber, date }: InvoicePrin
       <div className="flex-shrink-0 px-10 py-5 bg-gray-50 border-t-2 border-gray-900">
         <div className="grid grid-cols-2 gap-12">
           <div>
-            <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest border-b border-gray-300 pb-1 inline-block">Payment</h3>
-            <div className="mt-2 text-sm text-gray-600 space-y-1">
-              <p className="font-black text-blue-600">BCA / Bank Central Asia</p>
-              <p className="font-mono">Acc: 123 4567 890</p>
-              <p className="font-medium">PT. Monark Studio House</p>
-              <p className="italic text-gray-400 text-xs">Reference: {invNumber}</p>
+            <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest border-b border-gray-300 pb-1 inline-block">Terms &amp; Conditions</h3>
+            <div className="mt-2 text-[11px] text-gray-600 space-y-1 leading-normal">
+              <p>• Transfer hanya ke rekening/gateway resmi di invoice ini (sertakan No. Invoice).</p>
+              <p>• Pelunasan 100% wajib sebelum website ditayangkan live / source code diserahkan.</p>
+              <p>• Uang Muka (DP) bersifat non-refundable jika proyek dibatalkan sepihak oleh Klien.</p>
+              <p>• Keterlambatan pelunasan &gt;7 hari dari jatuh tempo berhak menangguhkan pengerjaan.</p>
+              <p>
+                • Pembayaran menandakan persetujuan atas{' '}
+                <a
+                  href={process.env.NEXT_PUBLIC_TERMS_URL || process.env.TERMS_URL || 'https://monarkstd.com/terms-conditions'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline font-semibold text-gray-900"
+                >
+                  Syarat &amp; Ketentuan Monark Studio
+                </a>.
+              </p>
             </div>
           </div>
-          <div>
-            <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest border-b border-gray-300 pb-1 inline-block">Terms</h3>
-            <div className="mt-2 text-sm text-gray-600 space-y-1">
-              <p>• Due within 14 days of issue</p>
-              <p>• Prices include support & maintenance</p>
-            </div>
+          <div className="flex flex-col justify-end items-end text-right">
+            <p className="font-semibold text-gray-900 text-sm">Monark Studio</p>
+            <p className="italic text-gray-400 text-xs pt-1">Reference: {invNumber}</p>
           </div>
         </div>
       </div>
@@ -205,7 +213,7 @@ export default function InvoicePrint({ order, invoiceNumber, date }: InvoicePrin
       {/* Footer - Fixed at bottom */}
       <div className="flex-shrink-0 px-10 py-3 border-t border-gray-200">
         <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-gray-400">
-          <p>© {new Date().getFullYear()} Monark Studio House</p>
+          <p>© {new Date().getFullYear()} Monark Studio</p>
           <p>Thank you for your business</p>
         </div>
       </div>
