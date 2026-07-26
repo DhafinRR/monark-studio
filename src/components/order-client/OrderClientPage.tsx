@@ -103,28 +103,32 @@ export default function OrderClientPage({ orderId }: OrderClientPageProps) {
     <div className="min-h-screen bg-background">
       <ClientHeader />
 
-      <main className="container mx-auto px-4 py-12 lg:py-16">
+      <main className="container mx-auto px-4 py-12 lg:py-16 print:p-0 print:m-0 print:max-w-none print:w-full">
         {/* Hero Section */}
-        <ClientHero
-          invoiceNumber={invoiceNumber}
-          projectTitle={order.project_title}
-          customerName={order.name}
-          status={order.status}
-          createdAt={order.created_at}
-          orderId={order.id}
-        />
+        <div className="print:hidden">
+          <ClientHero
+            invoiceNumber={invoiceNumber}
+            projectTitle={order.project_title}
+            customerName={order.name}
+            status={order.status}
+            createdAt={order.created_at}
+            orderId={order.id}
+          />
+        </div>
 
         {/* Financial Summary */}
-        <FinancialSummary
-          totalAmount={totalAmount}
-          totalPaid={totalPaid}
-          remainingBalance={remainingBalance}
-        />
+        <div className="print:hidden">
+          <FinancialSummary
+            totalAmount={totalAmount}
+            totalPaid={totalPaid}
+            remainingBalance={remainingBalance}
+          />
+        </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start print:block print:w-full print:m-0 print:p-0">
           {/* Left Sidebar - Payment Timeline */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="lg:col-span-3 space-y-8 print:hidden">
             <PaymentTimeline
               payments={order.payments || []}
               orderId={order.id}
@@ -133,9 +137,9 @@ export default function OrderClientPage({ orderId }: OrderClientPageProps) {
           </div>
 
           {/* Right Side - Invoice Preview */}
-          <div className="lg:col-span-9">
-            <div className="bg-white border border-border/20 rounded-xl overflow-hidden shadow-sm">
-              <div className="px-6 py-4 border-b border-border/20 bg-primary/5 flex justify-between items-center">
+          <div className="lg:col-span-9 print:w-full print:m-0 print:p-0">
+            <div className="bg-white border border-border/20 rounded-xl overflow-hidden shadow-sm print:border-none print:shadow-none print:rounded-none">
+              <div className="px-6 py-4 border-b border-border/20 bg-primary/5 flex justify-between items-center print:hidden">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
                   Dokumen Invoice
                 </h3>
@@ -146,11 +150,11 @@ export default function OrderClientPage({ orderId }: OrderClientPageProps) {
                 </div>
               </div>
 
-              <div className="p-6 overflow-x-auto">
-                <div className="flex justify-end mb-4">
+              <div className="p-6 overflow-x-auto print:p-0 print:overflow-visible">
+                <div className="flex justify-end mb-4 print:hidden">
                   <button
                     onClick={() => window.print()}
-                    className="inline-flex items-center gap-2 px-3 py-2 bg-foreground/5 rounded text-sm font-bold hover:bg-foreground/10 transition-colors"
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-foreground/5 rounded text-sm font-bold hover:bg-foreground/10 transition-colors print:hidden"
                   >
                     Unduh Invoice
                   </button>

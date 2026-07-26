@@ -176,7 +176,7 @@ export default function KwitansiReceipt({
               <p className="text-[10px] text-gray-600 uppercase">
                 Hormat kami, / Yours truly,
               </p>
-              <p className="text-xs font-bold text-gray-900 mt-2">PT. Monark Studio House</p>
+              <p className="text-xs font-bold text-gray-900 mt-2">Monark Studio</p>
             </div>
           </div>
 
@@ -185,7 +185,7 @@ export default function KwitansiReceipt({
         {/* Footer */}
         <div className="bg-gray-100 px-5 py-2 border-t border-gray-200 text-center">
           <p className="text-[9px] text-gray-500">
-            {kwNumber} • PT. Monark Studio House • Jakarta Selatan
+            {kwNumber} • Monark Studio • Bandung
           </p>
         </div>
 
@@ -205,26 +205,44 @@ export default function KwitansiReceipt({
       {/* Print Styles */}
       <style jsx global>{`
         @media print {
-          body * {
-            visibility: hidden;
-          }
-          [data-kwitansi],
-          [data-kwitansi] * {
-            visibility: visible;
-          }
-          [data-kwitansi] {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            transform: translateX(-50%);
-            width: 148mm;
-          }
-          [data-kwitansi] button {
-            display: none !important;
-          }
           @page {
             size: A5 portrait;
             margin: 0;
+          }
+          html, body {
+            background-color: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            width: 100% !important;
+            height: auto !important;
+          }
+          header, footer, nav, aside, button, .no-print, .print\\:hidden, .print-hidden {
+            display: none !important;
+          }
+          main, div, section, article {
+            overflow: visible !important;
+            max-height: none !important;
+            height: auto !important;
+            box-shadow: none !important;
+            background: transparent !important;
+          }
+          [data-kwitansi] {
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            width: 148mm !important;
+            max-width: 100% !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+            display: block !important;
+            position: relative !important;
+            top: 0 !important;
+            left: 0 !important;
+          }
+          [data-kwitansi] button {
+            display: none !important;
           }
         }
       `}</style>
