@@ -20,11 +20,7 @@ export default function LegalContent({ type, dbTitle, dbContent }: LegalContentP
         {displayTitle}
       </h1>
       
-      <p className="text-muted-foreground text-base md:text-lg leading-relaxed mb-10 max-w-2xl">
-        {t(`${type}.intro`)}
-      </p>
-      
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent mb-10" />
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent mb-10 mt-6" />
       
       <div
         className="prose prose-gray max-w-none"
