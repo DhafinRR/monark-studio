@@ -4,6 +4,8 @@ import prisma from '@/lib/prisma'
 import OrderDetailClient from '@/components/monolith-core/OrderDetailClient'
 import ClientLink from '@/components/monolith-core/ClientLink'
 import { Decimal } from '@prisma/client/runtime/library'
+import DeleteOrderButton from '../DeleteOrderButton'
+import { Trash2 } from 'lucide-react'
 
 function serializeOrder(order: any) {
   const serializeItem = (item: any) => ({
@@ -151,6 +153,17 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <FileText className="w-4 h-4" />
             Edit Items & Harga
           </Link>
+
+          {/* Delete Button */}
+          <DeleteOrderButton 
+            orderId={order.id} 
+            orderName={order.name}
+            redirectUrl="/monolith-core/orders"
+            className="block w-full px-4 py-3 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-all flex items-center justify-center gap-2 text-sm text-center"
+          >
+            <Trash2 className="w-4 h-4" />
+            Hapus Order
+          </DeleteOrderButton>
         </div>
       </div>
     </div>
