@@ -6,7 +6,7 @@ import logoImg from "@/../public/assets/logo-circle.png"
 
 export default function ClientHeader() {
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-border/20 shadow-sm">
+    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-border/20 shadow-sm print:hidden">
       <div className="container mx-auto flex items-center justify-between py-4 px-4">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-3 group">

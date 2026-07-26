@@ -25,6 +25,7 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import InvoicePreview from '@/components/monolith-core/InvoicePreview'
 import { PRICING_PACKAGES } from '@/config/pricing'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface Feature {
   id: string
@@ -86,6 +87,7 @@ interface ClientOrderFormProps {
 }
 
 export default function ClientOrderForm({ isPublic = false, orderId, initialData, initialStandardItems, initialAddonItems, initialBenefits, platform, adjustedFloorPrice }: ClientOrderFormProps) {
+  const { t } = useLanguage()
   const isEditMode = !!orderId
   const router = useRouter()
   const apiPath = isPublic ? '/api/public' : '/api/monolith-core'
@@ -519,13 +521,13 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
         <section className="p-6 rounded-2xl border shadow-sm space-y-6 bg-white">
           <div className="flex items-center gap-2 border-b pb-4">
             <User className="w-5 h-5 text-blue-600" />
-            <h2 className="font-bold uppercase tracking-widest text-sm">Informasi Klien</h2>
+            <h2 className="font-bold uppercase tracking-widest text-sm">{t("form.clientInfo")}</h2>
           </div>
           <div className="space-y-6">
             <div className="space-y-1.5">
               <input
                 className={getInputClass('project_title')}
-                placeholder="Judul Proyek, misal: Website Portfolio"
+                placeholder={t("form.projectTitle")}
                 value={client.project_title}
                 onChange={e => handleFieldChange('project_title', e.target.value)}
                 onBlur={() => handleFieldBlur('project_title')}
@@ -538,7 +540,7 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
               <div className="space-y-1.5">
                 <input
                   className={getInputClass('name')}
-                  placeholder="Nama"
+                  placeholder={t("form.name")}
                   value={client.name}
                   onChange={e => handleFieldChange('name', e.target.value)}
                   onBlur={() => handleFieldBlur('name')}
@@ -549,10 +551,14 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
               </div>
               <div className="space-y-1.5">
                 <input
+                  type="tel"
                   className={getInputClass('whatsapp')}
                   placeholder="WhatsApp"
                   value={client.whatsapp}
-                  onChange={e => handleFieldChange('whatsapp', e.target.value)}
+                  onChange={e => {
+                    const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                    handleFieldChange('whatsapp', numericValue);
+                  }}
                   onBlur={() => handleFieldBlur('whatsapp')}
                 />
                 {touched.whatsapp && fieldErrors.whatsapp && (
@@ -579,7 +585,7 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
                   onChange={e => handleFieldChange('package_id', e.target.value)}
                   onBlur={() => handleFieldBlur('package_id')}
                 >
-                  <option value="">-- Pilih Paket --</option>
+                  <option value="">{t("form.selectPackage")}</option>
                   {dbPackages.length > 0
                     ? dbPackages.map(pkg => <option key={pkg.id} value={pkg.id}>{pkg.name}</option>)
                     : PRICING_PACKAGES.map(pkg => <option key={pkg.id} value={pkg.id}>{pkg.name}</option>)
@@ -595,7 +601,7 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
             {client.package_id === 'mobile_app' && (
               <div className="pt-4 border-t">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">
-                  Platform Aplikasi *
+                  {t("form.platform")}
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <button
@@ -640,7 +646,7 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
           </div>
           {!isEditMode && client.details && (
             <div className="pt-2">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Catatan AI</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("form.aiNote")}</label>
               <p className="text-sm text-muted-foreground mt-1 bg-gray-50 p-3 rounded-lg">{client.details}</p>
             </div>
           )}
@@ -707,8 +713,8 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
           <section className="p-6 rounded-2xl border border-primary/20 bg-primary/5 shadow-sm space-y-4">
             <div className="flex items-center gap-2 border-b border-primary/10 pb-4">
               <CheckCircle className="w-5 h-5 text-primary" />
-              <h2 className="font-bold uppercase tracking-widest text-sm text-primary">Benefit Paket</h2>
-              <span className="ml-auto text-[10px] text-muted-foreground italic">Otomatis termasuk</span>
+              <h2 className="font-bold uppercase tracking-widest text-sm text-primary">{t("form.benefits")}</h2>
+              <span className="ml-auto text-[10px] text-muted-foreground italic">{t("form.included")}</span>
             </div>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {benefits.map((benefit, i) => (
@@ -727,10 +733,10 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
             <div className="flex items-center justify-between border-b pb-4">
               <div className="flex items-center gap-2">
                 <Package className="w-5 h-5 text-blue-600" />
-                <h2 className="font-bold text-sm uppercase tracking-widest">Fitur Standar</h2>
+                <h2 className="font-bold text-sm uppercase tracking-widest">{t("form.standardFeatures")}</h2>
               </div>
               <span className="text-xs text-muted-foreground font-mono">
-                {standardItems.filter(s => s.description.trim()).length}/{standardItems.length} slot
+                {standardItems.filter(s => s.description.trim()).length}/{standardItems.length} {t("form.slot")}
               </span>
             </div>
 
@@ -743,7 +749,7 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
                     </span>
                     <input
                       className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
-                      placeholder={`Fitur standar ${index + 1}...`}
+                      placeholder={`${t("form.standardPlaceholder")} ${index + 1}...`}
                       value={item.description}
                       onChange={e => updateStandardItem(index, { description: e.target.value })}
                     />
@@ -752,7 +758,7 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
                   <div className="ml-10">
                     <input
                       className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
-                      placeholder="Catatan untuk fitur ini, misal: ingin warna biru dominan (opsional)"
+                      placeholder={t("form.notePlaceholder")}
                       value={item.custom_note || ''}
                       onChange={e => updateStandardItem(index, { custom_note: e.target.value })}
                     />
@@ -774,23 +780,23 @@ export default function ClientOrderForm({ isPublic = false, orderId, initialData
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-500" />
               <div>
-                <h2 className="font-bold text-sm uppercase tracking-widest">Fitur Tambahan (Addon)</h2>
+                <h2 className="font-bold text-sm uppercase tracking-widest">{t("form.addonFeatures")}</h2>
                 <h3 className="text-xs text-muted-foreground">
-                  Tambahkan fitur tambahan sesuai kebutuhan proyek Anda.<span className='font-bold text-primary'> Harga akan muncul</span> setelah Anda memilih fitur atau mengisi deskripsi fitur custom <span className='font-bold text-primary'>secara otomatis</span>.
+                  {t("form.addonDesc1")}<span className='font-bold text-primary'> {t("form.addonDesc2")}</span> {t("form.addonDesc3")} <span className='font-bold text-primary'>{t("form.addonDesc4")}</span>.
                 </h3>
               </div>
             </div>
             <button type="button" onClick={addAddonItem} className="inline-flex items-center gap-1 text-blue-600 text-xs font-bold hover:text-blue-700 transition-colors">
-              <Plus className="w-4 h-4" /> Tambah
+              <Plus className="w-4 h-4" /> {t("form.add")}
             </button>
           </div>
 
           {addonItems.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Layers className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">Belum ada fitur tambahan.</p>
+              <p className="text-sm">{t("form.noAddon")}</p>
               <button type="button" onClick={addAddonItem} className="mt-3 text-blue-600 text-xs font-bold hover:underline">
-                + Tambah fitur addon
+                {t("form.addAddon")}
               </button>
             </div>
           ) : (

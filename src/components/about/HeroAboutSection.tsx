@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface HeroAboutSectionProps {
   title: string
@@ -10,6 +11,11 @@ interface HeroAboutSectionProps {
 }
 
 export default function HeroAboutSection({ title, subtitle, logoUrl }: HeroAboutSectionProps) {
+  const { t, lang: language } = useLanguage()
+  
+  const displayTitle = language === 'EN' ? t('about.db_title') : title
+  const displaySubtitle = language === 'EN' ? t('about.db_subtitle') : subtitle
+
   return (
     <section className="relative py-20 md:py-28 overflow-hidden bg-[#FAFAFA]">
       {/* Background decorations */}
@@ -59,7 +65,7 @@ export default function HeroAboutSection({ title, subtitle, logoUrl }: HeroAbout
             className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4"
             style={{ fontFamily: "'Cormorant Garamond', serif" }}
           >
-            {title}
+            {displayTitle}
           </motion.h1>
 
           {/* Accent line below title */}
@@ -88,7 +94,7 @@ export default function HeroAboutSection({ title, subtitle, logoUrl }: HeroAbout
               className="text-lg md:text-xl text-gray-600 font-medium"
               style={{ letterSpacing: '0.05em' }}
             >
-              {subtitle}
+              {displaySubtitle}
             </motion.p>
           )}
         </div>

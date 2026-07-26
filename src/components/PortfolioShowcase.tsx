@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Highlighter } from "./magicui/text-highlighter";
 import { Backlight } from "./magicui/backlight";
 import { getStoragePublicUrl } from "@/lib/storage-url";
+import { useLanguage } from "@/lib/LanguageContext";
 
 interface TechStack {
   id: string
@@ -28,6 +29,7 @@ interface PortfolioShowcaseProps {
 }
 
 export default function PortfolioShowcase({ projects }: PortfolioShowcaseProps) {
+  const { t } = useLanguage();
   return (
     <section id="portfolio" className="relative py-28 overflow-hidden">
       {/* Background */}
@@ -44,7 +46,7 @@ export default function PortfolioShowcase({ projects }: PortfolioShowcaseProps) 
             className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-[10px] font-semibold tracking-[0.2em] uppercase bg-accent/10 text-accent border border-accent/20 mb-5"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            Portfolio
+            {t("portfolio.badge")}
           </motion.span>
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
@@ -53,7 +55,7 @@ export default function PortfolioShowcase({ projects }: PortfolioShowcaseProps) 
             transition={{ delay: 0.1 }}
             className="text-3xl md:text-5xl font-display font-bold text-foreground mb-5"
           >
-            Karya<Highlighter action="underline" color="#C69B28" isView={true}> <span className="text-gradient-secondary">Terbaik</span></Highlighter> Kami
+            {t("portfolio.title1")}<Highlighter action="underline" color="#C69B28" isView={true}> <span className="text-gradient-secondary">{t("portfolio.titleHighlight")}</span></Highlighter> {t("portfolio.title2")}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
@@ -62,7 +64,7 @@ export default function PortfolioShowcase({ projects }: PortfolioShowcaseProps) 
             transition={{ delay: 0.2 }}
             className="text-muted-foreground max-w-md mx-auto text-base"
           >
-            Beberapa proyek yang telah kami selesaikan untuk klien dari berbagai industri.
+            {t("portfolio.subtitle")}
           </motion.p>
         </div>
 
@@ -153,7 +155,7 @@ export default function PortfolioShowcase({ projects }: PortfolioShowcaseProps) 
         {/* Empty state */}
         {projects.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-muted-foreground">Belum ada portfolio.</p>
+            <p className="text-muted-foreground">{t("portfolio.empty")}</p>
           </div>
         )}
       </div>

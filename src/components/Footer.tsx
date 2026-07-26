@@ -4,6 +4,7 @@ import { Heart, ArrowUpRight } from "lucide-react";
 import Link from 'next/link';
 import { motion } from "framer-motion";
 import logoImg from "../../public/assets/logo-circle.png";
+import { useLanguage } from "@/lib/LanguageContext";
 
 const footerLinks = [
   { label: "Layanan", href: "#pricing" },
@@ -17,6 +18,7 @@ const legalLinks = [
 ];
 
 export default function Footer() {
+  const { t } = useLanguage();
   return (
     <footer className="relative border-t border-border/30 bg-primary/[0.03]">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
@@ -31,12 +33,12 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              Kami membantu bisnis Anda hadir secara digital dengan website dan aplikasi berkualitas tinggi.
+              {t("footer.desc")}
             </p>
           </div>
 
           <div>
-            <h4 className="font-display font-semibold text-foreground mb-4 text-sm uppercase tracking-wider">Navigasi</h4>
+            <h4 className="font-display font-semibold text-foreground mb-4 text-sm uppercase tracking-wider">{t("footer.navigation")}</h4>
             <ul className="space-y-3">
               {footerLinks.map((l) => (
                 <li key={l.href}>
@@ -50,7 +52,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-display font-semibold text-foreground mb-4 text-sm uppercase tracking-wider">Kontak</h4>
+            <h4 className="font-display font-semibold text-foreground mb-4 text-sm uppercase tracking-wider">{t("footer.contact")}</h4>
             <ul className="space-y-3">
               <li>
                 <a
@@ -66,7 +68,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-display font-semibold text-foreground mb-4 text-sm uppercase tracking-wider">Legal</h4>
+            <h4 className="font-display font-semibold text-foreground mb-4 text-sm uppercase tracking-wider">{t("footer.legal")}</h4>
             <ul className="space-y-3">
               {legalLinks.map((l) => (
                 <li key={l.href}>
@@ -89,7 +91,7 @@ export default function Footer() {
             . All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            Made with <Heart size={11} className="text-destructive" /> in Indonesia
+            {t("footer.madeWith")} <Heart size={11} className="text-destructive" /> {t("footer.inIndonesia")}
           </p>
         </div>
       </div>

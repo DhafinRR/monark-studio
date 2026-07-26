@@ -8,8 +8,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner"; // Assuming sonner is used for toast, if not I'll just use simple alert/state, wait, package.json has sonner!
 import { Highlighter } from "./magicui/text-highlighter";
+import { useLanguage } from "@/lib/LanguageContext";
 
 export default function OrderForm() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [aiPrompt, setAiPrompt] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -95,7 +97,7 @@ export default function OrderForm() {
               className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-[10px] font-semibold tracking-[0.2em] uppercase bg-primary/10 text-primary border border-primary/20 mb-5"
             >
               <Sparkles size={12} />
-              Mulai Proyek
+              {t("order.badge")}
             </motion.span>
             <motion.h2
               initial={{ opacity: 0, y: 10 }}
@@ -104,7 +106,7 @@ export default function OrderForm() {
               transition={{ delay: 0.1 }}
               className="text-3xl md:text-5xl font-display font-bold text-foreground mb-5"
             >
-              Wujudkan <Highlighter action="circle" color="#C69B28" isView={true}> <span className="text-gradient-secondary">Ide</span></Highlighter> Anda
+              {t("order.title1")} <Highlighter action="circle" color="#C69B28" isView={true}> <span className="text-gradient-secondary">{t("order.titleHighlight")}</span></Highlighter> {t("order.title2")}
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 10 }}
@@ -113,7 +115,7 @@ export default function OrderForm() {
               transition={{ delay: 0.2 }}
               className="text-muted-foreground text-base max-w-2xl mx-auto"
             >
-              Pilih cara berkonsultasi yang paling nyaman untuk Anda. Tim atau AI kami siap membantu merumuskan kebutuhan proyek Anda.
+              {t("order.subtitle")}
             </motion.p>
           </div>
 
@@ -133,12 +135,12 @@ export default function OrderForm() {
               <div className="w-14 h-14 rounded-xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center mb-6">
                 <MessageCircle size={28} />
               </div>
-              <h3 className="text-xl font-bold mb-3">Konsultasi Langsung</h3>
+              <h3 className="text-xl font-bold mb-3">{t("order.waTitle")}</h3>
               <p className="text-muted-foreground text-sm flex-1 mb-8">
-                Diskusikan ide proyek Anda langsung dengan tim ahli kami melalui WhatsApp. Cepat dan personal.
+                {t("order.waDesc")}
               </p>
               <div className="flex items-center text-sm font-semibold text-[#25D366] mt-auto">
-                Chat Sekarang <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                {t("order.waCta")} <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </div>
             </motion.a>
 
@@ -152,22 +154,22 @@ export default function OrderForm() {
             >
               {/* Highlight badge */}
               <div className="absolute top-0 right-0 bg-primary text-background text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
-                Rekomendasi
+                {t("order.aiBadge")}
               </div>
 
               <div className="w-14 h-14 rounded-xl bg-primary/20 text-primary flex items-center justify-center mb-6">
                 <Bot size={28} />
               </div>
-              <h3 className="text-xl font-bold mb-3">Tanya Asisten AI</h3>
+              <h3 className="text-xl font-bold mb-3">{t("order.aiTitle")}</h3>
               <p className="text-muted-foreground text-sm mb-5">
-                Ceritakan secara singkat apa yang Anda butuhkan dengan bahasa sehari-hari. AI kami akan merumuskan spesifikasinya.
+                {t("order.aiDesc")}
               </p>
               
               <div className="flex flex-col flex-1">
                 <textarea
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
-                  placeholder="Contoh: Saya butuh website untuk jualan baju online dengan fitur keranjang belanja..."
+                  placeholder={t("order.aiPlaceholder")}
                   className="w-full text-sm bg-background/80 border border-primary/20 rounded-xl p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 resize-none mb-4"
                 />
                 <button
@@ -178,12 +180,12 @@ export default function OrderForm() {
                   {isAiLoading ? (
                     <>
                       <Loader2 size={16} className="animate-spin" />
-                      Menganalisis...
+                      {t("order.aiAnalyzing")}
                     </>
                   ) : (
                     <>
                       <Sparkles size={16} />
-                      Gunakan AI
+                      {t("order.aiButton")}
                     </>
                   )}
                 </button>
@@ -202,16 +204,16 @@ export default function OrderForm() {
               <div className="w-14 h-14 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center mb-6">
                 <FileText size={28} />
               </div>
-              <h3 className="text-xl font-bold mb-3">Isi Form Manual</h3>
+              <h3 className="text-xl font-bold mb-3">{t("order.formTitle")}</h3>
               <p className="text-muted-foreground text-sm flex-1 mb-8">
-                Sudah tahu persis apa yang Anda butuhkan? Isi formulir pemesanan secara mandiri dan pilih paket Anda.
+                {t("order.formDesc")}
               </p>
               
               <Link 
                 href="/order"
                 className="mt-auto block w-full text-center py-3.5 rounded-xl border border-border bg-background hover:bg-muted font-semibold text-sm transition-colors"
               >
-                Isi Formulir
+                {t("order.formCta")}
               </Link>
             </motion.div>
             
@@ -236,9 +238,9 @@ export default function OrderForm() {
               <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-6">
                 <Sparkles size={32} />
               </div>
-              <h3 className="text-2xl font-bold mb-2">Pilih Platform Aplikasi</h3>
+              <h3 className="text-2xl font-bold mb-2">{t("order.platformTitle")}</h3>
               <p className="text-muted-foreground text-sm">
-                Kami mendeteksi kebutuhan aplikasi mobile. Mana yang Anda butuhkan?
+                {t("order.platformSubtitle")}
               </p>
             </div>
 
@@ -250,7 +252,7 @@ export default function OrderForm() {
               >
                 <div>
                   <div className="font-bold text-lg">Android</div>
-                  <div className="text-xs text-muted-foreground">Aplikasi untuk Play Store</div>
+                  <div className="text-xs text-muted-foreground">{t("order.platformAndroid")}</div>
                 </div>
                 {isAiLoading ? <Loader2 size={20} className="animate-spin text-primary" /> : <ArrowRight size={20} className="text-primary group-hover:translate-x-1 transition-transform" />}
               </button>
@@ -261,7 +263,7 @@ export default function OrderForm() {
               >
                 <div>
                   <div className="font-bold text-lg">iOS</div>
-                  <div className="text-xs text-muted-foreground">Aplikasi untuk App Store</div>
+                  <div className="text-xs text-muted-foreground">{t("order.platformIos")}</div>
                 </div>
                 {isAiLoading ? <Loader2 size={20} className="animate-spin text-primary" /> : <ArrowRight size={20} className="text-primary group-hover:translate-x-1 transition-transform" />}
               </button>
@@ -271,8 +273,8 @@ export default function OrderForm() {
                 className="flex items-center justify-between p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div>
-                  <div className="font-bold text-lg">Keduanya (Android & iOS)</div>
-                  <div className="text-xs text-muted-foreground">Dua platform sekaligus dengan harga khusus</div>
+                  <div className="font-bold text-lg">{t("order.platformBothLabel")}</div>
+                  <div className="text-xs text-muted-foreground">{t("order.platformBoth")}</div>
                 </div>
                 {isAiLoading ? <Loader2 size={20} className="animate-spin text-primary" /> : <Sparkles size={20} className="text-primary group-hover:scale-110 transition-transform" />}
               </button>
@@ -282,7 +284,7 @@ export default function OrderForm() {
               onClick={() => setShowPlatformModal(false)}
               className="mt-6 w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              Batal
+              {t("order.platformCancel")}
             </button>
           </motion.div>
         </div>

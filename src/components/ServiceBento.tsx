@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { AnimatedBeam } from "@/components/magicui/animated-beam";
 import { useRef, forwardRef } from "react";
+import { useLanguage } from "@/lib/LanguageContext";
 
 const Circle = forwardRef<
   HTMLDivElement,
@@ -36,88 +37,6 @@ const Circle = forwardRef<
 });
 
 Circle.displayName = "Circle";
-
-const features = [
-  {
-    Icon: Zap,
-    name: "Performa Kilat",
-    description: "Situs web dengan skor Lighthouse 100 dan waktu muat di bawah 2 detik.",
-    href: "#",
-    cta: "Pelajari lebih lanjut",
-    className: "col-span-3 lg:col-span-1",
-    background: (
-      <div className="absolute right-0 top-0 h-full w-full opacity-10 [mask-image:linear-gradient(to_top,transparent,black)]">
-         <div className="flex h-full items-center justify-center text-8xl font-bold text-accent">100</div>
-      </div>
-    ),
-  },
-  {
-    Icon: Globe,
-    name: "Modern Tech Stack",
-    description: "Kami menggunakan teknologi terbaru seperti Next.js, TypeScript, dan Supabase.",
-    href: "#",
-    cta: "Lihat Stack",
-    className: "col-span-3 lg:col-span-2",
-    background: (
-      <Marquee
-        pauseOnHover
-        className="absolute top-10 [--duration:20s] [mask-image:linear-gradient(to_top,transparent,black)]"
-      >
-        {["Next.js", "React", "TypeScript", "Tailwind", "Prisma", "Supabase", "Framer Motion", "Magic UI"].map((f, idx) => (
-          <div
-            key={idx}
-            className={cn(
-              "relative w-32 cursor-pointer overflow-hidden rounded-xl border p-4",
-              "border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]",
-              "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]",
-            )}
-          >
-            <div className="flex flex-row items-center gap-2">
-              <div className="flex flex-col">
-                <figcaption className="text-sm font-medium dark:text-white line-clamp-1">
-                  {f}
-                </figcaption>
-              </div>
-            </div>
-          </div>
-        ))}
-      </Marquee>
-    ),
-  },
-  {
-    Icon: ShieldCheck,
-    name: "Seamless Integration",
-    description: "Terhubung otomatis dengan GCP, Xendit, WhatsApp, dan ekosistem bisnis Anda lainnya.",
-    href: "#",
-    cta: "Lihat Integrasi",
-    className: "col-span-3 lg:col-span-2",
-    background: (
-      <IntegrationBeam />
-    ),
-  },
-  {
-    Icon: Code2,
-    name: "Custom Solutions",
-    description: "Solusi perangkat lunak yang disesuaikan khusus untuk kebutuhan unik bisnis Anda.",
-    href: "#",
-    cta: "Konsultasi",
-    className: "col-span-3 lg:col-span-1",
-    background: (
-      <div className="absolute right-0 top-10 w-full p-4 opacity-10 transition-all duration-300 group-hover:opacity-20 uppercase font-mono text-[10px] leading-tight overflow-hidden h-full">
-        {`const monarkValue = {
-  quality: "Premium",
-  code: "Clean",
-  design: "State of Art",
-  performance: "Optimized"
-};
-
-function buildSuccess() {
-  return deploy(monarkValue);
-}`}
-      </div>
-    ),
-  },
-];
 
 function IntegrationBeam() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -222,15 +141,99 @@ function IntegrationBeam() {
 }
 
 export function ServiceBento() {
+  const { t } = useLanguage();
+
+  const features = [
+    {
+      Icon: Zap,
+      name: t("service.perfName"),
+      description: t("service.perfDesc"),
+      href: "#",
+      cta: t("service.perfCta"),
+      className: "col-span-3 lg:col-span-1",
+      background: (
+        <div className="absolute right-0 top-0 h-full w-full opacity-10 [mask-image:linear-gradient(to_top,transparent,black)]">
+           <div className="flex h-full items-center justify-center text-8xl font-bold text-accent">100</div>
+        </div>
+      ),
+    },
+    {
+      Icon: Globe,
+      name: t("service.techName"),
+      description: t("service.techDesc"),
+      href: "#",
+      cta: t("service.techCta"),
+      className: "col-span-3 lg:col-span-2",
+      background: (
+        <Marquee
+          pauseOnHover
+          className="absolute top-10 [--duration:20s] [mask-image:linear-gradient(to_top,transparent,black)]"
+        >
+          {["Next.js", "React", "TypeScript", "Tailwind", "Prisma", "Supabase", "Framer Motion", "Magic UI"].map((f, idx) => (
+            <div
+              key={idx}
+              className={cn(
+                "relative w-32 cursor-pointer overflow-hidden rounded-xl border p-4",
+                "border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]",
+                "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]",
+              )}
+            >
+              <div className="flex flex-row items-center gap-2">
+                <div className="flex flex-col">
+                  <figcaption className="text-sm font-medium dark:text-white line-clamp-1">
+                    {f}
+                  </figcaption>
+                </div>
+              </div>
+            </div>
+          ))}
+        </Marquee>
+      ),
+    },
+    {
+      Icon: ShieldCheck,
+      name: t("service.intName"),
+      description: t("service.intDesc"),
+      href: "#",
+      cta: t("service.intCta"),
+      className: "col-span-3 lg:col-span-2",
+      background: (
+        <IntegrationBeam />
+      ),
+    },
+    {
+      Icon: Code2,
+      name: t("service.customName"),
+      description: t("service.customDesc"),
+      href: "#",
+      cta: t("service.customCta"),
+      className: "col-span-3 lg:col-span-1",
+      background: (
+        <div className="absolute right-0 top-10 w-full p-4 opacity-10 transition-all duration-300 group-hover:opacity-20 uppercase font-mono text-[10px] leading-tight overflow-hidden h-full">
+          {`const monarkValue = {
+  quality: "Premium",
+  code: "Clean",
+  design: "State of Art",
+  performance: "Optimized"
+};
+
+function buildSuccess() {
+  return deploy(monarkValue);
+}`}
+        </div>
+      ),
+    },
+  ];
+
   return (
     <section className="py-24 relative overflow-hidden bg-background">
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 space-y-4">
           <h2 className="text-3xl md:text-5xl font-display font-bold">
-            Mengapa Memilih <span className="text-accent">Monark?</span>
+            {t("service.title")} <span className="text-accent">Monark?</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Kami menggabungkan keahlian teknis tingkat tinggi dengan desain yang memukau untuk membangun masa depan digital Anda.
+            {t("service.subtitle")}
           </p>
         </div>
         

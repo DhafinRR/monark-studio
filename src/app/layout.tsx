@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import '@/index.css'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import { Toaster } from 'sonner'
+import { LanguageProvider } from '@/lib/LanguageContext'
 
 export const metadata: Metadata = {
     title: {
@@ -34,9 +35,11 @@ export default function RootLayout({
     return (
         <html lang="id" suppressHydrationWarning>
             <body suppressHydrationWarning>
-                <GoogleAnalytics />
-                {children}
-                <Toaster position="top-center" richColors closeButton />
+                <LanguageProvider>
+                    <GoogleAnalytics />
+                    {children}
+                    <Toaster position="top-center" richColors closeButton />
+                </LanguageProvider>
             </body>
         </html>
     )

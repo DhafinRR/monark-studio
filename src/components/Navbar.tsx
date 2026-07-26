@@ -2,29 +2,18 @@
 
 import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 import logoImg from "../../public/assets/logo-circle.png";
-
-const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "Portfolio", href: "/portfolio" },
-  {
-    label: "About",
-    href: "/about",
-    submenu: [
-      { label: "About Us", href: "/about" },
-      { label: "Ketentuan", href: "/about#ketentuan" },
-    ]
-  },
-  { label: "Order", href: "/order" },
-];
+import { useLanguage } from "@/lib/LanguageContext";
 
 export default function Navbar() {
+  const { lang, setLang, t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileSubmenuOpen, setMobileSubmenuOpen] = useState<string | null>(null);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
   const [mounted, setMounted] = useState(false);
 
@@ -34,6 +23,20 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const navLinks = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("nav.portfolio"), href: "/portfolio" },
+    {
+      label: t("nav.about"),
+      href: "/about",
+      submenu: [
+        { label: t("nav.aboutUs"), href: "/about" },
+        { label: t("nav.ketentuan"), href: "/about#ketentuan" },
+      ]
+    },
+    { label: t("nav.order"), href: "/order" },
+  ];
 
   return (
     <motion.nav
@@ -125,11 +128,47 @@ export default function Navbar() {
             </div>
           )}
 
+          {/* Language Switcher Desktop */}
+          <div className="relative ml-2 mr-1">
+            <button
+              onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+            >
+              <Globe className="w-4 h-4" />
+              <span className="font-medium">{lang}</span>
+              <ChevronDown className="w-3 h-3" />
+            </button>
+            <AnimatePresence>
+              {langDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-full mt-2 right-0 min-w-[120px] bg-card/95 backdrop-blur-2xl border border-border/30 rounded-lg shadow-lg overflow-hidden flex flex-col"
+                >
+                  <button
+                    onClick={() => { setLang("ID"); setLangDropdownOpen(false); }}
+                    className={`px-4 py-2.5 text-left text-sm hover:bg-secondary/50 transition-colors ${lang === "ID" ? "text-foreground font-bold" : "text-muted-foreground"}`}
+                  >
+                    Indonesia (ID)
+                  </button>
+                  <button
+                    onClick={() => { setLang("EN"); setLangDropdownOpen(false); }}
+                    className={`px-4 py-2.5 text-left text-sm hover:bg-secondary/50 transition-colors ${lang === "EN" ? "text-foreground font-bold" : "text-muted-foreground"}`}
+                  >
+                    English (EN)
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <Link
             href="/#order"
-            className="ml-3 px-5 py-2 rounded-lg bg-gradient-secondary text-accent-foreground text-sm font-bold transition-all hover:scale-[1.03] active:scale-[0.97] inline-block"
+            className="ml-1 px-5 py-2 rounded-lg bg-gradient-secondary text-accent-foreground text-sm font-bold transition-all hover:scale-[1.03] active:scale-[0.97] inline-block"
           >
-            Mulai Proyek
+            {t("nav.startProject")}
           </Link>
         </div>
 
@@ -210,12 +249,34 @@ export default function Navbar() {
                 );
               })}
 
+              {/* Language Switcher Mobile */}
+              <div className="mt-2 px-4 py-3 rounded-lg bg-secondary/20 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-foreground font-medium">
+                  <Globe className="w-4 h-4" />
+                  {lang === "ID" ? "Bahasa" : "Language"}
+                </div>
+                <div className="flex gap-2 bg-background p-1 rounded-md border border-border/50">
+                  <button
+                    onClick={() => setLang("ID")}
+                    className={`px-3 py-1 rounded text-xs font-bold transition-colors ${lang === "ID" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    ID
+                  </button>
+                  <button
+                    onClick={() => setLang("EN")}
+                    className={`px-3 py-1 rounded text-xs font-bold transition-colors ${lang === "EN" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    EN
+                  </button>
+                </div>
+              </div>
+
               <Link
                 href="/#order"
                 onClick={() => setOpen(false)}
                 className="mt-2 px-5 py-3 rounded-lg bg-gradient-secondary text-accent-foreground text-sm font-bold text-center"
               >
-                Mulai Proyek
+                {t("nav.startProject")}
               </Link>
             </div>
           </motion.div>

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { useRef } from 'react'
 import { getStoragePublicUrl } from '@/lib/storage-url'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface TimelineStep {
   id: string
@@ -18,6 +19,7 @@ interface TimelineHorizontalSectionProps {
 }
 
 export default function TimelineHorizontalSection({ steps }: TimelineHorizontalSectionProps) {
+  const { t } = useLanguage()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   return (
@@ -34,7 +36,7 @@ export default function TimelineHorizontalSection({ steps }: TimelineHorizontalS
             className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
             style={{ fontFamily: "'Cormorant Garamond', serif" }}
           >
-            Proses Pemesanan
+            {t("about.timelineTitle")}
           </h2>
           <div className="flex justify-center mb-4">
             <div className="relative h-0.5 w-24">
@@ -47,7 +49,7 @@ export default function TimelineHorizontalSection({ steps }: TimelineHorizontalS
             </div>
           </div>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Timeline tahapan pemesanan dari konsultasi hingga serah terima
+            {t("about.timelineDesc")}
           </p>
         </motion.div>
 
@@ -103,7 +105,7 @@ export default function TimelineHorizontalSection({ steps }: TimelineHorizontalS
                             color: '#1C1200',
                           }}
                         >
-                          Step {step.step_number}
+                          {t("about.step")} {step.step_number}
                         </div>
                       </div>
                     </div>

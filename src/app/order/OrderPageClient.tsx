@@ -7,11 +7,13 @@ import Footer from "@/components/Footer";
 import Link from "next/link";
 import ClientOrderForm from "@/components/ClientOrderForm";
 import { Metadata } from "next";
+import { useLanguage } from "@/lib/LanguageContext";
 
 // Note: Metadata export doesn't work in 'use client' components
 // SEO will be handled by root layout and page structure
 
 export default function ManualOrderPage() {
+  const { t } = useLanguage()
   return (
     <div className="min-h-screen bg-background relative flex flex-col">
       <Navbar />
@@ -29,7 +31,7 @@ export default function ManualOrderPage() {
               className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
             >
               <ArrowLeft size={16} />
-              Kembali
+              {t("order.back")}
             </Link>
 
             <div className="text-center">
@@ -38,7 +40,7 @@ export default function ManualOrderPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-5"
               >
-                Formulir <span className="text-gradient-secondary">Manual</span>
+                {t("order.formTitle1")} <span className="text-gradient-secondary">{t("order.formTitleHighlight")}</span>
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
@@ -46,7 +48,7 @@ export default function ManualOrderPage() {
                 transition={{ delay: 0.1 }}
                 className="text-muted-foreground text-base"
               >
-                Silakan isi detail proyek Anda di bawah ini
+                {t("order.formSubtitle")}
               </motion.p>
             </div>
           </div>

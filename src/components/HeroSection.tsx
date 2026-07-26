@@ -5,6 +5,7 @@ import { ArrowUpRight, Globe, Smartphone, Palette } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Highlighter } from "./magicui/text-highlighter";
 import { MorphingText } from "./magicui/morphing-text";
+import { useLanguage } from "@/lib/LanguageContext";
 
 /* ─── Typed words ─── */
 const WORDS = ["Website", "Mobile App", "Web App", "E-Commerce"];
@@ -35,19 +36,8 @@ function useTypingEffect() {
   return text;
 }
 
-const STATS = [
-  { val: "50+", label: "Proyek" },
-  { val: "30+", label: "Klien" },
-  { val: "99%", label: "Uptime" },
-];
-
-const SERVICES = [
-  { Icon: Globe, title: "Website", desc: "Landing page & web app", pos: "left-0 top-12" },
-  { Icon: Smartphone, title: "Mobile App", desc: "iOS & Android native", pos: "right-0 top-[38%]" },
-  { Icon: Palette, title: "UI/UX Design", desc: "Design konversi tinggi", pos: "left-4 bottom-16" },
-];
-
 export default function HeroSection() {
+  const { t } = useLanguage();
   const text = ["Website", "Mobile App", "Web App", "E-Commerce"]
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
@@ -55,6 +45,18 @@ export default function HeroSection() {
   // Baris yang error sudah diperbaiki di sini:
   const yText = useTransform(scrollYProgress, [0, 1], ["0%", "12%"]);
   const opac = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
+
+  const STATS = [
+    { val: "50+", label: t("hero.statProjects") },
+    { val: "30+", label: t("hero.statClients") },
+    { val: "99%", label: t("hero.statUptime") },
+  ];
+
+  const SERVICES = [
+    { Icon: Globe, title: "Website", desc: t("hero.serviceWebDesc"), pos: "left-0 top-12" },
+    { Icon: Smartphone, title: "Mobile App", desc: t("hero.serviceMobileDesc"), pos: "right-0 top-[38%]" },
+    { Icon: Palette, title: "UI/UX Design", desc: t("hero.serviceDesignDesc"), pos: "left-4 bottom-16" },
+  ];
 
   return (
     <section
@@ -112,7 +114,7 @@ export default function HeroSection() {
                   fontSize: 10, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase",
                   color: "#A07820", fontFamily: "'DM Sans', sans-serif",
                 }}>
-                  Digital Agency
+                  {t("hero.badge")}
                 </span>
                 <span className="relative flex h-1.5 w-1.5 ml-1">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C69B28] opacity-60" />
@@ -132,7 +134,7 @@ export default function HeroSection() {
                   color: "#111827",
                 }}
               >
-                Kami Bangun
+                {t("hero.headline1")}
                 <br />
                 <Highlighter action="underline" iterations={5} animationDuration={2000} color="#C69B28" isView={true}>
                   <MorphingText 
@@ -145,7 +147,7 @@ export default function HeroSection() {
                   color: "#6B7280", fontWeight: 400,
                   fontSize: "clamp(2.2rem, 4.5vw, 4.2rem)", letterSpacing: "-0.015em",
                 }}>
-                  untuk Bisnis Anda
+                  {t("hero.headline2")}
                 </span>
               </motion.h1>
 
@@ -160,10 +162,10 @@ export default function HeroSection() {
                   marginTop: 28, marginBottom: 40, fontWeight: 400, letterSpacing: "0.01em",
                 }}
               >
-                Dari landing page sederhana hingga aplikasi mobile custom — solusi digital yang{" "}
-                <Highlighter action="underline" color="#C69B28" isView={true}>cepat</Highlighter>,{" "}
-                <Highlighter action="circle" color="#214533" isView={true}>scalable</Highlighter>
-                {" "}dan berperforma tinggi.
+                {t("hero.body")}{" "}
+                <Highlighter action="underline" color="#C69B28" isView={true}>{t("hero.bodyFast")}</Highlighter>,{" "}
+                <Highlighter action="circle" color="#214533" isView={true}>{t("hero.bodyScalable")}</Highlighter>
+                {" "}{t("hero.bodyEnd")}
               </motion.p>
 
               {/* CTAs */}
@@ -191,7 +193,7 @@ export default function HeroSection() {
                     animate={{ x: ["-120%", "120%"] }}
                     transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 1.5 }}
                   />
-                  <span className="relative">Lihat Paket Harga</span>
+                  <span className="relative">{t("hero.ctaPricing")}</span>
                   <ArrowUpRight size={14} className="relative group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200" />
                 </motion.a>
 
@@ -206,7 +208,7 @@ export default function HeroSection() {
                     border: "1px solid rgba(0,0,0,0.1)", background: "rgba(0,0,0,0.02)",
                   }}
                 >
-                  Lihat Portfolio
+                  {t("hero.ctaPortfolio")}
                 </motion.a>
               </motion.div>
 
@@ -399,7 +401,7 @@ export default function HeroSection() {
           fontFamily: "'DM Sans', sans-serif", fontSize: 9, fontWeight: 700,
           letterSpacing: "0.35em", textTransform: "uppercase", color: "#9CA3AF",
         }}>
-          Scroll
+          {t("hero.scroll")}
         </span>
         <div style={{ width: 1, height: 36, borderRadius: 2, overflow: "hidden", background: "rgba(0,0,0,0.1)" }}>
           <motion.div
