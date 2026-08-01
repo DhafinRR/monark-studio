@@ -592,7 +592,7 @@ export default function PortfolioForm({ initialData, id }: PortfolioFormProps) {
           >
             <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
             <p className="text-sm text-gray-500 font-medium">
-              Tambah gambar gallery (16:9)
+              Tambah gambar gallery (landscape / portrait)
             </p>
           </div>
           <input
