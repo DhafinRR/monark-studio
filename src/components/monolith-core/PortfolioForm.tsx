@@ -42,15 +42,17 @@ interface PortfolioFormProps {
 
 type ImageItem = { type: 'url'; value: string } | { type: 'file'; file: File; preview: string }
 
-const ASPECT_RATIO = 16 / 9
+const LANDSCAPE_RATIO = 16 / 9
+const PORTRAIT_RATIO = 9 / 16
 const ASPECT_TOLERANCE = 0.2
 
-function validateAspectRatio(file: File): Promise<boolean> {
+function validateAspectRatio(file: File, allowedRatios: number[] = [LANDSCAPE_RATIO]): Promise<boolean> {
   return new Promise((resolve) => {
     const img = new window.Image()
     img.onload = () => {
       const ratio = img.width / img.height
-      resolve(Math.abs(ratio - ASPECT_RATIO) <= ASPECT_TOLERANCE)
+      const isValid = allowedRatios.some(target => Math.abs(ratio - target) <= ASPECT_TOLERANCE)
+      resolve(isValid)
     }
     img.onerror = () => resolve(false)
     img.src = URL.createObjectURL(file)
@@ -162,9 +164,15 @@ export default function PortfolioForm({ initialData, id }: PortfolioFormProps) {
       toast.error('Hanya file gambar yang didukung')
       return
     }
-    const valid = await validateAspectRatio(file)
+    const allowedRatios = target === 'gallery'
+      ? [LANDSCAPE_RATIO, PORTRAIT_RATIO]
+      : [LANDSCAPE_RATIO]
+    const valid = await validateAspectRatio(file, allowedRatios)
     if (!valid) {
-      toast.error('Rasio gambar harus mendekati 16:9')
+      toast.error(target === 'gallery'
+        ? 'Rasio gambar harus mendekati 16:9 (landscape) atau 9:16 (portrait)'
+        : 'Rasio gambar harus mendekati 16:9'
+      )
       return
     }
     const preview = URL.createObjectURL(file)
