@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, Globe, Calendar, User, CheckCircle2, ExternalLink } from "lucide-react"
 import Link from "next/link"
@@ -10,6 +10,19 @@ import { BlurFade } from "@/components/magicui/blur-fade"
 import { BorderBeam } from "@/components/magicui/border-beam"
 import { Backlight } from "../magicui/backlight"
 import { getStoragePublicUrl } from "@/lib/storage-url"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel"
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface TechStack {
   id: string
@@ -46,6 +59,22 @@ interface ProjectDetailContentProps {
 }
 
 export default function ProjectDetailContent({ project, nextProject }: ProjectDetailContentProps) {
+  const [api, setApi] = useState<CarouselApi>()
+  const [current, setCurrent] = useState(0)
+  const [count, setCount] = useState(0)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!api) return
+
+    setCount(api.scrollSnapList().length)
+    setCurrent(api.selectedScrollSnap() + 1)
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap() + 1)
+    })
+  }, [api])
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -91,7 +120,7 @@ export default function ProjectDetailContent({ project, nextProject }: ProjectDe
           <div className="grid lg:grid-cols-[1fr_380px] gap-16 items-start">
 
             {/* LEFT CONTENT */}
-            <div className="space-y-12">
+            <div className="space-y-12 min-w-0">
               {/* Hero Info */}
               <section>
                 <BlurFade delay={0.1}>
@@ -136,10 +165,62 @@ export default function ProjectDetailContent({ project, nextProject }: ProjectDe
                 </section>
               )}
 
+              {/* Gallery Carousel Section (Diletakkan di atas Fitur Utama - Google Play Store Style) */}
+              {project.gallery.length > 0 && (
+                <section className="space-y-6 py-4 my-2 sm:py-6 sm:my-4 w-full max-w-full overflow-hidden">
+                  <BlurFade delay={0.3}>
+                    <div className="mb-4">
+                      <h2 className="text-2xl font-display font-bold">Visual Showcase</h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Geser untuk melihat seluruh tangkapan layar proyek
+                      </p>
+                    </div>
+
+                    <div className="relative group/carousel w-full max-w-full overflow-hidden">
+                      <Carousel
+                        setApi={setApi}
+                        opts={{
+                          align: "start",
+                          dragFree: true,
+                          loop: false,
+                        }}
+                        className="w-full"
+                      >
+                        <CarouselContent className="-ml-10 sm:-ml-16 md:-ml-20 py-10 sm:py-14">
+                          {project.gallery.map((img, i) => (
+                            <CarouselItem key={i} className="pl-10 sm:pl-16 md:pl-20 basis-auto shrink-0 max-w-full">
+                              <Backlight blur={20} className="h-full max-w-full">
+                                <div
+                                  onClick={() => setSelectedImage(getStoragePublicUrl(img))}
+                                  className="relative h-[240px] sm:h-[320px] md:h-[380px] w-auto max-w-full cursor-pointer flex items-center justify-center"
+                                >
+                                  <img
+                                    src={getStoragePublicUrl(img)}
+                                    alt={`${project.title} screenshot ${i + 1}`}
+                                    className="h-full w-auto max-w-full object-contain rounded-2xl"
+                                  />
+                                </div>
+                              </Backlight>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+
+                        {project.gallery.length > 1 && (
+                          <>
+                            <CarouselPrevious className="left-3 h-10 w-10 bg-background/80 hover:bg-background border-white/20 text-foreground backdrop-blur-md opacity-80 group-hover/carousel:opacity-100 transition-opacity" />
+                            <CarouselNext className="right-3 h-10 w-10 bg-background/80 hover:bg-background border-white/20 text-foreground backdrop-blur-md opacity-80 group-hover/carousel:opacity-100 transition-opacity" />
+                          </>
+                        )}
+                      </Carousel>
+                    </div>
+                  </BlurFade>
+                </section>
+              )}
+
               {/* Features Section */}
               {project.features.length > 0 && (
                 <section className="space-y-8">
-                  <BlurFade delay={0.3}>
+                  <BlurFade delay={0.4}>
                     <h2 className="text-2xl font-display font-bold">Fitur Utama</h2>
                     <div className="grid sm:grid-cols-2 gap-4">
                       {project.features.map((feat, i) => (
@@ -152,12 +233,25 @@ export default function ProjectDetailContent({ project, nextProject }: ProjectDe
                   </BlurFade>
                 </section>
               )}
-
-              {/* Gallery Section */}
-              {project.gallery.length > 0 && (
-                <GallerySection project={project} />
-              )}
             </div>
+
+            {/* Lightbox Preview Modal */}
+            <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
+              <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] bg-background/95 border-white/10 p-4 sm:p-8 backdrop-blur-2xl flex flex-col items-center justify-center overflow-hidden">
+                <DialogTitle className="sr-only">Detail Gambar Showcase</DialogTitle>
+                {selectedImage && (
+                  <div className="relative w-full h-[78vh] flex items-center justify-center p-4">
+                    <Backlight blur={30} className="max-w-full max-h-full flex items-center justify-center">
+                      <img
+                        src={selectedImage}
+                        alt="Showcase detail preview"
+                        className="max-w-full max-h-[72vh] object-contain rounded-2xl shadow-2xl"
+                      />
+                    </Backlight>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
 
             {/* RIGHT SIDEBAR (Quick Info) */}
             <aside className="lg:sticky lg:top-32 space-y-8">
