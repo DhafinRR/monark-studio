@@ -14,6 +14,7 @@ function getAnalyticsClient() {
     end: privateKey?.trim().endsWith("-----END PRIVATE KEY-----"),
     length: privateKey?.length,
   });
+  console.log(JSON.stringify(privateKey?.slice(-100)));
 
   if (!clientEmail || !privateKey) {
     return null
