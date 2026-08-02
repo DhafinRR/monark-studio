@@ -6,7 +6,7 @@ import prisma from '@/lib/prisma'
  * Includes: homepage, static pages, portfolio projects, and order pages
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://monarkstudio.com'
+  const baseUrl = 'https://monarkstd.com'
 
   // Static pages with high priority
   const staticPages: MetadataRoute.Sitemap = [
