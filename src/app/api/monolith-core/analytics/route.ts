@@ -6,7 +6,18 @@ import { tooManyRequests, internalError } from '@/lib/api-response'
 // Initialize GA4 Data API client
 function getAnalyticsClient() {
   const clientEmail = process.env.GA_CLIENT_EMAIL
-  const privateKey = process.env.GA_PRIVATE_KEY?.replace(/\\n/g, '\n')
+  const privateKey = process.env.GA_PRIVATE_KEY
+    ?.replace(/\\n/g, '\n')
+    .replace(/\\\n/g, '\n') // hapus backslash sebelum newline
+    .replace(/\r/g, '');
+
+  console.log({
+    clientEmail: process.env.GA_CLIENT_EMAIL,
+    begin: privateKey?.startsWith("-----BEGIN PRIVATE KEY-----"),
+    end: privateKey?.trim().endsWith("-----END PRIVATE KEY-----"),
+    length: privateKey?.length,
+  });
+  console.log(JSON.stringify(privateKey?.slice(-100)));
 
   if (!clientEmail || !privateKey) {
     return null
